@@ -32,6 +32,7 @@ export interface UserAuth {
   freelanceRewardPoints: number;
   freelanceRating: number;
   skills: string[];
+  AccountBalance: number;
 }
 
 export type UserAuthModel = Model<UserAuth>;
