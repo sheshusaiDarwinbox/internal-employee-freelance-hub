@@ -4,7 +4,7 @@ import session from "express-session";
 import passport from "passport";
 import MongoStore from "connect-mongo";
 import mongoose from "mongoose";
-import "./strategies/local-strategy";
+import "./strategies/local.strategy";
 
 export const createApp = () => {
   const app = express();

@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { User } from "../models/userAuth";
-import { comparePassword } from "../utils/password-util";
+import { User } from "../models/userAuth.model";
+import { comparePassword } from "../utils/password.util";
 
 passport.serializeUser((user: Express.User, done) => {
   done(null, user);
