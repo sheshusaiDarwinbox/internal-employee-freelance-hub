@@ -6,4 +6,4 @@ export interface RoleCounter {
   counter: number;
 }
 
-export type CounterModel = Model<RoleCounter>;
+export type RoleCounterModel = Model<RoleCounter>;

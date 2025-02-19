@@ -38,7 +38,12 @@ passport.use(
         if (!isMatch) {
           throw new Error("Invalid credentials");
         }
-        done(null, user);
+        const sessionUser = {
+          EID: user.EID,
+          role: user.role,
+        };
+
+        done(null, sessionUser);
       } catch (err) {
         done(err, false);
       }
