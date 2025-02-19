@@ -11,6 +11,7 @@ export interface UserAuth {
   EID: string;
   password: string;
   role: UserRole;
+  email: string;
 }
 
 export type UserAuthModel = Model<UserAuth>;

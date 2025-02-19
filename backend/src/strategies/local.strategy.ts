@@ -21,19 +21,27 @@ passport.deserializeUser(async (user: Express.User, done) => {
 });
 
 passport.use(
-  new LocalStrategy(async (EID, password, done) => {
-    try {
-      const user = await User.findOne({ EID });
-      if (!user) {
-        throw new Error("User not found");
+  new LocalStrategy(
+    {
+      usernameField: "EID",
+      passwordField: "password",
+    },
+    async (EID, password, done) => {
+      try {
+        const user = await User.findOne({
+          $or: [{ EID: EID }, { email: EID }],
+        });
+        if (!user) {
+          throw new Error("User not found");
+        }
+        const isMatch = await comparePassword(password, user.password);
+        if (!isMatch) {
+          throw new Error("Invalid credentials");
+        }
+        done(null, user);
+      } catch (err) {
+        done(err, false);
       }
-      const isMatch = await comparePassword(password, user.password);
-      if (!isMatch) {
-        throw new Error("Invalid credentials");
-      }
-      done(null, user);
-    } catch (err) {
-      done(err, false);
     }
-  })
+  )
 );
