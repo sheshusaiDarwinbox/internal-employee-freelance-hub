@@ -1,0 +1,41 @@
+{
+  "name": "backend-internal-employee-freelance-hub",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sheshusaiDarwinbox/internal-employee-freelance-hub.git"
+  },
+  "author": "sheshusai Madhunala",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sheshusaiDarwinbox/internal-employee-freelance-hub/issues"
+  },
+  "homepage": "https://github.com/sheshusaiDarwinbox/internal-employee-freelance-hub#readme",
+  "description": "",
+  "dependencies": {
+    "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.1",
+    "bcrypt": "^5.1.1",
+    "connect-mongo": "^5.1.0",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "mongoose": "^8.10.1",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/connect-mongo": "^3.1.2",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/mongoose": "^5.11.96",
+    "@types/passport": "^1.0.17",
+    "@types/passport-local": "^1.0.38",
+    "typescript": "^5.7.3"
+  }
+}
