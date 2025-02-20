@@ -1,26 +1,28 @@
 import { Schema, model } from "mongoose";
-import type {
-  UserAuth,
-  UserAuthModel,
-  UserRole,
-} from "../types/userAuth.types";
+import { type UserAuth, type UserAuthModel } from "../types/userAuth.types";
 
-const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
-  EID: { type: String, required: true },
+export enum UserRole {
+  Employee = "Employee",
+  Other = "Other",
+  Admin = "Admin",
+  ProjectManager = "ProjectManager",
+}
+export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
+  EID: { type: String, index: true, unique: true, required: true },
   password: { type: String, required: true },
   email: { type: String, unique: true },
   role: {
     type: String,
-    enum: ["Employee", "Admin", "ProjectManager", "Other"] as UserRole[],
+    enum: UserRole,
     required: true,
   },
-  JID: { type: String, required: true },
-  DID: { type: String, required: true },
-  ManagerID: { type: String, required: true },
+  JID: { type: Schema.Types.String, ref: "Job", required: true },
+  DID: { type: Schema.Types.String, ref: "Department", required: true },
+  ManagerID: { type: Schema.Types.String, ref: "UserAuth", required: true },
   phone: { type: String },
   gender: { type: String },
-  DOB: { type: String },
-  DOJ: { type: String, required: true },
+  dob: { type: String },
+  doj: { type: Date, required: true },
   maritalStatus: { type: String },
   nationality: { type: String },
   bloodGroup: { type: String },
@@ -30,11 +32,11 @@ const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   state: { type: String },
   country: { type: String },
   pincode: { type: String },
-  emergencyContactName: { type: String },
+  emergencyContactNumber: { type: Number },
   freelanceRewardPoints: { type: Number },
   freelanceRating: { type: Number },
   skills: { type: [String] },
-  AccountBalance: { type: Number },
+  accountBalance: { type: Number },
 });
 
 export const User: UserAuthModel = model<UserAuth, UserAuthModel>(

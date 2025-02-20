@@ -1,38 +1,33 @@
-import type { Model } from "mongoose";
+import { Model } from "mongoose";
 
-export enum UserRole {
-  Employee = "Employee",
-  Other = "Other",
-  Admin = "Admin",
-  ProjectManager = "ProjectManager",
-}
+import { UserRole } from "../models/userAuth.model";
 
 export interface UserAuth {
   EID: string;
   password: string;
-  role: UserRole;
-  email: string;
+  role: keyof typeof UserRole;
+  email?: string;
   JID: string;
   DID: string;
   ManagerID: string;
-  gender: string;
-  DOB: string;
-  DOJ: string;
-  nationality: string;
-  maritalStatus: string;
-  bloodGroup: string;
-  phone: string;
-  workmode: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  pincode: string;
-  emergencyContactName: string;
-  freelanceRewardPoints: number;
-  freelanceRating: number;
-  skills: string[];
-  AccountBalance: number;
+  gender?: string;
+  dob?: string;
+  doj?: Date;
+  nationality?: string;
+  maritalStatus?: string;
+  bloodGroup?: string;
+  phone?: string;
+  workmode?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  pincode?: string;
+  emergencyContactNumber?: number;
+  freelanceRewardPoints?: number;
+  freelanceRating?: number;
+  skills?: string[];
+  accountBalance?: number;
 }
 
 export type UserAuthModel = Model<UserAuth>;

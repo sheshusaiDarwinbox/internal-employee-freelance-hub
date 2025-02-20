@@ -1,4 +1,4 @@
-import { UserRole } from "../types/userAuth.types";
+import { UserRole } from "../models/userAuth.model";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
 
 export const checkAuth = (role: UserRole | undefined) => {

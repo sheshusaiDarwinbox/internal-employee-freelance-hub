@@ -38,9 +38,13 @@ passport.use(
         if (!isMatch) {
           throw new Error("Invalid credentials");
         }
-        const sessionUser = {
+        const sessionUser: Express.User = {
           EID: user.EID,
           role: user.role,
+          JID: user.JID,
+          DID: user.DID,
+          ManagerID: user.ManagerID,
+          password: user.password,
         };
 
         done(null, sessionUser);

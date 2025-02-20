@@ -2,14 +2,18 @@ import type { Request, Response } from "express";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
 import { DepartmentModel } from "../models/department.model";
 import { checkAuth } from "../middleware/checkAuth.middleware";
-import { DepartmentSchema } from "../utils/zod.util";
+import { PostDepartmentSchema } from "../utils/zod.util";
 import { Router } from "express";
-import { UserRole } from "../types/userAuth.types";
+import { UserRole } from "../models/userAuth.model";
+import { generateId, IDMap } from "../utils/counterManager.util";
+import { Department } from "../types/department.types";
 
 export const createDepartment = async (req: Request, res: Response) => {
   try {
-    DepartmentSchema.parse(req.body);
-    const department = await DepartmentModel.create(req.body);
+    const data = PostDepartmentSchema.parse(req.body);
+    const DID = await generateId(IDMap.DID);
+    const departmentData: Department = { ...data, DID };
+    const department = await DepartmentModel.create(departmentData);
     res.status(201).json(department);
   } catch (err) {
     if (err instanceof Error) {
@@ -21,6 +25,10 @@ export const createDepartment = async (req: Request, res: Response) => {
   }
 };
 
-const router = Router();
+export const departmentControlRouter = Router();
 
-router.post("/create", checkAuth(UserRole.Admin), createDepartment);
+departmentControlRouter.post(
+  "/create",
+  checkAuth(UserRole.Admin),
+  createDepartment
+);

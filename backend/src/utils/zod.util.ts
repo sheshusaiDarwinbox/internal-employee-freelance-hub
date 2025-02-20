@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { DepartmentEnum } from "../types/department.types";
-import { JobTypeEnum } from "../types/job.types";
+import { JobTypeEnum } from "../models/job.model";
 
 const EIDScheme = z.union([
   z.string().regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
@@ -18,32 +17,53 @@ const PasswordScheme = z
   })
   .max(255);
 
-export const UserSchema = z.object({
+export const GetUserSchema = z.object({
   EID: EIDScheme,
   password: PasswordScheme,
 });
 
-export const DepartmentSchema = z.object({
+export const PostUserSchema = z.object({
   DID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+  JID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+  role: z.enum(["Admin", "Employee", "ProjectManager", "Other"]),
+  ManagerID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+});
+
+export const GetDepartmentSchema = z.object({
+  DID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+});
+
+export const PostDepartmentSchema = z.object({
   name: z.string().regex(/^[a-zA-Z0-9 ]+$/, {
     message: "Name must be alphanumeric with spaces",
   }),
-  Description: z
+  description: z
     .string()
     .regex(
       /^[a-zA-Z0-9\s.,!?()&]+$/,
       "Description must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
     ),
-  type: z.nativeEnum(DepartmentEnum),
-  TeamSize: z.number().int(),
+  type: z.enum([
+    "Engineering",
+    "Product",
+    "Finance",
+    "Marketing",
+    "Sales",
+    "CustomerSupport",
+    "Other",
+  ]),
+  teamSize: z.number().int(),
 });
 
-export const jobSchema = z.object({
-  JID: z
-    .string()
-    .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+export const PostjobSchema = z.object({
   title: z.string().regex(/^[a-zA-Z0-9 ]+$/, {
     message: "Title must be alphanumeric with spaces",
   }),
@@ -56,6 +76,12 @@ export const jobSchema = z.object({
   type: z.nativeEnum(JobTypeEnum),
   salary: z.number().int(),
   DID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+});
+
+export const GetjobSchema = z.object({
+  JID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
