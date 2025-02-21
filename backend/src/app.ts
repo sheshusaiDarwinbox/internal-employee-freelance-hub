@@ -5,6 +5,7 @@ import passport from "passport";
 import MongoStore from "connect-mongo";
 import mongoose from "mongoose";
 import "./strategies/local.strategy";
+import { indexRouter } from "./routes/index.router";
 
 export const createApp = () => {
   const app = express();
@@ -25,6 +26,7 @@ export const createApp = () => {
   );
   app.use(passport.initialize());
   app.use(passport.session());
+  app.use("/api", indexRouter);
   app.get("/", (req, res) => {
     res.send("Hello World");
   });
