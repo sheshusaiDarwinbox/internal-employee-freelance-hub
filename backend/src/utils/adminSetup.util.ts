@@ -1,6 +1,7 @@
 import { DepartmentModel } from "../models/department.model";
 import { JobModel } from "../models/job.model";
 import { User } from "../models/userAuth.model";
+import { hashPassword } from "./password.util";
 
 export const setAdmin = async () => {
   try {
@@ -14,7 +15,7 @@ export const setAdmin = async () => {
       role: "Admin",
       ManagerID: "EMP-000000",
       doj: new Date(),
-      password: "admin",
+      password: await hashPassword("admin"),
     }).then(() => {
       console.log("Admin Created");
     });

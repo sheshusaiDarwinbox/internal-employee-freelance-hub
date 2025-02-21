@@ -6,7 +6,7 @@ const EIDScheme = z.union([
   z.string().email({ message: "Invalid email" }),
 ]);
 
-const PasswordScheme = z
+export const PasswordScheme = z
   .string()
   .min(6, { message: "Password must be at least 6 characters long" })
   .regex(/[A-Z]/, {

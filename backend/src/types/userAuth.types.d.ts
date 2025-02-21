@@ -28,6 +28,7 @@ export interface UserAuth {
   freelanceRating?: number;
   skills?: string[];
   accountBalance?: number;
+  img?: string;
 }
 
 export type UserAuthModel = Model<UserAuth>;

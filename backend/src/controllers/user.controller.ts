@@ -7,7 +7,7 @@ import { Router } from "express";
 import { User, UserRole } from "../models/userAuth.model";
 import { generateId, IDMap } from "../utils/counterManager.util";
 import { DepartmentModel } from "../models/department.model";
-import { UserAuth } from "../types/userAuth.types";
+import { generateRandomPassword, hashPassword } from "../utils/password.util";
 
 export const createUser = async (req: Request, res: Response) => {
   try {
@@ -21,8 +21,10 @@ export const createUser = async (req: Request, res: Response) => {
       throw new Error("Job not found");
     }
     const id = await generateId(IDMap.EID);
-    const user: UserAuth = await User.create({ ...data, EID: id });
-    res.status(HttpStatusCodes.CREATED).json(user);
+    const password = generateRandomPassword();
+    const hashedPassword = await hashPassword(password);
+    await User.create({ ...data, EID: id, password: hashedPassword });
+    res.status(HttpStatusCodes.CREATED).json({ id, password });
   } catch (err) {
     if (err instanceof Error) {
       res.status(HttpStatusCodes.BAD_REQUEST).json({ message: err.message });

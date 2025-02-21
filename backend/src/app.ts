@@ -26,7 +26,7 @@ export const createApp = () => {
   );
   app.use(passport.initialize());
   app.use(passport.session());
-  app.use(indexRouter);
+  app.use("/api", indexRouter);
   app.get("/", (req, res) => {
     res.send("Hello World");
   });

@@ -37,6 +37,7 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   freelanceRating: { type: Number },
   skills: { type: [String] },
   accountBalance: { type: Number },
+  img: { type: String },
 });
 
 export const User: UserAuthModel = model<UserAuth, UserAuthModel>(
