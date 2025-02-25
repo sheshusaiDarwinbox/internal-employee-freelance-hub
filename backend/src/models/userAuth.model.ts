@@ -1,5 +1,6 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, type PaginateModel } from "mongoose";
 import { type UserAuth, type UserAuthModel } from "../types/userAuth.types";
+import paginate from "mongoose-paginate-v2";
 
 export enum UserRole {
   Employee = "Employee",
@@ -10,10 +11,14 @@ export enum UserRole {
 export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   EID: { type: String, index: true, unique: true, required: true },
   password: { type: String, required: true },
-  email: { type: String, unique: true },
+  email: { type: String, unique: true, required: true },
   role: {
     type: String,
     enum: UserRole,
+    required: true,
+  },
+  verified: {
+    type: Boolean,
     required: true,
   },
   JID: { type: Schema.Types.String, ref: "Job", required: true },
@@ -40,7 +45,9 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   img: { type: String },
 });
 
-export const User: UserAuthModel = model<UserAuth, UserAuthModel>(
+userAuthSchema.plugin(paginate);
+
+export const User = model<UserAuth, PaginateModel<UserAuthModel>>(
   "UserAuth",
   userAuthSchema
 );

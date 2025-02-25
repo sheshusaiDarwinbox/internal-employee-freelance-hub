@@ -1,22 +1,26 @@
 import { CounterID } from "../models/idCounter.model";
 import { IDs } from "../models/idCounter.model";
 
-export enum IDMap {
-  EID = "EMP",
-  OID = "O",
-  TaskID = "T",
-  DID = "D",
-  JID = "J",
-}
+export const IDMap = {
+  EID: "EMP",
+  OID: "O",
+  TaskID: "T",
+  DID: "D",
+  JID: "J",
+  BidID: "B",
+  NID: "N",
+  ReqID: "Req",
+  RefID: "Ref",
+};
 
-export const generateId = async (type: IDMap) => {
+export const generateId = async (type: IDs) => {
   const counterDoc = await CounterID.findOneAndUpdate(
-    { type },
+    { id: type },
     { $inc: { counter: 1 } },
     { new: true, upsert: true }
   );
 
-  const id = `${type}-${counterDoc.counter.toString().padStart(6, "0")}`;
+  const id = `${IDMap[type]}${counterDoc.counter.toString().padStart(6, "0")}`;
 
   return id;
 };

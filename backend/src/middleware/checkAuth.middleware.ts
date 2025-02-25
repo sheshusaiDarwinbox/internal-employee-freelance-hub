@@ -1,17 +1,18 @@
+import { NextFunction, Request, Response } from "express";
 import { UserRole } from "../models/userAuth.model";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
 
-export const checkAuth = (role: UserRole | undefined) => {
-  return (req: any, res: any, next: any) => {
+export const checkAuth = (roles: Array<keyof typeof UserRole> | undefined) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.isAuthenticated()) {
-      return res
+      res
         .status(HttpStatusCodes.UNAUTHORIZED)
         .json({ message: "Unauthorized" });
     }
-    if (role && req.user.role !== role) {
-      return res
-        .status(HttpStatusCodes.FORBIDDEN)
-        .json({ message: "Forbidden" });
+    if (roles === undefined) return next();
+    for (let role of roles) {
+      if (req.user?.role !== role)
+        res.status(HttpStatusCodes.FORBIDDEN).json({ message: "Forbidden" });
     }
     next();
   };

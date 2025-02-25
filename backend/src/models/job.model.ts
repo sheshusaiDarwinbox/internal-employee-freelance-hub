@@ -1,9 +1,10 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, type PaginateModel } from "mongoose";
 import { type Job, type JobModelType } from "../types/job.types";
+import paginate from "mongoose-paginate-v2";
 
 export enum JobTypeEnum {
-  FullTime = "Full Time",
-  PartTime = "Part Time",
+  FullTime = "FullTime",
+  PartTime = "PartTime",
   Internship = "Internship",
   Temporary = "Temporary",
   Freelance = "Freelance",
@@ -24,7 +25,9 @@ export const jobSchema = new Schema<Job, JobModelType>({
   DID: { type: Schema.Types.String, ref: "Department", required: true },
 });
 
-export const JobModel: JobModelType = model<Job, JobModelType>(
+jobSchema.plugin(paginate);
+
+export const JobModel = model<Job, PaginateModel<JobModelType>>(
   "Job",
   jobSchema
 );

@@ -18,11 +18,12 @@ export const PasswordScheme = z
   .max(255);
 
 export const GetUserSchema = z.object({
-  EID: EIDScheme,
-  password: PasswordScheme,
+  EID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
 
-export const PostUserSchema = z.object({
+export const CreateUserSchema = z.object({
   DID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
@@ -33,6 +34,7 @@ export const PostUserSchema = z.object({
   ManagerID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+  email: z.string().email({ message: "Invalid email" }),
 });
 
 export const GetDepartmentSchema = z.object({
@@ -41,7 +43,7 @@ export const GetDepartmentSchema = z.object({
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
 
-export const PostDepartmentSchema = z.object({
+export const CreateDepartmentSchema = z.object({
   name: z.string().regex(/^[a-zA-Z0-9 ]+$/, {
     message: "Name must be alphanumeric with spaces",
   }),
@@ -63,7 +65,7 @@ export const PostDepartmentSchema = z.object({
   teamSize: z.number().int(),
 });
 
-export const PostjobSchema = z.object({
+export const CreateJobSchema = z.object({
   title: z.string().regex(/^[a-zA-Z0-9 ]+$/, {
     message: "Title must be alphanumeric with spaces",
   }),
@@ -74,14 +76,53 @@ export const PostjobSchema = z.object({
       "Description must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
     ),
   type: z.nativeEnum(JobTypeEnum),
+
   salary: z.number().int(),
   DID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
 
-export const GetjobSchema = z.object({
+export const GetJobSchema = z.object({
   JID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+});
+
+export const DepartmentArraySchema = z.array(
+  z.enum([
+    "Engineering",
+    "Product",
+    "Finance",
+    "Marketing",
+    "Sales",
+    "CustomerSupport",
+    "Other",
+  ] as const)
+);
+
+export const JobsArraySchema = z.array(
+  z.enum([
+    "FullTime",
+    "PartTime",
+    "Internship",
+    "Temporary",
+    "Freelance",
+    "Contract",
+    "Other",
+  ] as const)
+);
+
+export const UsersArraySchema = z.array(
+  z.enum(["Employee", "Admin", "ProjectManager", "Other"])
+);
+
+export const forgotPasswordZodSchema = z.object({
+  email: z.string().email({ message: "Invalid email" }),
+  redirectUrl: z.string(),
+});
+
+export const forgotPasswordResetZodSchema = z.object({
+  newPassword: PasswordScheme,
+  confirmPassword: PasswordScheme,
 });

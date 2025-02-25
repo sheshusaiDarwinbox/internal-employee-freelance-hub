@@ -6,9 +6,18 @@ import MongoStore from "connect-mongo";
 import mongoose from "mongoose";
 import "./strategies/local.strategy";
 import { indexRouter } from "./routes/index.router";
+import cors from "cors";
 
 export const createApp = () => {
   const app = express();
+  app.use(
+    cors({
+      origin: "*",
+      allowedHeaders: "Access-Control-Allow-Origin",
+      credentials: true,
+    })
+  );
+  app.use(express.static("./public"));
   app.use(express.json());
   app.use(cookieParser());
   app.use(

@@ -31,20 +31,22 @@ passport.use(
         const user = await User.findOne({
           $or: [{ EID: EID }, { email: EID }],
         });
+
         if (!user) {
           throw new Error("User not found");
         }
-        const isMatch = await comparePassword(password, user.password);
+        const isMatch = await comparePassword(password, user.get("password"));
         if (!isMatch) {
           throw new Error("Invalid credentials");
         }
+        if (!user.get("verified")) throw new Error("User Not verified");
         const sessionUser: Express.User = {
-          EID: user.EID,
-          role: user.role,
-          JID: user.JID,
-          DID: user.DID,
-          ManagerID: user.ManagerID,
-          password: user.password,
+          EID: user.get("EID"),
+          role: user.get("role"),
+          JID: user.get("JID"),
+          DID: user.get("DID"),
+          ManagerID: user.get("ManagerID"),
+          password: user.get("password"),
         };
 
         done(null, sessionUser);

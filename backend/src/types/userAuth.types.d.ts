@@ -6,7 +6,8 @@ export interface UserAuth {
   EID: string;
   password: string;
   role: keyof typeof UserRole;
-  email?: string;
+  email: string;
+  verified: boolean;
   JID: string;
   DID: string;
   ManagerID: string;
@@ -32,3 +33,19 @@ export interface UserAuth {
 }
 
 export type UserAuthModel = Model<UserAuth>;
+
+export interface UserVerificationType {
+  email: string;
+  verifyString: string;
+  createdAt: Date;
+}
+
+export type UserVerificationModel = Model<UserVerification>;
+
+export interface forgotPasswordType {
+  email: string;
+  forgotVerifyString: string;
+  createdAt: Data;
+}
+
+export type forgotPasswordModel = Model<forgotPasswordType>;

@@ -1,4 +1,5 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, type PaginateModel } from "mongoose";
+import paginate from "mongoose-paginate-v2";
 import type {
   Department,
   DepartmentModelType,
@@ -16,7 +17,7 @@ export enum DepartmentEnum {
 
 const departmentSchema = new Schema<Department, DepartmentModelType>({
   DID: { type: String, required: true, index: true, unique: true },
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   description: { type: String, required: true },
   type: {
     type: String,
@@ -26,7 +27,9 @@ const departmentSchema = new Schema<Department, DepartmentModelType>({
   teamSize: { type: Number, required: true },
 });
 
-export const DepartmentModel = model<Department, DepartmentModelType>(
-  "Department",
-  departmentSchema
-);
+departmentSchema.plugin(paginate);
+
+export const DepartmentModel = model<
+  Department,
+  PaginateModel<DepartmentModelType>
+>("Department", departmentSchema);

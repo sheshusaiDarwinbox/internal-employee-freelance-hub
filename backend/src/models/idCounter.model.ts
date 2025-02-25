@@ -9,8 +9,8 @@ export enum IDs {
   TaskID = "TaskID",
   BidID = "BidID",
   NID = "NID",
-  RequestID = "RequestID",
-  ReferID = "ReferID",
+  ReqID = "ReqID",
+  RefID = "RefID",
 }
 
 const counterSchema = new Schema<IDCounter, IDCounterModel>({

@@ -23,7 +23,7 @@ export const generateRandomPassword = (): string => {
   password += getRandomChar(uppercaseLetters);
   password += getRandomChar(specialCharacters);
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 6; i++) {
     password += getRandomChar(alphanumericCharacters);
   }
   password = password
