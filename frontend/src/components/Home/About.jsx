@@ -3,7 +3,7 @@ import aboutImg from "../../assets/about.png";
 
 const About = () => {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 py-16 px-6">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-y-16">
         
         {/* Left - Image Section */}
