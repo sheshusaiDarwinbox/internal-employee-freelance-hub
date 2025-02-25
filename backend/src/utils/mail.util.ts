@@ -35,7 +35,8 @@ export const sendVerificationEmail = async (
   res: Response
 ) => {
   try {
-    const verifyString = crypto.randomBytes(16).toString("base64") + data._id;
+    const verifyString =
+      crypto.randomBytes(16).toString("base64url") + data._id;
 
     const hashedVerifyString = await hashPassword(verifyString);
     const message = {
@@ -87,7 +88,7 @@ export const sendForgotPasswordMail = async (
 ) => {
   try {
     const forgotVerifyString =
-      crypto.randomBytes(16).toString("base64") + data._id;
+      crypto.randomBytes(16).toString("base64url") + data._id;
 
     const hashedforgotVerifyString = await hashPassword(forgotVerifyString);
 
