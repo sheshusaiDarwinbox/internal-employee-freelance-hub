@@ -6,7 +6,6 @@ import { RequestModel, RequestTypeEnum } from "../models/request.model";
 import { generateId } from "../utils/counterManager.util";
 import { IDs } from "../models/idCounter.model";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
-import { error } from "../utils/error.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
 import { UserAuth } from "../types/userAuth.types";
 import { sessionHandler } from "../utils/session.util";

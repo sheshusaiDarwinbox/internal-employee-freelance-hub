@@ -12,7 +12,6 @@ import { UserRole } from "../models/userAuth.model";
 import { generateId } from "../utils/counterManager.util";
 import { DepartmentModel } from "../models/department.model";
 import { IDs } from "../models/idCounter.model";
-import { error } from "../utils/error.util";
 import { sessionHandler } from "../utils/session.util";
 
 export const createJob = sessionHandler(async (req: Request, res: Response) => {
