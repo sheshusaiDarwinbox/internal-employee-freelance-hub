@@ -7,6 +7,7 @@ export interface Department {
   name: string;
   description: string;
   type: DepartmentType;
+  ManagerID?: string;
   teamSize: number;
 }
 

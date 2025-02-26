@@ -6,7 +6,7 @@ export enum UserRole {
   Employee = "Employee",
   Other = "Other",
   Admin = "Admin",
-  ProjectManager = "ProjectManager",
+  Manager = "Manager",
 }
 export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   EID: { type: String, index: true, unique: true, required: true },

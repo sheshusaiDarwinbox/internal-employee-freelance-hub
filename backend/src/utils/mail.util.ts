@@ -3,7 +3,6 @@ import nodemailer from "nodemailer";
 import { hashPassword } from "./password.util";
 import crypto from "crypto";
 import { UserVerification } from "../models/userVerification.model";
-import { error } from "./error.util";
 import { Types } from "mongoose";
 import { forgotPassword } from "../models/forgotPassword.model";
 import { HttpStatusCodes } from "./httpsStatusCodes.util";
@@ -34,48 +33,37 @@ export const sendVerificationEmail = async (
   baseUrl: string,
   res: Response
 ) => {
-  try {
-    const verifyString =
-      crypto.randomBytes(16).toString("base64url") + data._id;
+  const verifyString = crypto.randomBytes(16).toString("base64url") + data._id;
 
-    const hashedVerifyString = await hashPassword(verifyString);
-    const message = {
-      from: "testmaildarwinbox@gmail.com", // sender address
-      to: data.email, // list of receivers
-      subject: "Verify your Account", // Subject line
-      html: `<p>click <a href=${
-        baseUrl + "/api/verify/" + data._id + "/" + verifyString
-      }>here</a><b></b> to activate your Account</p>`,
-    };
+  const hashedVerifyString = await hashPassword(verifyString);
+  const message = {
+    from: "testmaildarwinbox@gmail.com", // sender address
+    to: data.email, // list of receivers
+    subject: "Verify your Account", // Subject line
+    html: `<p>click <a href=${
+      baseUrl + "/api/verify/" + data._id + "/" + verifyString
+    }>here</a><b></b> to activate your Account</p>`,
+  };
 
-    console.log(`${baseUrl + "/api/verify/" + data._id + "/" + verifyString}`);
-    // {baseUrl}/verify/id/verifyString
+  console.log(`${baseUrl + "/api/verify/" + data._id + "/" + verifyString}`);
+  // {baseUrl}/verify/id/verifyString
 
-    const result = await UserVerification.create({
-      email: data.email,
-      verifyString: hashedVerifyString,
-      _id: data._id,
-    });
+  const result = await UserVerification.create({
+    email: data.email,
+    verifyString: hashedVerifyString,
+    _id: data._id,
+  });
 
-    if (!result) throw new Error("userverification doc failed to create");
+  if (!result) throw new Error("userverification doc failed to create");
 
-    transporter
-      .sendMail(message)
-      .then((info) => {
-        return res.status(201).json({
-          msg: "Verification Email sent",
-          info: info.messageId,
-          preview: nodemailer.getTestMessageUrl(info),
-          id: data._id,
-          password: data.password,
-        });
-      })
-      .catch((err) => {
-        return res.status(500).json({ msg: err });
-      });
-  } catch (err) {
-    error(err, res);
-  }
+  const info = await transporter.sendMail(message);
+  return res.status(201).json({
+    msg: "Verification Email sent",
+    info: info.messageId,
+    preview: nodemailer.getTestMessageUrl(info),
+    id: data._id,
+    password: data.password,
+  });
 };
 
 export const sendForgotPasswordMail = async (
@@ -86,51 +74,46 @@ export const sendForgotPasswordMail = async (
   },
   res: Response
 ) => {
-  try {
-    const forgotVerifyString =
-      crypto.randomBytes(16).toString("base64url") + data._id;
+  const forgotVerifyString =
+    crypto.randomBytes(16).toString("base64url") + data._id;
 
-    const hashedforgotVerifyString = await hashPassword(forgotVerifyString);
+  const hashedforgotVerifyString = await hashPassword(forgotVerifyString);
 
-    const message = {
-      from: "testmaildarwinbox@gmail.com",
-      to: data.email,
-      subject: "Forgot Password",
-      html: `<p>Hello!</p><br><p>click <a href=${
-        data.redirectUrl +
-        "/forgot-password/" +
-        data._id +
-        "/" +
-        forgotVerifyString
-      }>here</a> to reset your password</p>`,
-    };
+  const message = {
+    from: "testmaildarwinbox@gmail.com",
+    to: data.email,
+    subject: "Forgot Password",
+    html: `<p>Hello!</p><br><p>click <a href=${
+      data.redirectUrl +
+      "/forgot-password/" +
+      data._id +
+      "/" +
+      forgotVerifyString
+    }>here</a> to reset your password</p>`,
+  };
 
-    console.log(
-      `${
-        data.redirectUrl +
-        "/forgot-password/" +
-        data._id +
-        "/" +
-        forgotVerifyString
-      }`
-    );
+  console.log(
+    `${
+      data.redirectUrl +
+      "/forgot-password/" +
+      data._id +
+      "/" +
+      forgotVerifyString
+    }`
+  );
 
-    const result = await forgotPassword.create({
-      email: data.email,
-      forgotVerifyString: hashedforgotVerifyString,
-      _id: data._id,
-    });
+  const result = await forgotPassword.create({
+    email: data.email,
+    forgotVerifyString: hashedforgotVerifyString,
+    _id: data._id,
+  });
 
-    if (!result) throw new Error("forgot Password doc failed to created");
+  if (!result) throw new Error("forgot Password doc failed to created");
 
-    transporter.sendMail(message).then((info) => {
-      return res.status(HttpStatusCodes.OK).json({
-        msg: "Forgot mail sent",
-        info: info.messageId,
-        preview: nodemailer.getTestMessageUrl(info),
-      });
-    });
-  } catch (err) {
-    error(err, res);
-  }
+  const info = await transporter.sendMail(message);
+  return res.status(HttpStatusCodes.OK).json({
+    msg: "Forgot mail sent",
+    info: info.messageId,
+    preview: nodemailer.getTestMessageUrl(info),
+  });
 };

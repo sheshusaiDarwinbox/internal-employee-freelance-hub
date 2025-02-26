@@ -24,6 +24,9 @@ const departmentSchema = new Schema<Department, DepartmentModelType>({
     required: true,
     enum: DepartmentEnum,
   },
+  ManagerID: {
+    type: String,
+  },
   teamSize: { type: Number, required: true },
 });
 

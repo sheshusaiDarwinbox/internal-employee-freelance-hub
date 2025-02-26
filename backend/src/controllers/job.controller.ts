@@ -13,25 +13,22 @@ import { generateId } from "../utils/counterManager.util";
 import { DepartmentModel } from "../models/department.model";
 import { IDs } from "../models/idCounter.model";
 import { error } from "../utils/error.util";
+import { sessionHandler } from "../utils/session.util";
 
-export const createJob = async (req: Request, res: Response) => {
-  try {
-    const data = CreateJobSchema.parse(req.body);
-    const Department = await DepartmentModel.findOne({ DID: data.DID });
-    if (!Department) {
-      throw new Error("Department not found");
-    }
-    const JID = await generateId(IDs.JID);
-    const job = await JobModel.create({ ...data, JID });
-    if (!job) throw new Error("Job not created");
-    res.status(201).json(job);
-  } catch (err) {
-    error(err, res);
+export const createJob = sessionHandler(async (req: Request, res: Response) => {
+  const data = CreateJobSchema.parse(req.body);
+  const Department = await DepartmentModel.findOne({ DID: data.DID });
+  if (!Department) {
+    throw new Error("Department not found");
   }
-};
+  const JID = await generateId(IDs.JID);
+  const job = await JobModel.create({ ...data, JID });
+  if (!job) throw new Error("Job not created");
+  res.status(201).json(job);
+});
 
-export const getAllJobs = async (req: Request, res: Response) => {
-  try {
+export const getAllJobs = sessionHandler(
+  async (req: Request, res: Response) => {
     const { types, page = 0 } = req.query;
     const filter: any = {};
     const pageNum = Number(page);
@@ -47,13 +44,11 @@ export const getAllJobs = async (req: Request, res: Response) => {
       limit: 10,
     });
     res.status(HttpStatusCodes.OK).send(jobs);
-  } catch (err) {
-    error(err, res);
   }
-};
+);
 
-export const deleteJobByID = async (req: Request, res: Response) => {
-  try {
+export const deleteJobByID = sessionHandler(
+  async (req: Request, res: Response) => {
     const { ID } = req.params;
     GetJobSchema.parse({ JID: ID });
     const job = await JobModel.findOne({
@@ -63,22 +58,18 @@ export const deleteJobByID = async (req: Request, res: Response) => {
     const result = await JobModel.deleteOne({ JID: ID });
     if (result.acknowledged === false) throw new Error("Job not deleted");
     res.status(HttpStatusCodes.OK).send(job);
-  } catch (err) {
-    error(err, res);
   }
-};
+);
 
-export const getJobById = async (req: Request, res: Response) => {
-  try {
+export const getJobById = sessionHandler(
+  async (req: Request, res: Response) => {
     const { ID } = req.params;
     GetJobSchema.parse({ JID: ID });
     const job = await JobModel.findOne({ JID: ID });
     if (!job) throw new Error("Bad Request");
     res.status(HttpStatusCodes.OK).send(job);
-  } catch (err) {
-    error(err, res);
   }
-};
+);
 
 export const jobControlRouter = Router();
 

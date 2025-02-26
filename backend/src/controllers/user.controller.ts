@@ -14,18 +14,17 @@ import { generateRandomPassword, hashPassword } from "../utils/password.util";
 import { IDs } from "../models/idCounter.model";
 import { error } from "../utils/error.util";
 import { sendVerificationEmail } from "../utils/mail.util";
+import { sessionHandler } from "../utils/session.util";
 
-export const createUser = async (req: Request, res: Response) => {
-  try {
+export const createUser = sessionHandler(
+  async (req: Request, res: Response) => {
     const data = CreateUserSchema.parse(req.body);
+
     const department = await DepartmentModel.findOne({ DID: data.DID });
-    if (!department) {
-      throw new Error("Department not found");
-    }
     const job = await JobModel.findOne({ JID: data.JID });
-    if (!job) {
-      throw new Error("Job not found");
-    }
+
+    if (!department || !job) throw new Error("Department or Job not found");
+
     const id = await generateId(IDs.EID);
     const password = generateRandomPassword();
     const hashedPassword = await hashPassword(password);
@@ -34,7 +33,7 @@ export const createUser = async (req: Request, res: Response) => {
       verified: false,
       EID: id,
       password: hashedPassword,
-      doj: Date.now(),
+      doj: new Date(),
     });
     const result = await DepartmentModel.findOneAndUpdate(
       { DID: data.DID },
@@ -46,13 +45,11 @@ export const createUser = async (req: Request, res: Response) => {
       "http://localhost:3000",
       res
     );
-  } catch (err) {
-    error(err, res);
   }
-};
+);
 
-export const getAllUsers = async (req: Request, res: Response) => {
-  try {
+export const getAllUsers = sessionHandler(
+  async (req: Request, res: Response) => {
     const { types, page = 0 } = req.query;
     const filter: any = {};
     const pageNum = Number(page);
@@ -67,13 +64,11 @@ export const getAllUsers = async (req: Request, res: Response) => {
       limit: 10,
     });
     res.status(HttpStatusCodes.OK).send(users);
-  } catch (err) {
-    error(err, res);
   }
-};
+);
 
-export const deleteUserByID = async (req: Request, res: Response) => {
-  try {
+export const deleteUserByID = sessionHandler(
+  async (req: Request, res: Response) => {
     const { ID } = req.params;
     GetUserSchema.parse({ EID: ID });
     const user = await User.findOne({ EID: ID });
@@ -81,22 +76,18 @@ export const deleteUserByID = async (req: Request, res: Response) => {
     const result = await User.deleteOne({ EID: ID });
     if (result.acknowledged === false) throw new Error("User Not Deleted");
     res.status(HttpStatusCodes.OK).send(user);
-  } catch (err) {
-    error(err, res);
   }
-};
+);
 
-export const getUserById = async (req: Request, res: Response) => {
-  try {
+export const getUserById = sessionHandler(
+  async (req: Request, res: Response) => {
     const { ID } = req.params;
     GetUserSchema.parse({ EID: ID });
     const user = await User.findOne({ EID: ID });
     if (!user) throw new Error("Bad Request");
     res.status(HttpStatusCodes.OK).send(user);
-  } catch (err) {
-    error(err, res);
   }
-};
+);
 
 export const userControlRouter = Router();
 
