@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { JobTypeEnum } from "../models/job.model";
 
-const EIDScheme = z.union([
+export const EIDScheme = z.union([
   z.string().regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
   z.string().email({ message: "Invalid email" }),
 ]);
@@ -30,7 +30,7 @@ export const CreateUserSchema = z.object({
   JID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
-  role: z.enum(["Admin", "Employee", "ProjectManager", "Other"]),
+  role: z.enum(["Admin", "Employee", "Manager", "Other"]),
   ManagerID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
@@ -117,12 +117,47 @@ export const UsersArraySchema = z.array(
   z.enum(["Employee", "Admin", "ProjectManager", "Other"])
 );
 
-export const forgotPasswordZodSchema = z.object({
+export const ForgotPasswordZodSchema = z.object({
   email: z.string().email({ message: "Invalid email" }),
   redirectUrl: z.string(),
 });
 
-export const forgotPasswordResetZodSchema = z.object({
+export const ForgotPasswordResetZodSchema = z.object({
   newPassword: PasswordScheme,
   confirmPassword: PasswordScheme,
+});
+
+export const CreateTaskZodSchema = z.object({
+  ManagerID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "ManagerID must be alphanumeric" }),
+  title: z
+    .string()
+    .regex(
+      /^[a-zA-Z0-9\s.,!?()&]+$/,
+      "title must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
+    ),
+  skillsRequired: z.array(z.string()),
+  amount: z.number().int(),
+  deadline: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: "Invalid date format",
+    })
+    .transform((val) => new Date(val)),
+  description: z
+    .string()
+    .regex(
+      /^[a-zA-Z0-9\s.,!?()&]+$/,
+      "title must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
+    ),
+});
+
+export const assignManagerZodSchema = z.object({
+  EID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "DID must be alphanumeric" }),
+  DID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "DID must be alphanumeric" }),
 });
