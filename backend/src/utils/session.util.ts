@@ -10,8 +10,8 @@ export const sessionHandler = (fun: (req: Request, res: Response) => any) => {
       await fun(req, res);
       await session.commitTransaction();
     } catch (err) {
-      error(err, res);
       await session.abortTransaction();
+      if (!res.headersSent) error(err, res);
     } finally {
       await session.endSession();
     }

@@ -36,8 +36,9 @@ exports.getAllDepartments = (0, session_util_1.sessionHandler)((req, res) => __a
         const typesArray = types.split(",");
         zod_util_1.DepartmentArraySchema.parse(typesArray);
         filter.type = { $in: typesArray };
-        if (search !== "")
-            filter.name = search;
+    }
+    if (search !== "") {
+        filter.$text = { $search: search };
     }
     const departments = yield department_model_1.DepartmentModel.paginate(filter, {
         offset: pageNum * 10,

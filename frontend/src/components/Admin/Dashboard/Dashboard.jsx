@@ -18,9 +18,12 @@ const Dashboard = () => {
   };
 
   return (
-    <>
-      <Nav />
-      <Navbar className="bg-blue-400 shadow px-6 py-6 mt-[90px]">
+    <div className="min-h-screen">
+      {/* Fixed Top Navigation */}
+      <Nav className="fixed top-0 left-0 right-0 z-50" />
+
+      {/* Fixed Secondary Navigation */}
+      <Navbar className="fixed top-[90px] left-0 right-0 bg-blue-400 shadow px-6 py-6 z-40">
         <marquee>
           <h1 className="text-xl font-semibold text-gray-800">
             Your Workplace Hub: Manage Tasks, Track Progress, and Stay
@@ -29,58 +32,65 @@ const Dashboard = () => {
         </marquee>
       </Navbar>
 
-      <div className="flex flex-col min-h-screen bg-gray-100 md:flex-row">
-        <div className="w-full md:w-1/5 p-8 bg-blue-200 bg-opacity-90 backdrop-blur-lg shadow-md pt-20">
-          <div className="flex flex-col items-center">
-            <img src={ProfileAvatar} alt="Profile Avatar" className="h-40" />
-            <h2 className="text-2xl font-semibold text-gray-700">John Doe</h2>
-            <h2 className="text-lg font-semibold text-gray-700">Admin</h2>
+      <div className="flex pt-[160px]">
+        {/* Fixed Sidebar */}
+        <div className="fixed w-1/5 h-[calc(100vh-160px)] bg-blue-200 bg-opacity-90 backdrop-blur-lg shadow-md overflow-y-auto">
+          <div className="p-8">
+            <div className="flex flex-col items-center">
+              <img src={ProfileAvatar} alt="Profile Avatar" className="h-40" />
+              <h2 className="text-2xl font-semibold text-gray-700">John Doe</h2>
+              <h2 className="text-lg font-semibold text-gray-700">Admin</h2>
+            </div>
+
+            <Card className="mt-6 shadow-sm border border-gray-200">
+              <ul className="space-y-2">
+                {[
+                  { name: "👥 Manage Users", link: "#" },
+                  { name: "📩 Requests", link: "#" },
+                  { name: "✅ Tasks", link: "/admin/tasks" },
+                  { name: "🏢 Manage Departments", link: "/admin/departments" },
+                  { name: "🏢 Manage Jobs", link: "#" },
+                  { name: "🧑‍💼 Manage Managers", link: "#" },
+                  { name: "🙍‍♂️ My Profile", link: "#" },
+                  { name: "🚪 Logout", onClick: handleLogout, isLogout: true },
+                ].map((item, index) => (
+                  <li key={index}>
+                    {item.onClick ? (
+                      <button
+                        onClick={item.onClick}
+                        className={`block w-full text-left p-3 rounded-lg transition duration-200 ${
+                          item.isLogout
+                            ? "text-red-500 hover:bg-red-100"
+                            : "text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {item.name}
+                      </button>
+                    ) : (
+                      <Link
+                        to={item.link}
+                        className={`block p-3 rounded-lg transition duration-200 ${
+                          item.isLogout
+                            ? "text-red-500 hover:bg-red-100"
+                            : "text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {item.name}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
           </div>
-          <Card className="mt-6 shadow-sm border border-gray-200">
-            <ul className="space-y-2">
-              {[
-                { name: "✅ Tasks", link: "/admin/tasks" },
-                { name: "👥 Manage Users", link: "#" },
-                { name: "🏢 Manage Department", link: "#" },
-                { name: "🧑‍💼 Manage Managers", link: "#" },
-                { name: "🙍‍♂️ My Profile", link: "#" },
-                { name: "📩 Requests", link: "#" },
-                { name: "🚪 Logout", onClick: handleLogout, isLogout: true },
-              ].map((item, index) => (
-                <li key={index}>
-                  {item.onClick ? (
-                    <button
-                      onClick={item.onClick}
-                      className={`block w-full text-left p-3 rounded-lg transition duration-200 ${
-                        item.isLogout
-                          ? "text-red-500 hover:bg-red-100"
-                          : "text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {item.name}
-                    </button>
-                  ) : (
-                    <Link
-                      to={item.link}
-                      className={`block p-3 rounded-lg transition duration-200 ${
-                        item.isLogout
-                          ? "text-red-500 hover:bg-red-100"
-                          : "text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {item.name}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </Card>
         </div>
-        <div className="flex-1 p-8">
+
+        {/* Scrollable Main Content */}
+        <div className="ml-[20%] flex-1 p-8 min-h-[calc(100vh-160px)]">
           <Outlet />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

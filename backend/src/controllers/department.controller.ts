@@ -36,7 +36,10 @@ export const getAllDepartments = sessionHandler(
       const typesArray = (types as string).split(",");
       DepartmentArraySchema.parse(typesArray);
       filter.type = { $in: typesArray };
-      if (search !== "") filter.name = search;
+    }
+
+    if (search !== "") {
+      filter.$text = { $search: search };
     }
 
     const departments = await DepartmentModel.paginate(filter, {

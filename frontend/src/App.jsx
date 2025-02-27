@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import PropTypes from "prop-types";
+import DepartmentManagement from "./components/Admin/ManageDepartment/ManageDepartment";
 
 const RootNavbar = lazy(() => import("./components/Navbar"));
 const Home = lazy(() => import("./components/Home/Homepage"));
@@ -133,6 +134,7 @@ function App() {
         >
           <Route index element={<AdminDashboardHome />} />
           <Route path="tasks" element={<ViewAllTasks />} />
+          <Route path="departments" element={<DepartmentManagement />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
