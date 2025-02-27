@@ -32,7 +32,11 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
-      await axios.post(`${API_BASE_URL}/logout`, {}, { withCredentials: true });
+      await axios.get(
+        `${API_BASE_URL}/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
       return null;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Logout failed");

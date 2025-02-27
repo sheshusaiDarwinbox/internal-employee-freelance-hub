@@ -33,7 +33,7 @@ const setAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
                 console.log("Admin Created");
             });
         const findDepartment = yield department_model_1.DepartmentModel.find({ DID: "D000000" });
-        console.log(findDepartment);
+        // console.log(findDepartment)
         if (findDepartment.length === 0)
             yield department_model_1.DepartmentModel.create({
                 name: "adminDepartment",

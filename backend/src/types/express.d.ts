@@ -4,7 +4,7 @@ declare global {
   namespace Express {
     interface User {
       EID: string;
-      password: string;
+      password?: string;
       role: keyof typeof UserRole;
       email?: string;
       JID: string;

@@ -2,9 +2,19 @@ import { Navbar } from "flowbite-react";
 import ProfileAvatar from "../../../assets/profile-avatar.png";
 import Nav from "./Navbar";
 import { Card } from "flowbite-react";
-import { Link , Outlet} from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { logoutUser } from "../../../redux/slices/authSlice";
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
+  };
   return (
     <>
       {/* Navigation Bar (Main) */}
@@ -14,7 +24,8 @@ const Dashboard = () => {
       <Navbar className="bg-blue-400 shadow px-6 py-6 mt-[90px]">
         <marquee>
           <h1 className="text-xl font-semibold text-gray-800">
-            Your Workplace Hub: Manage Tasks, Track Progress, and Stay Connected!
+            Your Workplace Hub: Manage Tasks, Track Progress, and Stay
+            Connected!
           </h1>
         </marquee>
       </Navbar>
@@ -36,7 +47,7 @@ const Dashboard = () => {
                 { name: "📊 My Activity", link: "/user/my-activity" },
                 { name: "👤 My Profile", link: "/user/my-profile" },
                 { name: "🏦 My Account", link: "/user/my-account" },
-                { name: "🚪 Logout", link: "#logout", isLogout: true },
+                { name: "🚪 Logout", onclick: handleLogout, isLogout: true },
               ].map((item, index) => (
                 <li key={index}>
                   <Link
@@ -57,7 +68,8 @@ const Dashboard = () => {
 
         {/* Main Content (Dynamic Route Changes Here) */}
         <div className="w-full md:w-4/5 p-8">
-          <Outlet /> {/* This will render nested route components dynamically */}
+          <Outlet />{" "}
+          {/* This will render nested route components dynamically */}
         </div>
       </div>
     </>
