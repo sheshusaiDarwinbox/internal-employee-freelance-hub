@@ -1,11 +1,17 @@
-import { FaCheckCircle, FaProjectDiagram, FaUsers, FaClock, FaBuilding } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaProjectDiagram,
+  FaUsers,
+  FaClock,
+  FaBuilding,
+} from "react-icons/fa";
 import aboutImg from "../../assets/about.png";
+import { memo } from "react";
 
 const About = () => {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-y-16">
-        
         {/* Left - Image Section */}
         <div className="md:w-1/2 flex justify-center">
           <img src={aboutImg} alt="Teamwork" className="w-80 md:w-full" />
@@ -17,7 +23,8 @@ const About = () => {
             About Our Internal Freelance System
           </h2>
           <p className="text-gray-600 mt-4 italic text-center md:text-left">
-            Our internal freelance platform enables employees to collaborate and contribute to projects beyond their core responsibilities.
+            Our internal freelance platform enables employees to collaborate and
+            contribute to projects beyond their core responsibilities.
           </p>
 
           {/* Bullet Points */}
@@ -57,4 +64,4 @@ const About = () => {
   );
 };
 
-export default About;
+export default memo(About);

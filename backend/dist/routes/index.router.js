@@ -1,0 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.indexRouter = void 0;
+const express_1 = require("express");
+const deparment_router_1 = require("./deparment.router");
+const user_router_1 = require("./user.router");
+const job_router_1 = require("./job.router");
+const login_router_1 = require("./login.router");
+const userVerify_router_1 = require("./userVerify.router");
+const task_router_1 = require("./task.router");
+exports.indexRouter = (0, express_1.Router)();
+exports.indexRouter.use(deparment_router_1.departmentRouter);
+exports.indexRouter.use(user_router_1.userRouter);
+exports.indexRouter.use(job_router_1.jobRouter);
+exports.indexRouter.use(login_router_1.loginRouter);
+exports.indexRouter.use(userVerify_router_1.verifyRouter);
+exports.indexRouter.use(task_router_1.taskRouter);
