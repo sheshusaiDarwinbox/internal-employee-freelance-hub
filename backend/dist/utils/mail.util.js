@@ -85,7 +85,7 @@ const sendForgotPasswordMail = (data, res) => __awaiter(void 0, void 0, void 0, 
                 "/" +
                 data._id +
                 "/" +
-                forgotVerifyString}>here</a> to reset your password for darwinbox freelance Application</p>`,
+                forgotVerifyString}>here</a> to reset your password</p>`,
         };
         console.log(`${data.redirectUrl +
             "/" +

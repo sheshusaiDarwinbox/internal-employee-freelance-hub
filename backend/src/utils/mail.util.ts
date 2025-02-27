@@ -101,7 +101,7 @@ export const sendForgotPasswordMail = async (
         data._id +
         "/" +
         forgotVerifyString
-      }>here</a> to reset your password for darwinbox freelance Application</p>`,
+      }>here</a> to reset your password</p>`,
     };
 
     console.log(
