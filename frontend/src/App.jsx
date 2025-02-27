@@ -18,6 +18,9 @@ import MyAccount from "./components/User/MyAccount/MyAccount";
 import AdminDashboard from "./components/Admin/Dashboard/Dashboard";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/Resetpassword";
+import ManageEmployees from "./components/Admin/manageEmployees/ManageEmployees";
+import CreateEmployee from "./components/Admin/manageEmployees/CreateEmployee";
+import ViewEmployees from "./components/Admin/manageEmployees/ViewEmployees";
 
 
 /** Layout component for pages that require a Navbar */
@@ -55,10 +58,15 @@ function App() {
           <Route path="my-profile" element={<Profile />} />
           <Route path="my-account" element={<MyAccount/>} />
         </Route>
-
+        
         <Route path="/admin" element={<AdminDashboard/>}>
           <Route index element={<AdminDashboardHome />} />
           <Route path="tasks" element={<ViewAllTasks />} />
+          <Route path="manageEmployees" element={<ManageEmployees />} />
+          <Route path="manageEmployees/createEmployee" element={<CreateEmployee />} />
+          <Route path="manageEmployees/viewEmployees" element={<ViewEmployees />} />
+
+
          </Route>
 
         

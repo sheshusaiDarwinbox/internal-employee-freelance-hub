@@ -31,7 +31,7 @@ const Dashboard = () => {
           <ul className="space-y-2">
             {[
               { name: "✅ Tasks", link: "/admin/tasks" },
-              { name: "👥 Manage Users", link: "#" },
+              { name: "👥 Manage Employees", link: "/admin/manageEmployees" },
               { name: "🏢 Manage Department", link: "#" },
               { name: "🧑‍💼 Manage Managers", link: "#" },
               { name: "🙍‍♂️ My Profile", link: "#" },
