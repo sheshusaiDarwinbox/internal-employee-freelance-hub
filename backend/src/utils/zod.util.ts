@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { JobTypeEnum } from "../models/job.model";
+import { RequestTypeEnum } from "../models/request.model";
 
 export const EIDScheme = z.union([
   z.string().regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
@@ -18,7 +19,13 @@ export const PasswordScheme = z
   .max(255);
 
 export const GetUserSchema = z.object({
-  EID: z
+  ID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+});
+
+export const GetIDSchema = z.object({
+  ID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
@@ -138,7 +145,7 @@ export const CreateTaskZodSchema = z.object({
       "title must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
     ),
   skillsRequired: z.array(z.string()),
-  amount: z.number().int(),
+  amount: z.number().int().gte(0),
   deadline: z
     .string()
     .refine((val) => !isNaN(Date.parse(val)), {
@@ -153,11 +160,15 @@ export const CreateTaskZodSchema = z.object({
     ),
 });
 
-export const assignManagerZodSchema = z.object({
+export const AssignManagerZodSchema = z.object({
   EID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "DID must be alphanumeric" }),
   DID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "DID must be alphanumeric" }),
+});
+
+export const RequestZodSchema = z.object({
+  reqType: z.nativeEnum(RequestTypeEnum),
 });

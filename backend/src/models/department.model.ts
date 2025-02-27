@@ -30,6 +30,7 @@ const departmentSchema = new Schema<Department, DepartmentModelType>({
   teamSize: { type: Number, required: true },
 });
 
+departmentSchema.index({ name: "text" });
 departmentSchema.plugin(paginate);
 
 export const DepartmentModel = model<

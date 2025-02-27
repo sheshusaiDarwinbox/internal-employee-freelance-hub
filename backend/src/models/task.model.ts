@@ -48,6 +48,8 @@ const taskSchema = new Schema<TaskSchema, TaskModel>({
   feedback: { type: String },
 });
 
+taskSchema.index({ title: "text" });
+
 taskSchema.plugin(paginate);
 
 export const Task = model<TaskSchema, PaginateModel<TaskModel>>(

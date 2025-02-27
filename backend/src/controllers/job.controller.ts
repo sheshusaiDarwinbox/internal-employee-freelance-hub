@@ -13,6 +13,7 @@ import { generateId } from "../utils/counterManager.util";
 import { DepartmentModel } from "../models/department.model";
 import { IDs } from "../models/idCounter.model";
 import { sessionHandler } from "../utils/session.util";
+import z from "zod";
 
 export const createJob = sessionHandler(async (req: Request, res: Response) => {
   const data = CreateJobSchema.parse(req.body);
@@ -28,8 +29,8 @@ export const createJob = sessionHandler(async (req: Request, res: Response) => {
 
 export const getAllJobs = sessionHandler(
   async (req: Request, res: Response) => {
-    const { types, page = 0 } = req.query;
-    const filter: any = {};
+    const { types, page = 0, DIDs, search } = req.query;
+    let filter: any = {};
     const pageNum = Number(page);
 
     if (types) {
@@ -37,7 +38,25 @@ export const getAllJobs = sessionHandler(
       JobsArraySchema.parse(typesArray);
       filter.type = { $in: typesArray };
     }
+    if (DIDs) {
+      z.array(
+        z
+          .string()
+          .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
+      ).parse(DIDs);
+      filter.DID = { $in: DIDs };
+    }
 
+    if (search) {
+      z.string().regex(
+        /^[a-zA-Z0-9\s.,!?()&]+$/,
+        "search must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
+      );
+      filter = {
+        ...filter,
+        $text: { $search: search },
+      };
+    }
     const jobs = await JobModel.paginate(filter, {
       offset: pageNum * 10,
       limit: 10,
@@ -73,6 +92,6 @@ export const getJobById = sessionHandler(
 export const jobControlRouter = Router();
 
 jobControlRouter.post("/create", checkAuth([UserRole.Admin]), createJob);
-jobControlRouter.get("", getAllJobs);
-jobControlRouter.delete("/:ID", deleteJobByID);
-jobControlRouter.get("/:ID", getJobById);
+jobControlRouter.get("", checkAuth([]), getAllJobs);
+jobControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteJobByID);
+jobControlRouter.get("/:ID", checkAuth([]), getJobById);

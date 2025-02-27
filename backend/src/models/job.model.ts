@@ -25,6 +25,7 @@ export const jobSchema = new Schema<Job, JobModelType>({
   DID: { type: Schema.Types.String, ref: "Department", required: true },
 });
 
+jobSchema.index({ title: "text" });
 jobSchema.plugin(paginate);
 
 export const JobModel = model<Job, PaginateModel<JobModelType>>(

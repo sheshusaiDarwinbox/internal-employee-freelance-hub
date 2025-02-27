@@ -12,7 +12,6 @@ import { generateId } from "../utils/counterManager.util";
 import { DepartmentModel } from "../models/department.model";
 import { generateRandomPassword, hashPassword } from "../utils/password.util";
 import { IDs } from "../models/idCounter.model";
-import { error } from "../utils/error.util";
 import { sendVerificationEmail } from "../utils/mail.util";
 import { sessionHandler } from "../utils/session.util";
 
