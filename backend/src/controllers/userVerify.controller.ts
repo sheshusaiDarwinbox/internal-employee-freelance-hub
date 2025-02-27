@@ -92,7 +92,7 @@ userVerifyController.post(
         { email: forgotInfo.email },
         { password: hashedPassword }
       );
-
+      console.log("result :",result);
       if (!result) throw new Error("Password reset failed");
       await forgotPassword.deleteOne({ _id: ID });
       const filePath = join(
@@ -100,7 +100,7 @@ userVerifyController.post(
         "../public/passwordResetSuccessful.html"
       );
       const htmlContent = await readFile(filePath, "utf-8");
-      res.status(HttpStatusCodes.OK).send(htmlContent);
+      res.status(HttpStatusCodes.OK).json({ msg: "Password reset successful" });;
     } catch (err) {
       error(err, res);
     }

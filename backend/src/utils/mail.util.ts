@@ -97,17 +97,17 @@ export const sendForgotPasswordMail = async (
       subject: "Forgot Password",
       html: `<p>Hello!</p><br><p>click <a href=${
         data.redirectUrl +
-        "/forgot-password/" +
+        "/" +
         data._id +
         "/" +
         forgotVerifyString
-      }>here</a> to reset your password</p>`,
+      }>here</a> to reset your password for darwinbox freelance Application</p>`,
     };
 
     console.log(
       `${
         data.redirectUrl +
-        "/forgot-password/" +
+        "/" +
         data._id +
         "/" +
         forgotVerifyString

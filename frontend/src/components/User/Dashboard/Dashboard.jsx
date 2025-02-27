@@ -24,7 +24,8 @@ const Dashboard = () => {
         <div className="w-full md:w-1/5 p-8 bg-blue-200 bg-opacity-90 backdrop-blur-lg shadow-md pt-20">
           <div className="flex flex-col items-center">
             <img src={ProfileAvatar} alt="Profile Avatar" className="h-40" />
-            <h2 className="text-lg font-semibold text-gray-700">User Name</h2>
+            <h2 className="text-2xl font-semibold text-gray-700">John Doe</h2>
+            <h2 className="text-lg font-semibold text-gray-700">Employee</h2>
           </div>
           <Card className="mt-6 shadow-sm border border-gray-200">
             <ul className="space-y-2">
@@ -34,6 +35,7 @@ const Dashboard = () => {
                 { name: "📝 View All Tasks", link: "/user/view-all-tasks" },
                 { name: "📊 My Activity", link: "/user/my-activity" },
                 { name: "👤 My Profile", link: "/user/my-profile" },
+                { name: "🏦 My Account", link: "/user/my-account" },
                 { name: "🚪 Logout", link: "#logout", isLogout: true },
               ].map((item, index) => (
                 <li key={index}>

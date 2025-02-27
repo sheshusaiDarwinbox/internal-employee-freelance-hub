@@ -66,9 +66,12 @@ const MyActivity = () => {
       <Modal 
       show={modalOpen} 
       onClose={() => setModalOpen(false)} 
-      size="lg"
-      className="pt-[10%] shadow-2xl rounded-lg bg-black"
+      size="md"
+      className="pt-[10%] shadow-2xl rounded-lg  inset-0 bg-black bg-opacity-50"
     >
+       {/* Override Modal Background */}
+  {/* <div className="fixed inset-0 bg-black bg-opacity-50"></div> */}
+
       <Modal.Header className="text-xl font-semibold text-gray-900 border-b pb-3 p-5">
         Submit Task
       </Modal.Header>

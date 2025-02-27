@@ -1,6 +1,6 @@
 import { Alert} from "flowbite-react";
 
-export const DashboardHome = () => {
+const DashboardHome = () => {
   return (
     <div>
          <div className="flex-1 text-center p-8 w-full">
@@ -14,3 +14,5 @@ export const DashboardHome = () => {
     </div>
   )
 }
+
+export default DashboardHome;

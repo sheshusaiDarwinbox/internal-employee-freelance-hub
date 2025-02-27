@@ -23,6 +23,7 @@ export const setAdmin = async () => {
       });
 
     const findDepartment = await DepartmentModel.find({ DID: "D000000" });
+    console.log(findDepartment)
     if (findDepartment.length === 0)
       await DepartmentModel.create({
         name: "adminDepartment",
@@ -41,7 +42,7 @@ export const setAdmin = async () => {
         DID: "D000000",
         JID: "J000000",
         salary: 0,
-        type: "Full Time",
+        type: "FullTime",
       }).then(() => {
         console.log("Admin Job Created");
       });

@@ -1,46 +1,77 @@
-import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser} from "../redux/slices/authSlice";
+import { useState, useEffect } from "react";
+import { useNavigate ,Link } from "react-router-dom";
 
 const Login = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user, isLoading, error} = useSelector(
+    (state) => state.auth
+  );
+  const [formEmail, setFormEmail] = useState("");
+  const [formPassword, setFormPassword] = useState("");
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
-  const handleSubmit = (e) => {
+  const handleLoginSubmit = (e) => {
     e.preventDefault();
-    console.log("Login Data:", formData);
+    dispatch(loginUser({ email: formEmail, password: formPassword }));
   };
+
+
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === "Admin") {
+        navigate("/admin");
+      } else {
+        navigate("/user");
+      }
+    }
+  }, [user, navigate]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-16 rounded-lg shadow-lg w-[30rem]">
-        <h2 className="text-3xl font-semibold text-center mb-8">Login</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <input
-            type="email"
-            name="email"
-            placeholder="Email/Emp ID"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full border-b-2 bg-gray-50 border-gray-300 focus:outline-none focus:border-blue-500 rounded-lg px-4 py-4 text-lg"
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full border-b-2 bg-gray-50 border-gray-300 focus:outline-none focus:border-blue-500 rounded-lg px-4 py-4 text-lg"
-            required
-          />
-          <div className="text-center">
-          <button type="submit" className="w-1/2 bg-blue-600 text-white py-4 text-lg rounded-lg hover:bg-blue-700 transition duration-300">
-            Login
-          </button>
-          </div>
-        </form>
+      <div className="bg-white p-10 rounded-lg shadow-lg w-[30rem]">
+        
+          <>
+            <h2 className="text-3xl font-semibold text-center mb-6 text-gray-700">Login</h2>
+            {error && <p className="text-red-500 text-center my-2 mb-4">{error}</p>}
+            {user && <p className="text-green-500 text-center">Welcome, {user.email}</p>}
+            <form onSubmit={handleLoginSubmit} className="space-y-6">
+              <input
+                type="text"
+                placeholder="Email/Emp ID"
+                value={formEmail}
+                onChange={(e) => setFormEmail(e.target.value)}
+                required
+                className="w-full border-b-2 rounded-md border-gray-300 py-3 px-2 focus:outline-none focus:border-blue-400 transition duration-300"
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={formPassword}
+                onChange={(e) => setFormPassword(e.target.value)}
+                required
+                className="w-full border-b-2 rounded-md border-gray-300 py-3 px-2 focus:outline-none focus:border-blue-400 transition duration-300"
+              />
+
+              <div className="flex justify-between text-sm text-blue-600 cursor-pointer">
+              <Link to="/forgot-password">Forgot Password?</Link>
+              </div>
+              <div className="text-center">
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 text-white py-3 text-lg rounded-lg hover:bg-blue-700 transition duration-300 shadow-md hover:shadow-lg"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Logging in..." : "Login"}
+                </button>
+              </div>
+            </form>
+          </>
+        
+         
       </div>
     </div>
   );

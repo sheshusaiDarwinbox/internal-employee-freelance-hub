@@ -12,9 +12,10 @@ export const createApp = () => {
   const app = express();
   app.use(
     cors({
-      origin: "*",
-      allowedHeaders: "Access-Control-Allow-Origin",
+      origin: "http://localhost:5173",
+      allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
     })
   );
   app.use(express.static("./public"));
