@@ -49,29 +49,6 @@ function App() {
     <Suspense fallback={<Loading />}>
       <Routes>
         {/* Root routes with Navbar */}
-        {/* <Route
-          path="/"
-          element={
-            <Layout>
-              <Home />
-            </Layout>
-          }
-        />
-        <Route
-          path="/about"
-          element={
-            <Layout>
-              <About />
-            </Layout>
-          }
-        />
-        <Route path="/login" element={<Login />} />
-
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route
-          path="/reset-password/:ID/:forgotVerifyString"
-          element={<ResetPassword />}
-        /> */}
 
         <Route
           path="/"

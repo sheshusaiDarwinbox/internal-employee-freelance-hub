@@ -64,6 +64,7 @@ exports.deleteUserByID = (0, session_util_1.sessionHandler)((req, res) => __awai
 }));
 exports.getUserById = (0, session_util_1.sessionHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { ID } = req.params;
+    console.log(ID);
     zod_util_1.GetUserSchema.parse({ EID: ID });
     const user = yield userAuth_model_1.User.findOne({ EID: ID });
     if (!user)

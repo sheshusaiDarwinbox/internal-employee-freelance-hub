@@ -19,7 +19,7 @@ export const PasswordScheme = z
   .max(255);
 
 export const GetUserSchema = z.object({
-  ID: z
+  EID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });

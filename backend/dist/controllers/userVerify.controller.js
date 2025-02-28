@@ -42,6 +42,7 @@ exports.userVerifyController.get("/verify/:ID/:verifyString", (0, session_util_1
     res.status(httpsStatusCodes_util_1.HttpStatusCodes.OK).send(htmlContent);
 })));
 exports.userVerifyController.post("/forgot-password", (0, session_util_1.sessionHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("/forgot-password called to get the link for forgot password");
     zod_util_1.ForgotPasswordZodSchema.parse(req.body);
     const { email, redirectUrl } = req.body;
     const user = yield userAuth_model_1.User.findOne({ email: email });
@@ -54,6 +55,7 @@ exports.userVerifyController.post("/forgot-password", (0, session_util_1.session
     }, res);
 })));
 exports.userVerifyController.post("/forgot-password/:ID/:forgotVerifyString", (0, session_util_1.sessionHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("forgot password reset called");
     const { ID, forgotVerifyString } = req.params;
     zod_util_1.ForgotPasswordResetZodSchema.parse(req.body);
     const { newPassword, confirmPassword } = req.body;

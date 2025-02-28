@@ -19,7 +19,7 @@ exports.PasswordScheme = zod_1.z
 })
     .max(255);
 exports.GetUserSchema = zod_1.z.object({
-    ID: zod_1.z
+    EID: zod_1.z
         .string()
         .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });

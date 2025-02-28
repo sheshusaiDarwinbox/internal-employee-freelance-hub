@@ -81,6 +81,8 @@ export const deleteUserByID = sessionHandler(
 export const getUserById = sessionHandler(
   async (req: Request, res: Response) => {
     const { ID } = req.params;
+
+    console.log(ID);
     GetUserSchema.parse({ EID: ID });
     const user = await User.findOne({ EID: ID });
     if (!user) throw new Error("Bad Request");

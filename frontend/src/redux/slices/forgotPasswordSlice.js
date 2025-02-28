@@ -1,4 +1,3 @@
-
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -44,7 +43,9 @@ export const resetPassword = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to reset password");
+      return rejectWithValue(
+        error.response?.data || "Failed to reset password"
+      );
     }
   }
 );

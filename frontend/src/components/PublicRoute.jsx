@@ -5,7 +5,11 @@ import { Navigate } from "react-router-dom";
 const PublicRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
 
-  console.log(user);
+  // if (children?.type?.name === "ResetPassword") return children;
+  if (location.pathname.includes("reset-password")) {
+    return children;
+  }
+  console.log("hello world");
   if (!user || !user.role) return children;
   if (user.role === "Employee") {
     return <Navigate to="/user" />;

@@ -74,6 +74,9 @@ const sendForgotPasswordMail = (data, res) => __awaiter(void 0, void 0, void 0, 
         html: `<p>Hello!</p><br><p>click <a href=${data.redirectUrl + "/" + data._id + "/" + forgotVerifyString}>here</a> to reset your password</p>`,
     };
     console.log(`${data.redirectUrl + "/" + data._id + "/" + forgotVerifyString}`);
+    const d = yield forgotPassword_model_1.forgotPassword.findOne({ _id: data._id });
+    if (d)
+        yield forgotPassword_model_1.forgotPassword.deleteOne({ _id: data._id });
     const result = yield forgotPassword_model_1.forgotPassword.create({
         email: data.email,
         forgotVerifyString: hashedforgotVerifyString,

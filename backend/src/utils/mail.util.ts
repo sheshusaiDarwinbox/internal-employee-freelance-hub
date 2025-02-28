@@ -95,6 +95,8 @@ export const sendForgotPasswordMail = async (
     `${data.redirectUrl + "/" + data._id + "/" + forgotVerifyString}`
   );
 
+  const d = await forgotPassword.findOne({ _id: data._id });
+  if (d) await forgotPassword.deleteOne({ _id: data._id });
   const result = await forgotPassword.create({
     email: data.email,
     forgotVerifyString: hashedforgotVerifyString,
