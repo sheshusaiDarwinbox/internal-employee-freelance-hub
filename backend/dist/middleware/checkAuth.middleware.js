@@ -10,7 +10,7 @@ const checkAuth = (roles) => {
                 .status(httpsStatusCodes_util_1.HttpStatusCodes.UNAUTHORIZED)
                 .json({ message: "Unauthorized" });
         }
-        if (roles === undefined)
+        if (roles === undefined || (roles === null || roles === void 0 ? void 0 : roles.length) === 0)
             return next();
         for (let role of roles) {
             if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== role)

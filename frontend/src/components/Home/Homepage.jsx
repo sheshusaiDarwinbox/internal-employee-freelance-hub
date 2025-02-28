@@ -2,6 +2,7 @@ import { Button } from "flowbite-react";
 import HeroImg from "../../assets/hero-img.png";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { memo } from "react";
 
 const Homepage = () => {
   return (
@@ -14,13 +15,14 @@ const Homepage = () => {
             Elegant and creative solutions
           </h2>
           <p className="text-gray-600 text-lg mt-4">
-            Bringing together talented professionals to craft exceptional initiatives
+            Bringing together talented professionals to craft exceptional
+            initiatives
           </p>
           <div className="mt-6 flex justify-center md:justify-start space-x-4">
             <Link to="/login">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 text-xl rounded-full">
-              Get Started
-            </Button>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 text-xl rounded-full">
+                Get Started
+              </Button>
             </Link>
           </div>
         </div>
@@ -41,10 +43,9 @@ const Homepage = () => {
             }}
           />
         </div>
-        
       </section>
     </div>
   );
 };
 
-export default Homepage;
+export default memo(Homepage);

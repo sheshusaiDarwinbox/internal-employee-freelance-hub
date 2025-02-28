@@ -1,23 +1,48 @@
-import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { sendForgotPasswordEmail } from "../redux/slices/forgotPasswordSlice";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { memo } from "react";
+import axios from "axios";
+const API_BASE_URL = "http://localhost:3000/api"; // Update with your backend URL
+const redirectUrl = "http://localhost:5173/reset-password"; //  frontend URL for password reset
 
 const ForgotPassword = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isLoading, error, successMessage } = useSelector(
-    (state) => state.forgotPassword
-  );
+
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMeassage] = useState(null);
   const [email, setEmail] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const redirectUrl = "http://localhost:5173/reset-password"; //  frontend URL for password reset
-    dispatch(sendForgotPasswordEmail({ email, redirectUrl }));
-    alert("Reset Mail sent ")
-    navigate("/login");
+    setLoading(true);
+    axios
+      .post(
+        `${API_BASE_URL}/forgot-password/`,
+        { email, redirectUrl },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then((data) => {
+        setLoading(false);
+        setSuccessMeassage("Forgot Mail sent sucessfully");
+      })
+      .catch((err) => {
+        setLoading(false);
+        setError("failed to send Mail");
+      });
   };
+
+  useEffect(() => {
+    if (successMessage) {
+      alert(successMessage);
+      console.log("success message ", successMessage);
+      navigate("/login");
+    }
+  }, [successMessage]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -55,4 +80,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default memo(ForgotPassword);

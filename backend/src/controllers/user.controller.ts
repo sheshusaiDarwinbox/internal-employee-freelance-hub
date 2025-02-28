@@ -12,7 +12,6 @@ import { generateId } from "../utils/counterManager.util";
 import { DepartmentModel } from "../models/department.model";
 import { generateRandomPassword, hashPassword } from "../utils/password.util";
 import { IDs } from "../models/idCounter.model";
-import { error } from "../utils/error.util";
 import { sendVerificationEmail } from "../utils/mail.util";
 import { sessionHandler } from "../utils/session.util";
 
@@ -82,6 +81,8 @@ export const deleteUserByID = sessionHandler(
 export const getUserById = sessionHandler(
   async (req: Request, res: Response) => {
     const { ID } = req.params;
+
+    console.log(ID);
     GetUserSchema.parse({ EID: ID });
     const user = await User.findOne({ EID: ID });
     if (!user) throw new Error("Bad Request");

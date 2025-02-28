@@ -11,7 +11,7 @@ var UserRole;
     UserRole["Employee"] = "Employee";
     UserRole["Other"] = "Other";
     UserRole["Admin"] = "Admin";
-    UserRole["ProjectManager"] = "ProjectManager";
+    UserRole["Manager"] = "Manager";
 })(UserRole || (exports.UserRole = UserRole = {}));
 exports.userAuthSchema = new mongoose_1.Schema({
     EID: { type: String, index: true, unique: true, required: true },

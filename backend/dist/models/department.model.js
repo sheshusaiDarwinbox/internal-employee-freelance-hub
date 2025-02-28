@@ -25,7 +25,11 @@ const departmentSchema = new mongoose_1.Schema({
         required: true,
         enum: DepartmentEnum,
     },
+    ManagerID: {
+        type: String,
+    },
     teamSize: { type: Number, required: true },
 });
+departmentSchema.index({ name: "text" });
 departmentSchema.plugin(mongoose_paginate_v2_1.default);
 exports.DepartmentModel = (0, mongoose_1.model)("Department", departmentSchema);

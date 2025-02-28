@@ -23,7 +23,7 @@ export const setAdmin = async () => {
       });
 
     const findDepartment = await DepartmentModel.find({ DID: "D000000" });
-    console.log(findDepartment)
+    // console.log(findDepartment)
     if (findDepartment.length === 0)
       await DepartmentModel.create({
         name: "adminDepartment",

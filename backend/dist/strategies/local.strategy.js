@@ -56,7 +56,7 @@ passport_1.default.use(new passport_local_1.Strategy({
             JID: user.get("JID"),
             DID: user.get("DID"),
             ManagerID: user.get("ManagerID"),
-            password: user.get("password"),
+            // password: user.get("password"),
         };
         done(null, sessionUser);
     }

@@ -1,24 +1,37 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import RootNavbar from "./components/Navbar";
-import Home from "./components/Home/Homepage";
-import Login from "./components/Login"; // Importing the Login component
-import About from "./components/Home/About";
-// import DashboardLayout from "./components/User/Dashboard/DashboardLayout";
-import Dashboard from "./components/User/Dashboard/Dashboard";
-import Rewards from "./components/User/Rewards/Rewards";
-import ViewAllTasks from "./components/User/ViewAllTasks/ViewAllTasks";
-import MyTasks from "./components/User/MyTasks/MyTasks";
-import MyActivity from "./components/User/MyActivity/MyActivity";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import PropTypes from "prop-types";
-import  DashboardHome  from "./components/User/Dashboard/DashboardHome";
-import  AdminDashboardHome  from "./components/Admin/Dashboard/DashboardHome";
+import DepartmentManagement from "./components/Admin/ManageDepartment/ManageDepartment";
 
-import Profile from "./components/User/Profile/Profile";
-import MyAccount from "./components/User/MyAccount/MyAccount";
-import AdminDashboard from "./components/Admin/Dashboard/Dashboard";
-import ForgotPassword from "./components/ForgotPassword";
-import ResetPassword from "./components/Resetpassword";
-import ManageEmployees from "./components/Admin/manageEmployees/ManageEmployees";
+const RootNavbar = lazy(() => import("./components/Navbar"));
+const Home = lazy(() => import("./components/Home/Homepage"));
+const About = lazy(() => import("./components/Home/About"));
+const Login = lazy(() => import("./components/Login"));
+const Dashboard = lazy(() => import("./components/User/Dashboard/Dashboard"));
+const Rewards = lazy(() => import("./components/User/Rewards/Rewards"));
+const ViewAllTasks = lazy(() =>
+  import("./components/User/ViewAllTasks/ViewAllTasks")
+);
+const MyTasks = lazy(() => import("./components/User/MyTasks/MyTasks"));
+const MyActivity = lazy(() =>
+  import("./components/User/MyActivity/MyActivity")
+);
+const DashboardHome = lazy(() =>
+  import("./components/User/Dashboard/DashboardHome")
+);
+const AdminDashboardHome = lazy(() =>
+  import("./components/Admin/Dashboard/DashboardHome")
+);
+const Profile = lazy(() => import("./components/User/Profile/Profile"));
+const MyAccount = lazy(() => import("./components/User/MyAccount/MyAccount"));
+const AdminDashboard = lazy(() =>
+  import("./components/Admin/Dashboard/Dashboard")
+);
+const ForgotPassword = lazy(() => import("./components/ForgotPassword"));
+const ResetPassword = lazy(() => import("./components/Resetpassword"));
+const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
+const Loading = lazy(() => import("./components/Loading"));
+const PublicRoute = lazy(() => import("./components/PublicRoute"));import ManageEmployees from "./components/Admin/manageEmployees/ManageEmployees";
 import CreateEmployee from "./components/Admin/manageEmployees/CreateEmployee";
 import ViewEmployees from "./components/Admin/manageEmployees/ViewEmployees";
 
@@ -36,30 +49,69 @@ Layout.propTypes = {
 
 function App() {
   return (
-    <BrowserRouter>
+    <Suspense fallback={<Loading />}>
       <Routes>
         {/* Root routes with Navbar */}
-        <Route path="/" element={<Layout><Home /></Layout>} />
-        <Route path="/about" element={<Layout><About /></Layout>} />
-        <Route path="/login" element={<Login />} />
 
-        <Route path="/forgot-password" element={<ForgotPassword/>} />
         <Route
-          path="/reset-password/:ID/:forgotVerifyString"
-          element={<ResetPassword />}/>
+          path="/"
+          element={
+            <PublicRoute>
+              <Outlet />
+            </PublicRoute>
+          }
+        >
+          <Route
+            path="/"
+            element={
+              <Layout>
+                <Home />
+              </Layout>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <Layout>
+                <About />
+              </Layout>
+            }
+          />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/reset-password/:ID/:forgotVerifyString"
+            element={<ResetPassword />}
+          />
+        </Route>
 
         {/* User Dashboard with Nested Routes */}
-        <Route path="/user" element={<Dashboard />}>
+
+        <Route
+          path="/user"
+          element={
+            <ProtectedRoute role="Employee">
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<DashboardHome />} />
           <Route path="rewards" element={<Rewards />} />
           <Route path="view-all-tasks" element={<ViewAllTasks />} />
           <Route path="my-tasks" element={<MyTasks />} />
           <Route path="my-activity" element={<MyActivity />} />
           <Route path="my-profile" element={<Profile />} />
-          <Route path="my-account" element={<MyAccount/>} />
+          <Route path="my-account" element={<MyAccount />} />
         </Route>
         
-        <Route path="/admin" element={<AdminDashboard/>}>
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="Admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<AdminDashboardHome />} />
           <Route path="tasks" element={<ViewAllTasks />} />
           <Route path="manageEmployees" element={<ManageEmployees />} />
@@ -67,11 +119,11 @@ function App() {
           <Route path="manageEmployees/viewEmployees" element={<ViewEmployees />} />
 
 
-         </Route>
-
-        
+          <Route path="departments" element={<DepartmentManagement />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
+    </Suspense>
   );
 }
 

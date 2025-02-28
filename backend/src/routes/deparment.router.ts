@@ -5,8 +5,4 @@ import { UserRole } from "../models/userAuth.model";
 
 export const departmentRouter = Router();
 
-departmentRouter.use(
-  "/departments",
-  checkAuth([UserRole.Admin]),
-  departmentControlRouter
-);
+departmentRouter.use("/departments", departmentControlRouter);

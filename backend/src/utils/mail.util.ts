@@ -42,7 +42,10 @@ export const sendVerificationEmail = async (
     subject: "Verify your Account", // Subject line
     html: `<p>click <a href=${
       baseUrl + "/api/verify/" + data._id + "/" + verifyString
-    }>here</a><b></b> to activate your Account</p>`,
+    }>here</a><b></b> to activate your Account</p>
+    <br> Your EID is: ${data.EID} <br>
+    Your password is: ${data.password} 
+    `,
   };
 
   console.log(`${baseUrl + "/api/verify/" + data._id + "/" + verifyString}`);
@@ -84,24 +87,16 @@ export const sendForgotPasswordMail = async (
     to: data.email,
     subject: "Forgot Password",
     html: `<p>Hello!</p><br><p>click <a href=${
-      data.redirectUrl +
-      "/forgot-password/" +
-      data._id +
-      "/" +
-      forgotVerifyString
+      data.redirectUrl + "/" + data._id + "/" + forgotVerifyString
     }>here</a> to reset your password</p>`,
   };
 
   console.log(
-    `${
-      data.redirectUrl +
-      "/forgot-password/" +
-      data._id +
-      "/" +
-      forgotVerifyString
-    }`
+    `${data.redirectUrl + "/" + data._id + "/" + forgotVerifyString}`
   );
 
+  const d = await forgotPassword.findOne({ _id: data._id });
+  if (d) await forgotPassword.deleteOne({ _id: data._id });
   const result = await forgotPassword.create({
     email: data.email,
     forgotVerifyString: hashedforgotVerifyString,

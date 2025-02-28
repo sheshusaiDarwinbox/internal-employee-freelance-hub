@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
 import { DepartmentModel } from "../models/department.model";
 import {
-  assignManagerZodSchema,
+  AssignManagerZodSchema,
   CreateDepartmentSchema,
   DepartmentArraySchema,
   GetDepartmentSchema,
@@ -11,10 +11,10 @@ import { Router } from "express";
 import { generateId } from "../utils/counterManager.util";
 import { Department } from "../types/department.types";
 import { IDs } from "../models/idCounter.model";
-import { error } from "../utils/error.util";
-import { User } from "../models/userAuth.model";
+import { User, UserRole } from "../models/userAuth.model";
 import { UserAuth } from "../types/userAuth.types";
 import { sessionHandler } from "../utils/session.util";
+import { checkAuth } from "../middleware/checkAuth.middleware";
 
 export const createDepartment = sessionHandler(
   async (req: Request, res: Response) => {
@@ -29,13 +29,17 @@ export const createDepartment = sessionHandler(
 
 export const getAllDepartments = sessionHandler(
   async (req: Request, res: Response) => {
-    const { types, page = 0 } = req.query;
+    const { types, page = 0, search = "" } = req.query;
     const filter: any = {};
     const pageNum = Number(page);
     if (types) {
       const typesArray = (types as string).split(",");
       DepartmentArraySchema.parse(typesArray);
       filter.type = { $in: typesArray };
+    }
+
+    if (search !== "") {
+      filter.$text = { $search: search };
     }
 
     const departments = await DepartmentModel.paginate(filter, {
@@ -72,7 +76,7 @@ export const getDepartmentByID = sessionHandler(
 
 export const assignManagerToDepartment = sessionHandler(
   async (req: Request, res: Response) => {
-    const data = assignManagerZodSchema.parse(req.body);
+    const data = AssignManagerZodSchema.parse(req.body);
     const user: UserAuth | null = await User.findOne({ EID: data.EID });
     const department: Department | null = await DepartmentModel.findOne({
       DID: data.DID,
@@ -103,8 +107,20 @@ export const assignManagerToDepartment = sessionHandler(
 
 export const departmentControlRouter = Router();
 
-departmentControlRouter.post("/create", createDepartment);
-departmentControlRouter.get("", getAllDepartments);
-departmentControlRouter.delete("/:ID", deleteDepartmentByID);
-departmentControlRouter.get("/:ID", getDepartmentByID);
-departmentControlRouter.post("/assign-manager", assignManagerToDepartment);
+departmentControlRouter.post(
+  "/create",
+  checkAuth([UserRole.Admin]),
+  createDepartment
+);
+departmentControlRouter.get("", checkAuth([]), getAllDepartments);
+departmentControlRouter.delete(
+  "/:ID",
+  checkAuth([UserRole.Admin]),
+  deleteDepartmentByID
+);
+departmentControlRouter.get("/:ID", checkAuth([]), getDepartmentByID);
+departmentControlRouter.post(
+  "/assign-manager",
+  checkAuth([UserRole.Admin]),
+  assignManagerToDepartment
+);

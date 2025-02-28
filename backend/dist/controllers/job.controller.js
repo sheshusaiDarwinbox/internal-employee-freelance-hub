@@ -8,6 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.jobControlRouter = exports.getJobById = exports.deleteJobByID = exports.getAllJobs = exports.createJob = void 0;
 const httpsStatusCodes_util_1 = require("../utils/httpsStatusCodes.util");
@@ -19,81 +22,68 @@ const userAuth_model_1 = require("../models/userAuth.model");
 const counterManager_util_1 = require("../utils/counterManager.util");
 const department_model_1 = require("../models/department.model");
 const idCounter_model_1 = require("../models/idCounter.model");
-const error_util_1 = require("../utils/error.util");
-const createJob = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const data = zod_util_1.CreateJobSchema.parse(req.body);
-        const Department = yield department_model_1.DepartmentModel.findOne({ DID: data.DID });
-        if (!Department) {
-            throw new Error("Department not found");
-        }
-        const JID = yield (0, counterManager_util_1.generateId)(idCounter_model_1.IDs.JID);
-        const job = yield job_model_1.JobModel.create(Object.assign(Object.assign({}, data), { JID }));
-        if (!job)
-            throw new Error("Job not created");
-        res.status(201).json(job);
+const session_util_1 = require("../utils/session.util");
+const zod_1 = __importDefault(require("zod"));
+exports.createJob = (0, session_util_1.sessionHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const data = zod_util_1.CreateJobSchema.parse(req.body);
+    const Department = yield department_model_1.DepartmentModel.findOne({ DID: data.DID });
+    if (!Department) {
+        throw new Error("Department not found");
     }
-    catch (err) {
-        (0, error_util_1.error)(err, res);
+    const JID = yield (0, counterManager_util_1.generateId)(idCounter_model_1.IDs.JID);
+    const job = yield job_model_1.JobModel.create(Object.assign(Object.assign({}, data), { JID }));
+    if (!job)
+        throw new Error("Job not created");
+    res.status(201).json(job);
+}));
+exports.getAllJobs = (0, session_util_1.sessionHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { types, page = 0, DIDs, search } = req.query;
+    let filter = {};
+    const pageNum = Number(page);
+    if (types) {
+        const typesArray = types.split(",");
+        zod_util_1.JobsArraySchema.parse(typesArray);
+        filter.type = { $in: typesArray };
     }
-});
-exports.createJob = createJob;
-const getAllJobs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { types, page = 0 } = req.query;
-        const filter = {};
-        const pageNum = Number(page);
-        if (types) {
-            const typesArray = types.split(",");
-            zod_util_1.JobsArraySchema.parse(typesArray);
-            filter.type = { $in: typesArray };
-        }
-        const jobs = yield job_model_1.JobModel.paginate(filter, {
-            offset: pageNum * 10,
-            limit: 10,
-        });
-        res.status(httpsStatusCodes_util_1.HttpStatusCodes.OK).send(jobs);
+    if (DIDs) {
+        zod_1.default.array(zod_1.default
+            .string()
+            .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })).parse(DIDs);
+        filter.DID = { $in: DIDs };
     }
-    catch (err) {
-        (0, error_util_1.error)(err, res);
+    if (search) {
+        zod_1.default.string().regex(/^[a-zA-Z0-9\s.,!?()&]+$/, "search must be alphanumeric with grammar notations (e.g., spaces, punctuation).");
+        filter = Object.assign(Object.assign({}, filter), { $text: { $search: search } });
     }
-});
-exports.getAllJobs = getAllJobs;
-const deleteJobByID = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { ID } = req.params;
-        zod_util_1.GetJobSchema.parse({ JID: ID });
-        const job = yield job_model_1.JobModel.findOne({
-            JID: ID,
-        });
-        if (!job)
-            throw new Error("Bad Request");
-        const result = yield job_model_1.JobModel.deleteOne({ JID: ID });
-        if (result.acknowledged === false)
-            throw new Error("Job not deleted");
-        res.status(httpsStatusCodes_util_1.HttpStatusCodes.OK).send(job);
-    }
-    catch (err) {
-        (0, error_util_1.error)(err, res);
-    }
-});
-exports.deleteJobByID = deleteJobByID;
-const getJobById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { ID } = req.params;
-        zod_util_1.GetJobSchema.parse({ JID: ID });
-        const job = yield job_model_1.JobModel.findOne({ JID: ID });
-        if (!job)
-            throw new Error("Bad Request");
-        res.status(httpsStatusCodes_util_1.HttpStatusCodes.OK).send(job);
-    }
-    catch (err) {
-        (0, error_util_1.error)(err, res);
-    }
-});
-exports.getJobById = getJobById;
+    const jobs = yield job_model_1.JobModel.paginate(filter, {
+        offset: pageNum * 10,
+        limit: 10,
+    });
+    res.status(httpsStatusCodes_util_1.HttpStatusCodes.OK).send(jobs);
+}));
+exports.deleteJobByID = (0, session_util_1.sessionHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { ID } = req.params;
+    zod_util_1.GetJobSchema.parse({ JID: ID });
+    const job = yield job_model_1.JobModel.findOne({
+        JID: ID,
+    });
+    if (!job)
+        throw new Error("Bad Request");
+    const result = yield job_model_1.JobModel.deleteOne({ JID: ID });
+    if (result.acknowledged === false)
+        throw new Error("Job not deleted");
+    res.status(httpsStatusCodes_util_1.HttpStatusCodes.OK).send(job);
+}));
+exports.getJobById = (0, session_util_1.sessionHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { ID } = req.params;
+    zod_util_1.GetJobSchema.parse({ JID: ID });
+    const job = yield job_model_1.JobModel.findOne({ JID: ID });
+    if (!job)
+        throw new Error("Bad Request");
+    res.status(httpsStatusCodes_util_1.HttpStatusCodes.OK).send(job);
+}));
 exports.jobControlRouter = (0, express_1.Router)();
 exports.jobControlRouter.post("/create", (0, checkAuth_middleware_1.checkAuth)([userAuth_model_1.UserRole.Admin]), exports.createJob);
-exports.jobControlRouter.get("", exports.getAllJobs);
-exports.jobControlRouter.delete("/:ID", exports.deleteJobByID);
-exports.jobControlRouter.get("/:ID", exports.getJobById);
+exports.jobControlRouter.get("", (0, checkAuth_middleware_1.checkAuth)([]), exports.getAllJobs);
+exports.jobControlRouter.delete("/:ID", (0, checkAuth_middleware_1.checkAuth)([userAuth_model_1.UserRole.Admin]), exports.deleteJobByID);
+exports.jobControlRouter.get("/:ID", (0, checkAuth_middleware_1.checkAuth)([]), exports.getJobById);

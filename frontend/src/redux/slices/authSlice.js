@@ -1,4 +1,3 @@
-
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -10,12 +9,17 @@ export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      console.log({email,password});
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, { EID: email, password }, { 
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true });
+      console.log({ email, password });
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/login`,
+        { EID: email, password },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
       return response.data;
     } catch (error) {
       console.error("Login Error:", error.response?.data);
@@ -28,7 +32,11 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
-      await axios.post(`${API_BASE_URL}/logout`, {}, { withCredentials: true });
+      await axios.get(
+        `${API_BASE_URL}/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
       return null;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Logout failed");
@@ -36,19 +44,16 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
-
-
 const authSlice = createSlice({
   name: "auth",
   initialState: {
     initialState: {
+      // user: JSON.parse(localStorage.getItem("user")) || null,
       user: null,
       isLoading: false,
       error: null,
       successMessage: null,
-      
     },
-    
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -60,16 +65,18 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
+        // localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload?.message || "Invalid email or password. Please try again.";
+        state.error =
+          action.payload?.message ||
+          "Invalid email or password. Please try again.";
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
-      })
-      
-      
+        // localStorage.removeItem("user");
+      });
   },
 });
 

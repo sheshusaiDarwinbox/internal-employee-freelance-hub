@@ -28,5 +28,6 @@ exports.jobSchema = new mongoose_1.Schema({
     salary: { type: Number },
     DID: { type: mongoose_1.Schema.Types.String, ref: "Department", required: true },
 });
+exports.jobSchema.index({ title: "text" });
 exports.jobSchema.plugin(mongoose_paginate_v2_1.default);
 exports.JobModel = (0, mongoose_1.model)("Job", exports.jobSchema);

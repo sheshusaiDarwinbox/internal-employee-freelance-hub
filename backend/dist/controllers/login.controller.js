@@ -13,7 +13,7 @@ exports.loginControlRouter.post("/login", passport_1.default.authenticate("local
         user: req.user
     });
 });
-exports.loginControlRouter.post("/logout", (req, res) => {
+exports.loginControlRouter.get("/logout", (req, res) => {
     req.logout((err) => {
         if (err)
             return res.sendStatus(400);

@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { resetPassword } from "../redux/slices/forgotPasswordSlice";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+const API_BASE_URL = "http://localhost:3000/api"; // Update with your backend URL
 
 const ResetPassword = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { ID, forgotVerifyString } = useParams();
-  const { isLoading, error, successMessage } = useSelector(
-    (state) => state.forgotPassword
-  );
+  console.log(ID + " " + forgotVerifyString);
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMeassage] = useState(null);
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMatchError, setPasswordMatchError] = useState(null);
@@ -21,9 +22,26 @@ const ResetPassword = () => {
       setPasswordMatchError("Passwords do not match.");
       return;
     }
-    dispatch(
-      resetPassword({ ID, forgotVerifyString, newPassword, confirmPassword })
-    );
+
+    setLoading(true);
+    axios
+      .post(
+        `${API_BASE_URL}/forgot-password/${ID}/${forgotVerifyString}`,
+        { newPassword, confirmPassword },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then((data) => {
+        setLoading(false);
+        setSuccessMeassage("Password Reset sucessfull");
+      })
+      .catch((err) => {
+        setLoading(false);
+        setError("failed to reset password");
+      });
   };
 
   useEffect(() => {
@@ -31,7 +49,7 @@ const ResetPassword = () => {
       alert(successMessage);
       navigate("/login");
     }
-  }, [successMessage, navigate]);
+  }, [successMessage]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
