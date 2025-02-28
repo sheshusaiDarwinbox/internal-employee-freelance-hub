@@ -1,10 +1,12 @@
 // redux/store.js
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
-import { setupListeners } from "@reduxjs/toolkit/query";
+// import { setupListeners } from "@reduxjs/toolkit/query";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import authReducer from "./slices/authSlice";
 import forgotPasswordReducer from "./slices/forgotPasswordSlice";
+import tasksReducer from "./slices/tasksSlice";
+import usersSliceReducer from "./slices/usersSlice";
 
 const persistConfig = {
   key: "root",
@@ -18,6 +20,8 @@ const persistConfig = {
 const rootReducer = combineReducers({
   auth: authReducer,
   forgotPassword: forgotPasswordReducer,
+  tasks: tasksReducer,
+  user: usersSliceReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

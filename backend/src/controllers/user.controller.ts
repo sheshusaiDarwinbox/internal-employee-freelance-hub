@@ -14,6 +14,7 @@ import { generateRandomPassword, hashPassword } from "../utils/password.util";
 import { IDs } from "../models/idCounter.model";
 import { sendVerificationEmail } from "../utils/mail.util";
 import { sessionHandler } from "../utils/session.util";
+import { checkAuth } from "../middleware/checkAuth.middleware";
 
 export const createUser = sessionHandler(
   async (req: Request, res: Response) => {
@@ -82,7 +83,7 @@ export const getUserById = sessionHandler(
   async (req: Request, res: Response) => {
     const { ID } = req.params;
 
-    console.log(ID);
+    // console.log(ID);
     GetUserSchema.parse({ EID: ID });
     const user = await User.findOne({ EID: ID });
     if (!user) throw new Error("Bad Request");
@@ -95,4 +96,4 @@ export const userControlRouter = Router();
 userControlRouter.post("/create", createUser);
 userControlRouter.get("", getAllUsers);
 userControlRouter.delete("/:ID", deleteUserByID);
-userControlRouter.get("/:ID", getUserById);
+userControlRouter.get("/:ID", checkAuth([]) , getUserById);

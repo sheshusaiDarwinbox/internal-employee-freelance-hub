@@ -27,6 +27,17 @@ const MyAccount = lazy(() => import("./components/User/MyAccount/MyAccount"));
 const AdminDashboard = lazy(() =>
   import("./components/Admin/Dashboard/Dashboard")
 );
+
+const ManagerDashboard = lazy(() =>
+  import("./components/Manager/Dashboard/Dashboard")
+);
+const ManagerDashboardHome = lazy(() =>
+  import("./components/Manager/Dashboard/DashboardHome")
+);
+const PostTask = lazy(() => import("./components/Manager/PostTask/PostTask"));
+// const Requests = lazy(() => import("./components/Manager/Requests"));
+
+
 const ForgotPassword = lazy(() => import("./components/ForgotPassword"));
 const ResetPassword = lazy(() => import("./components/Resetpassword"));
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
@@ -114,13 +125,33 @@ function App() {
         >
           <Route index element={<AdminDashboardHome />} />
           <Route path="tasks" element={<ViewAllTasks />} />
+          <Route path="departments" element={<DepartmentManagement />} />
           <Route path="manageEmployees" element={<ManageEmployees />} />
           <Route path="manageEmployees/createEmployee" element={<CreateEmployee />} />
           <Route path="manageEmployees/viewEmployees" element={<ViewEmployees />} />
-
-
+          <Route path="my-profile" element={<Profile />} />
           <Route path="departments" element={<DepartmentManagement />} />
-        </Route>
+          </Route>
+
+          <Route
+          path="/manager"
+          element={
+            <ProtectedRoute role="Manager">
+              <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<ManagerDashboardHome />} />
+          <Route path="view-all-tasks" element={<ViewAllTasks />} />
+          <Route path="my-tasks" element={<MyTasks />} />
+          <Route path="post-task" element={<PostTask/>} />
+          {/* <Route path="requests" element={<Requests />} /> */}
+          <Route path="my-profile" element={<Profile />} />
+
+
+         </Route>
+
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

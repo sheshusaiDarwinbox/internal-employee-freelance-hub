@@ -10,9 +10,9 @@ const Navbar = () => {
         {/* Logo & Branding */}
         <Link to="/" className="flex items-center space-x-3 rtl:space-x-reverse">
           <img src={logo} className="h-16" alt="Darwinbox Logo" />
-          <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
+          {/* <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
             Darwinbox
-          </span>
+          </span> */}
         </Link>
 
         {/* Right-side icons & User Info */}

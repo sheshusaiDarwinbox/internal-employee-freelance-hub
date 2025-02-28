@@ -21,6 +21,7 @@ const password_util_1 = require("../utils/password.util");
 const idCounter_model_1 = require("../models/idCounter.model");
 const mail_util_1 = require("../utils/mail.util");
 const session_util_1 = require("../utils/session.util");
+const checkAuth_middleware_1 = require("../middleware/checkAuth.middleware");
 exports.createUser = (0, session_util_1.sessionHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const data = zod_util_1.CreateUserSchema.parse(req.body);
     const department = yield department_model_1.DepartmentModel.findOne({ DID: data.DID });
@@ -64,7 +65,7 @@ exports.deleteUserByID = (0, session_util_1.sessionHandler)((req, res) => __awai
 }));
 exports.getUserById = (0, session_util_1.sessionHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { ID } = req.params;
-    console.log(ID);
+    // console.log(ID);
     zod_util_1.GetUserSchema.parse({ EID: ID });
     const user = yield userAuth_model_1.User.findOne({ EID: ID });
     if (!user)
@@ -75,4 +76,4 @@ exports.userControlRouter = (0, express_1.Router)();
 exports.userControlRouter.post("/create", exports.createUser);
 exports.userControlRouter.get("", exports.getAllUsers);
 exports.userControlRouter.delete("/:ID", exports.deleteUserByID);
-exports.userControlRouter.get("/:ID", exports.getUserById);
+exports.userControlRouter.get("/:ID", (0, checkAuth_middleware_1.checkAuth)([]), exports.getUserById);

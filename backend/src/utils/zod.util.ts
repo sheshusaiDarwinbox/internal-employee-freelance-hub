@@ -25,7 +25,7 @@ export const GetUserSchema = z.object({
 });
 
 export const GetIDSchema = z.object({
-  ID: z
+  EID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
