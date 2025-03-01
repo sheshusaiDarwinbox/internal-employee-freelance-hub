@@ -2,7 +2,11 @@ import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import DepartmentManagement from "./pages/ManageDepartment";
 import MainLayout from "./layouts/MainLayout";
-import { adminSidbarNavLinks, userSidebarNavLinks } from "./utils/sidebarUtils";
+import {
+  adminSidbarNavLinks,
+  managerSidebarNavLinks,
+  userSidebarNavLinks,
+} from "./utils/sidebarUtils";
 import AllTasks from "./pages/AllTasks";
 
 import Profile from "./pages/Profile";
@@ -19,12 +23,6 @@ const ResetPassword = lazy(() => import("./pages/Resetpassword"));
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 const Loading = lazy(() => import("./components/Loading"));
 const PublicRoute = lazy(() => import("./components/PublicRoute"));
-const ManagerDashboard = lazy(() =>
-  import("./components/Manager/Dashboard/Dashboard")
-);
-const ManagerDashboardHome = lazy(() =>
-  import("./components/Manager/Dashboard/DashboardHome")
-);
 const PublicLayout = lazy(() => import("./layouts/PublicLayout"));
 
 function App() {
@@ -100,12 +98,11 @@ function App() {
           path="/manager"
           element={
             <ProtectedRoute role="Manager">
-              <ManagerDashboard />
+              <MainLayout navlinks={managerSidebarNavLinks} />
             </ProtectedRoute>
           }
         >
-          <Route path="view-all-tasks" index element={<AllTasks />} />
-          <Route path="my-tasks" element={<MyTasks />} />
+          <Route path="view-all-tasks" element={<AllTasks />} />
           <Route path="profile" element={<Profile />} />
         </Route>
 

@@ -91,9 +91,6 @@ const AllTasks = () => {
                       Deadline: {formatDate(task.deadline)}
                     </span>
                   </div>
-                  {/* <span className="text-sm text-gray-500">
-                    Deadline: {formatDate(task.deadline)}
-                  </span> */}
                 </div>
               </div>
             </div>

@@ -16,3 +16,13 @@ export const userSidebarNavLinks = [
   { name: "👤 My Profile", link: "/user/my-profile" },
   { name: "🏦 My Account", link: "/user/my-account" },
 ];
+
+export const managerSidebarNavLinks = [
+  { name: "👥 Manage Users", link: "#" },
+  { name: "📩 Requests", link: "#" },
+  { name: "✅ Tasks", link: "/manager/view-all-tasks" },
+  { name: "🏢 Manage Departments", link: "/admin/departments" },
+  { name: "🏢 Manage Jobs", link: "#" },
+  { name: "🧑‍💼 Managers", link: "#" },
+  { name: "🙍‍♂️ My Profile", link: "/manager/profile" },
+];
