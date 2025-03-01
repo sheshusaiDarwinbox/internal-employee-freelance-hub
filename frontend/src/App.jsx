@@ -10,6 +10,7 @@ import {
 import AllTasks from "./pages/AllTasks";
 
 import Profile from "./pages/Profile";
+import ChatPage from "./pages/ChatPage";
 
 const Home = lazy(() => import("./pages/Home/Homepage"));
 const About = lazy(() => import("./pages/Home/About"));
@@ -73,12 +74,14 @@ function App() {
             </ProtectedRoute>
           }
         >
+          <Route index element={<AllTasks />} />
           <Route path="rewards" element={<Rewards />} />
-          <Route path="view-all-tasks" index element={<AllTasks />} />
+          <Route index path="view-all-tasks" element={<AllTasks />} />
           <Route path="my-tasks" element={<MyTasks />} />
           <Route path="my-activity" element={<MyActivity />} />
           <Route path="profile" element={<Profile />} />
           <Route path="my-account" element={<MyAccount />} />
+          <Route path="chat" element={<ChatPage />} />
         </Route>
 
         <Route
@@ -92,6 +95,7 @@ function App() {
           <Route path="tasks" index element={<AllTasks />} />
           <Route path="departments" element={<DepartmentManagement />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="chat" element={<ChatPage />} />
         </Route>
 
         <Route
@@ -104,6 +108,7 @@ function App() {
         >
           <Route path="view-all-tasks" element={<AllTasks />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="chat" element={<ChatPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

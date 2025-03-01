@@ -93,43 +93,6 @@ const DepartmentManagement = () => {
       {/* Navigation Buttons */}
       <div className="mb-6 flex space-x-4">
         {/* <Button.Group> */}
-        {/* <Button
-            color={view === "list" ? "blue" : "gray"}
-            onClick={() => handleViewChange("list")}
-          >
-            <HiViewList className="mr-2 h-5 w-5" />
-            View Departments
-          </Button>
-          <Button
-            color={view === "form" ? "blue" : "gray"}
-            onClick={() => handleViewChange("form")}
-          >
-            <HiPlus className="mr-2 h-5 w-5" />
-            Create Department
-          </Button> */}
-
-        {/* <Button
-            className={`${
-              view === "list"
-                ? "bg-blue-400 hover:bg-blue-500 text-white"
-                : "bg-gray-200 hover:bg-gray-300 text-black"
-            } `}
-            onClick={() => handleViewChange("list")}
-          >
-            <HiViewList className="mr-2 h-5 w-5" />
-            View Departments
-          </Button>
-          <Button
-            className={`${
-              view === "form"
-                ? "bg-[#678DC6] hover:bg-[#5a7eb4] text-white"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-            } `}
-            onClick={() => handleViewChange("form")}
-          >
-            Create Department
-          </Button>
-        </Button.Group> */}
         <Button.Group>
           <Button
             className={`${

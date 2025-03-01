@@ -6,6 +6,7 @@ export const adminSidbarNavLinks = [
   { name: "🏢 Manage Jobs", link: "#" },
   { name: "🧑‍💼 Managers", link: "#" },
   { name: "🙍‍♂️ My Profile", link: "/admin/profile" },
+  { name: "💬 Chat", link: "/admin/chat" },
 ];
 
 export const userSidebarNavLinks = [
@@ -13,8 +14,9 @@ export const userSidebarNavLinks = [
   { name: "📋 My Tasks", link: "/user/my-tasks" },
   { name: "📝 View All Tasks", link: "/user/view-all-tasks" },
   { name: "📊 My Activity", link: "/user/my-activity" },
-  { name: "👤 My Profile", link: "/user/my-profile" },
+  { name: "👤 My Profile", link: "/user/profile" },
   { name: "🏦 My Account", link: "/user/my-account" },
+  { name: "💬 Chat", link: "/user/chat" },
 ];
 
 export const managerSidebarNavLinks = [
@@ -25,4 +27,5 @@ export const managerSidebarNavLinks = [
   { name: "🏢 Manage Jobs", link: "#" },
   { name: "🧑‍💼 Managers", link: "#" },
   { name: "🙍‍♂️ My Profile", link: "/manager/profile" },
+  { name: "💬 Chat", link: "/manager/chat" },
 ];
