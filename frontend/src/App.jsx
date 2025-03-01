@@ -1,48 +1,31 @@
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Suspense, lazy } from "react";
-import PropTypes from "prop-types";
-import DepartmentManagement from "./components/Admin/ManageDepartment/ManageDepartment";
+import DepartmentManagement from "./pages/ManageDepartment";
+import MainLayout from "./layouts/MainLayout";
+import { adminSidbarNavLinks, userSidebarNavLinks } from "./utils/sidebarUtils";
+import AllTasks from "./pages/AllTasks";
 
-const RootNavbar = lazy(() => import("./components/Navbar"));
-const Home = lazy(() => import("./components/Home/Homepage"));
-const About = lazy(() => import("./components/Home/About"));
-const Login = lazy(() => import("./components/Login"));
-const Dashboard = lazy(() => import("./components/User/Dashboard/Dashboard"));
-const Rewards = lazy(() => import("./components/User/Rewards/Rewards"));
-const ViewAllTasks = lazy(() =>
-  import("./components/User/ViewAllTasks/ViewAllTasks")
-);
-const MyTasks = lazy(() => import("./components/User/MyTasks/MyTasks"));
-const MyActivity = lazy(() =>
-  import("./components/User/MyActivity/MyActivity")
-);
-const DashboardHome = lazy(() =>
-  import("./components/User/Dashboard/DashboardHome")
-);
-const AdminDashboardHome = lazy(() =>
-  import("./components/Admin/Dashboard/DashboardHome")
-);
-const Profile = lazy(() => import("./components/User/Profile/Profile"));
-const MyAccount = lazy(() => import("./components/User/MyAccount/MyAccount"));
-const AdminDashboard = lazy(() =>
-  import("./components/Admin/Dashboard/Dashboard")
-);
-const ForgotPassword = lazy(() => import("./components/ForgotPassword"));
-const ResetPassword = lazy(() => import("./components/Resetpassword"));
+import Profile from "./pages/Profile";
+
+const Home = lazy(() => import("./pages/Home/Homepage"));
+const About = lazy(() => import("./pages/Home/About"));
+const Login = lazy(() => import("./pages/Login"));
+const Rewards = lazy(() => import("./pages/Rewards"));
+const MyTasks = lazy(() => import("./pages/MyTasks"));
+const MyActivity = lazy(() => import("./pages/MyActivity"));
+const MyAccount = lazy(() => import("./pages/MyAccount"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/Resetpassword"));
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoute"));
 const Loading = lazy(() => import("./components/Loading"));
 const PublicRoute = lazy(() => import("./components/PublicRoute"));
-
-/** Layout component for pages that require a Navbar */
-const Layout = ({ children }) => (
-  <>
-    <RootNavbar />
-    <div className="mt-20">{children}</div>
-  </>
+const ManagerDashboard = lazy(() =>
+  import("./components/Manager/Dashboard/Dashboard")
 );
-Layout.propTypes = {
-  children: PropTypes.node.isRequired,
-};
+const ManagerDashboardHome = lazy(() =>
+  import("./components/Manager/Dashboard/DashboardHome")
+);
+const PublicLayout = lazy(() => import("./layouts/PublicLayout"));
 
 function App() {
   return (
@@ -61,17 +44,17 @@ function App() {
           <Route
             path="/"
             element={
-              <Layout>
+              <PublicLayout>
                 <Home />
-              </Layout>
+              </PublicLayout>
             }
           />
           <Route
             path="/about"
             element={
-              <Layout>
+              <PublicLayout>
                 <About />
-              </Layout>
+              </PublicLayout>
             }
           />
           <Route path="/login" element={<Login />} />
@@ -88,16 +71,15 @@ function App() {
           path="/user"
           element={
             <ProtectedRoute role="Employee">
-              <Dashboard />
+              <MainLayout navlinks={userSidebarNavLinks} />
             </ProtectedRoute>
           }
         >
-          <Route index element={<DashboardHome />} />
           <Route path="rewards" element={<Rewards />} />
-          <Route path="view-all-tasks" element={<ViewAllTasks />} />
+          <Route path="view-all-tasks" index element={<AllTasks />} />
           <Route path="my-tasks" element={<MyTasks />} />
           <Route path="my-activity" element={<MyActivity />} />
-          <Route path="my-profile" element={<Profile />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="my-account" element={<MyAccount />} />
         </Route>
 
@@ -105,14 +87,28 @@ function App() {
           path="/admin"
           element={
             <ProtectedRoute role="Admin">
-              <AdminDashboard />
+              <MainLayout navlinks={adminSidbarNavLinks} />
             </ProtectedRoute>
           }
         >
-          <Route index element={<AdminDashboardHome />} />
-          <Route path="tasks" element={<ViewAllTasks />} />
+          <Route path="tasks" index element={<AllTasks />} />
           <Route path="departments" element={<DepartmentManagement />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
+
+        <Route
+          path="/manager"
+          element={
+            <ProtectedRoute role="Manager">
+              <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="view-all-tasks" index element={<AllTasks />} />
+          <Route path="my-tasks" element={<MyTasks />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

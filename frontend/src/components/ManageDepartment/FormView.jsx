@@ -55,7 +55,7 @@ const FormView = ({ handleCreate, setFormData, formData }) => (
           onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
         />
       </div>
-      <Button type="submit" color="blue">
+      <Button type="submit" className="bg-blue-400">
         {formData.id ? "Update Department" : "Create Department"}
       </Button>
     </form>
