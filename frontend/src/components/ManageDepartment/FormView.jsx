@@ -1,4 +1,5 @@
-import { Button, TextInput, Label } from "flowbite-react";
+import { Button, TextInput, Label, Select } from "flowbite-react";
+import { DepartmentFunctions } from "../../pages/ManageDepartment";
 
 const FormView = ({ handleCreate, setFormData, formData }) => (
   <div className="space-y-4">
@@ -24,36 +25,21 @@ const FormView = ({ handleCreate, setFormData, formData }) => (
         />
       </div>
       <div>
-        <Label htmlFor="location">Location</Label>
-        <TextInput
-          id="location"
+        <Label htmlFor="location">Function</Label>
+        <Select
+          id="function"
           required
-          value={formData.location}
+          value={formData.function}
           onChange={(e) =>
-            setFormData({ ...formData, location: e.target.value })
+            setFormData({ ...formData, function: e.target.value })
           }
-        />
-      </div>
-      <div>
-        <Label htmlFor="manager">Manager</Label>
-        <TextInput
-          id="manager"
-          required
-          value={formData.manager}
-          onChange={(e) =>
-            setFormData({ ...formData, manager: e.target.value })
-          }
-        />
-      </div>
-      <div>
-        <Label htmlFor="budget">Budget</Label>
-        <TextInput
-          id="budget"
-          type="number"
-          required
-          value={formData.budget}
-          onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-        />
+        >
+          {Object.values(DepartmentFunctions).map((func) => (
+            <option key={func} value={func}>
+              {func}
+            </option>
+          ))}
+        </Select>
       </div>
       <Button type="submit" className="bg-blue-400">
         {formData.id ? "Update Department" : "Create Department"}

@@ -3,7 +3,7 @@ export const adminSidbarNavLinks = [
   { name: "📩 Requests", link: "#" },
   { name: "✅ Tasks", link: "/admin/tasks" },
   { name: "🏢 Manage Departments", link: "/admin/departments" },
-  { name: "🏢 Manage Jobs", link: "#" },
+  { name: "🏢 Manage Jobs", link: "/admin/jobs" },
   { name: "🧑‍💼 Managers", link: "#" },
   { name: "🙍‍♂️ My Profile", link: "/admin/profile" },
   { name: "💬 Chat", link: "/admin/chat" },
