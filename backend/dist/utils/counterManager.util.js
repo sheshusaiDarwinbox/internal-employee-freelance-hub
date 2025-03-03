@@ -15,16 +15,16 @@ const idCounter_model_2 = require("../models/idCounter.model");
 exports.IDMap = {
     EID: "EMP",
     OID: "O",
-    TaskID: "T",
+    GigID: "G",
     DID: "D",
-    JID: "J",
+    PID: "P",
     BidID: "B",
     NID: "N",
     ReqID: "Req",
     RefID: "Ref",
 };
-const generateId = (type) => __awaiter(void 0, void 0, void 0, function* () {
-    const counterDoc = yield idCounter_model_1.CounterID.findOneAndUpdate({ id: type }, { $inc: { counter: 1 } }, { new: true, upsert: true });
+const generateId = (type, session) => __awaiter(void 0, void 0, void 0, function* () {
+    const counterDoc = yield idCounter_model_1.CounterID.findOneAndUpdate({ id: type }, { $inc: { counter: 1 } }, { session, new: true, upsert: true });
     const id = `${exports.IDMap[type]}${counterDoc.counter.toString().padStart(6, "0")}`;
     return id;
 });

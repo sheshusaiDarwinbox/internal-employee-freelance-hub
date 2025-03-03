@@ -53,7 +53,7 @@ passport_1.default.use(new passport_local_1.Strategy({
         const sessionUser = {
             EID: user.get("EID"),
             role: user.get("role"),
-            JID: user.get("JID"),
+            PID: user.get("PID"),
             DID: user.get("DID"),
             ManagerID: user.get("ManagerID"),
             // password: user.get("password"),

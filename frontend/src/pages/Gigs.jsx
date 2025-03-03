@@ -1,30 +1,30 @@
 import React, { useState } from "react";
 import { Card, Button, Modal, TextInput, Dropdown } from "flowbite-react";
 import { HiSearch, HiX } from "react-icons/hi";
-import task1 from "../assets/Tasks/task1.jpg";
-import task2 from "../assets/Tasks/task2.jpg";
+import task1 from "../assets/Gigs/task1.jpg";
+import task2 from "../assets/Gigs/task2.jpg";
 
-const AllTasks = () => {
+const AllGigs = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [openModal, setOpenModal] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedGig, setSelectedGig] = useState(null);
 
-  const handleOpenModal = (task) => {
-    setSelectedTask(task);
+  const handleOpenModal = (gig) => {
+    setSelectedGig(gig);
     setOpenModal(true);
   };
 
-  const tasks = [
+  const gigs = [
     {
       image: task1,
       postedBy: "John Doe",
       department: "Engineering",
-      projectTitle: "Task Management System",
-      description: "Develop a task management system using React and Node.js",
+      projectTitle: "Gig Management System",
+      description: "Develop a gig management system using React and Node.js",
       longDescription:
-        "This project involves creating a comprehensive task management system...",
+        "This project involves creating a comprehensive gig management system...",
       tags: ["React", "Node.js", "MongoDB"],
       status: "Available",
       points: 500,
@@ -47,18 +47,18 @@ const AllTasks = () => {
     },
   ];
 
-  const departments = [...new Set(tasks.map((task) => task.department))];
-  const allSkills = [...new Set(tasks.flatMap((task) => task.tags))];
+  const departments = [...new Set(gigs.map((gig) => gig.department))];
+  const allSkills = [...new Set(gigs.flatMap((gig) => gig.tags))];
 
-  const filteredTasks = tasks.filter((task) => {
+  const filteredGigs = gigs.filter((gig) => {
     const matchesSearch =
-      task.projectTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.description.toLowerCase().includes(searchQuery.toLowerCase());
+      gig.projectTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      gig.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDepartment =
-      !selectedDepartment || task.department === selectedDepartment;
+      !selectedDepartment || gig.department === selectedDepartment;
     const matchesSkills =
       selectedSkills.length === 0 ||
-      selectedSkills.some((skill) => task.tags.includes(skill));
+      selectedSkills.some((skill) => gig.tags.includes(skill));
 
     return matchesSearch && matchesDepartment && matchesSkills;
   });
@@ -72,7 +72,7 @@ const AllTasks = () => {
             icon={HiSearch}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search tasks..."
+            placeholder="Search gigs..."
             className="w-full"
           />
         </div>
@@ -149,37 +149,37 @@ const AllTasks = () => {
         )}
       </div>
 
-      {/* Tasks List */}
+      {/* Gigs List */}
       <div className="grid grid-cols-1 gap-6">
-        {filteredTasks.map((task, index) => (
+        {filteredGigs.map((gig, index) => (
           <Card
             key={index}
-            onClick={() => handleOpenModal(task)}
+            onClick={() => handleOpenModal(gig)}
             className="hover:shadow-lg transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >
             <div className="flex">
               <div className="w-1/3 pr-4">
                 <img
-                  src={task.image}
-                  alt="Task"
+                  src={gig.image}
+                  alt="Gig"
                   className="w-full h-48 object-cover rounded-lg shadow-sm"
                 />
                 <p className="text-sm mt-2 text-center text-gray-700">
-                  Posted by: {task.postedBy}
+                  Posted by: {gig.postedBy}
                 </p>
                 <p className="text-sm text-gray-600 text-center">
-                  Dept: {task.department}
+                  Dept: {gig.department}
                 </p>
               </div>
               <div className="w-2/3">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">
-                  {task.projectTitle}
+                  {gig.projectTitle}
                 </h2>
                 <p className="text-gray-600 mb-4 line-clamp-3">
-                  {task.description}
+                  {gig.description}
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {task.tags.map((tag, i) => (
+                  {gig.tags.map((tag, i) => (
                     <span
                       key={i}
                       className="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full text-sm font-medium"
@@ -190,11 +190,11 @@ const AllTasks = () => {
                 </div>
                 <div className="flex justify-between items-center mt-auto">
                   <div className="flex gap-4 text-sm text-gray-600">
-                    <span>Points: {task.points}</span>
-                    <span>Amount: {task.amount}</span>
+                    <span>Points: {gig.points}</span>
+                    <span>Amount: {gig.amount}</span>
                   </div>
                   <span className="text-sm text-gray-500">
-                    Deadline: {task.deadline}
+                    Deadline: {gig.deadline}
                   </span>
                 </div>
               </div>
@@ -203,32 +203,32 @@ const AllTasks = () => {
         ))}
       </div>
 
-      {/* Task Detail Modal */}
+      {/* Gig Detail Modal */}
       <Modal show={openModal} onClose={() => setOpenModal(false)} size="xl">
         <Modal.Header>
           <h3 className="text-xl font-semibold text-gray-900">
-            {selectedTask?.projectTitle}
+            {selectedGig?.projectTitle}
           </h3>
         </Modal.Header>
         <Modal.Body>
           <div className="space-y-6">
             <div className="flex gap-6">
               <img
-                src={selectedTask?.image}
-                alt="Task"
+                src={selectedGig?.image}
+                alt="Gig"
                 className="w-1/3 rounded-lg shadow-md object-cover"
               />
               <div className="w-2/3 space-y-4">
                 <div>
                   <h4 className="font-semibold text-gray-900">Description</h4>
                   <p className="text-gray-700 mt-1">
-                    {selectedTask?.longDescription}
+                    {selectedGig?.longDescription}
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900">Technologies</h4>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedTask?.tags.map((tag, i) => (
+                    {selectedGig?.tags.map((tag, i) => (
                       <span
                         key={i}
                         className="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full text-sm font-medium"
@@ -242,22 +242,22 @@ const AllTasks = () => {
                   <div>
                     <h4 className="font-semibold text-gray-900">Department</h4>
                     <p className="text-gray-700 mt-1">
-                      {selectedTask?.department}
+                      {selectedGig?.department}
                     </p>
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Posted By</h4>
                     <p className="text-gray-700 mt-1">
-                      {selectedTask?.postedBy}
+                      {selectedGig?.postedBy}
                     </p>
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Points</h4>
-                    <p className="text-gray-700 mt-1">{selectedTask?.points}</p>
+                    <p className="text-gray-700 mt-1">{selectedGig?.points}</p>
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Amount</h4>
-                    <p className="text-gray-700 mt-1">{selectedTask?.amount}</p>
+                    <p className="text-gray-700 mt-1">{selectedGig?.amount}</p>
                   </div>
                 </div>
               </div>
@@ -272,4 +272,4 @@ const AllTasks = () => {
   );
 };
 
-export default AllTasks;
+export default AllGigs;

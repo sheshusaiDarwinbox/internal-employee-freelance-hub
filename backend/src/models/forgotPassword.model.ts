@@ -13,7 +13,7 @@ export const forgotPasswordSchema = new Schema<
   createdAt: { type: Date, required: true, default: Date.now, expires: "1h" },
 });
 
-forgotPasswordSchema.index({ createdAt: 1 }, { expireAfterSeconds: 3600 });
+// forgotPasswordSchema.index({ createdAt: 1 }, { expireAfterSeconds: 3600 });
 
 export const forgotPassword = model<forgotPasswordType, forgotPasswordModel>(
   "forgotPassword",

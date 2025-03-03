@@ -12,7 +12,7 @@ export enum PositionTypeEnum {
   Other = "Other",
 }
 
-export const jobSchema = new Schema<Position, PositonModelType>({
+export const positionSchema = new Schema<Position, PositonModelType>({
   PID: { type: String, required: true, index: true, unique: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
@@ -25,10 +25,10 @@ export const jobSchema = new Schema<Position, PositonModelType>({
   DID: { type: Schema.Types.String, ref: "Department", required: true },
 });
 
-jobSchema.index({ title: "text" });
-jobSchema.plugin(paginate);
+positionSchema.index({ title: "text" });
+positionSchema.plugin(paginate);
 
 export const PositionModel = model<Position, PaginateModel<PositonModelType>>(
-  "Job",
-  jobSchema
+  "Position",
+  positionSchema
 );

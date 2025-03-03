@@ -1,9 +1,9 @@
 export const adminSidbarNavLinks = [
   { name: "👥 Manage Users", link: "#" },
   { name: "📩 Requests", link: "#" },
-  { name: "✅ Tasks", link: "/admin/tasks" },
+  { name: "✅ Gigs", link: "/admin/gigs" },
   { name: "🏢 Manage Departments", link: "/admin/departments" },
-  { name: "🏢 Manage Jobs", link: "/admin/jobs" },
+  { name: "🏢 Manage Positions", link: "/admin/positions" },
   { name: "🧑‍💼 Managers", link: "#" },
   { name: "🙍‍♂️ My Profile", link: "/admin/profile" },
   { name: "💬 Chat", link: "/admin/chat" },
@@ -11,8 +11,8 @@ export const adminSidbarNavLinks = [
 
 export const userSidebarNavLinks = [
   { name: "🏆 Rewards", link: "/user/rewards" },
-  { name: "📋 My Tasks", link: "/user/my-tasks" },
-  { name: "📝 View All Tasks", link: "/user/view-all-tasks" },
+  { name: "📋 Work History", link: "/user/work-history" },
+  { name: "📝 Gigs", link: "/user/gigs" },
   { name: "📊 My Activity", link: "/user/my-activity" },
   { name: "👤 My Profile", link: "/user/profile" },
   { name: "🏦 My Account", link: "/user/my-account" },
@@ -22,10 +22,9 @@ export const userSidebarNavLinks = [
 export const managerSidebarNavLinks = [
   { name: "👥 Manage Users", link: "#" },
   { name: "📩 Requests", link: "#" },
-  { name: "✅ Tasks", link: "/manager/view-all-tasks" },
+  { name: "✅ Gigs", link: "/manager/gigs" },
+  { name: "Posted Gigs", link: "/manager/posted-gigs" },
   { name: "🏢 Manage Departments", link: "/admin/departments" },
-  { name: "🏢 Manage Jobs", link: "#" },
-  { name: "🧑‍💼 Managers", link: "#" },
   { name: "🙍‍♂️ My Profile", link: "/manager/profile" },
   { name: "💬 Chat", link: "/manager/chat" },
 ];

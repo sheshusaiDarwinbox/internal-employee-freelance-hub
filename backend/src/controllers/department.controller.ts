@@ -17,9 +17,9 @@ import { sessionHandler } from "../utils/session.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
 
 export const createDepartment = sessionHandler(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response, session) => {
     const data = CreateDepartmentSchema.parse(req.body);
-    const DID = await generateId(IDs.DID);
+    const DID = await generateId(IDs.DID, session);
     const departmentData: Department = { ...data, DID };
     const department = await DepartmentModel.create(departmentData);
     if (!department) throw new Error("Server Error");

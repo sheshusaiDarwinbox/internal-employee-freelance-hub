@@ -26,7 +26,7 @@ exports.userAuthSchema = new mongoose_1.Schema({
         type: Boolean,
         required: true,
     },
-    JID: { type: mongoose_1.Schema.Types.String, ref: "Job", required: true },
+    PID: { type: mongoose_1.Schema.Types.String, ref: "Position", required: true },
     DID: { type: mongoose_1.Schema.Types.String, ref: "Department", required: true },
     ManagerID: { type: mongoose_1.Schema.Types.String, ref: "UserAuth", required: true },
     phone: { type: String },

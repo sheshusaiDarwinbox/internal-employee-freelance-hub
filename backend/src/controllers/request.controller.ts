@@ -11,10 +11,10 @@ import { UserRole } from "../models/userAuth.model";
 const requestControlRouter = Router();
 
 export const createRequest = sessionHandler(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response, session) => {
     RequestZodSchema.parse(req.body);
     const { reqType } = req.body;
-    const ReqID = generateId(IDs.ReqID);
+    const ReqID = generateId(IDs.ReqID, session);
     const request = await RequestModel.create({
       ReqID: ReqID,
       From: req.user?.EID,

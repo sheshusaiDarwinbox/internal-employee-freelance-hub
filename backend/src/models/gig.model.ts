@@ -1,5 +1,5 @@
 import { PaginateModel, Schema, model } from "mongoose";
-import type { TaskSchema, TaskModel } from "../types/task.types";
+import type { GigSchema, GigModel } from "../types/gig.types";
 import paginate from "mongoose-paginate-v2";
 
 export enum ApprovalStatus {
@@ -15,8 +15,8 @@ export enum OngoingStatus {
   Reviewed = "Reviewed",
 }
 
-const taskSchema = new Schema<TaskSchema, TaskModel>({
-  TaskID: { type: String, required: true },
+const gigSchema = new Schema<GigSchema, GigModel>({
+  GigID: { type: String, required: true },
   DID: { type: String, required: true },
   ManagerID: { type: String, required: true },
   title: { type: String, required: true },
@@ -48,11 +48,8 @@ const taskSchema = new Schema<TaskSchema, TaskModel>({
   feedback: { type: String },
 });
 
-taskSchema.index({ title: "text" });
+gigSchema.index({ title: "text" });
 
-taskSchema.plugin(paginate);
+gigSchema.plugin(paginate);
 
-export const Task = model<TaskSchema, PaginateModel<TaskModel>>(
-  "Tasks",
-  taskSchema
-);
+export const Gig = model<GigSchema, PaginateModel<GigModel>>("Gig", gigSchema);

@@ -3,25 +3,10 @@ import nodemailer from "nodemailer";
 import { hashPassword } from "./password.util";
 import crypto from "crypto";
 import { UserVerification } from "../models/userVerification.model";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { forgotPassword } from "../models/forgotPassword.model";
 import { HttpStatusCodes } from "./httpsStatusCodes.util";
-
-export const config = {
-  service: "gmail",
-  auth: {
-    user: process.env.NODEJS_GMAIL_APP_USER,
-    pass: process.env.NODEJS_GMAIL_APP_PASSWORD,
-  },
-};
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "testmaildarwinbox@gmail.com",
-    pass: "pgkjgecbdslibsmc",
-  },
-});
+import { config } from "../server";
 
 export const sendVerificationEmail = async (
   data: {
@@ -30,16 +15,16 @@ export const sendVerificationEmail = async (
     email: string;
     password: string;
   },
-  baseUrl: string,
-  res: Response
+  session: mongoose.ClientSession
 ) => {
+  const transporter = nodemailer.createTransport(config);
   const verifyString = crypto.randomBytes(16).toString("base64url") + data._id;
-
+  const baseUrl = process.env.BASE_URL;
   const hashedVerifyString = await hashPassword(verifyString);
   const message = {
-    from: "testmaildarwinbox@gmail.com", // sender address
-    to: data.email, // list of receivers
-    subject: "Verify your Account", // Subject line
+    from: "testmaildarwinbox@gmail.com",
+    to: data.email,
+    subject: "Verify your Account",
     html: `<p>click <a href=${
       baseUrl + "/api/verify/" + data._id + "/" + verifyString
     }>here</a><b></b> to activate your Account</p>
@@ -51,22 +36,27 @@ export const sendVerificationEmail = async (
   console.log(`${baseUrl + "/api/verify/" + data._id + "/" + verifyString}`);
   // {baseUrl}/verify/id/verifyString
 
-  const result = await UserVerification.create({
-    email: data.email,
-    verifyString: hashedVerifyString,
-    _id: data._id,
-  });
+  const [verification] = await UserVerification.create(
+    [
+      {
+        email: data.email,
+        verifyString: hashedVerifyString,
+        _id: data._id,
+      },
+    ],
+    { session }
+  );
 
-  if (!result) throw new Error("userverification doc failed to create");
+  if (!verification) throw new Error("userverification doc failed to create");
 
   const info = await transporter.sendMail(message);
-  return res.status(201).json({
+  return {
     msg: "Verification Email sent",
     info: info.messageId,
     preview: nodemailer.getTestMessageUrl(info),
     id: data._id,
     password: data.password,
-  });
+  };
 };
 
 export const sendForgotPasswordMail = async (
@@ -81,6 +71,8 @@ export const sendForgotPasswordMail = async (
     crypto.randomBytes(16).toString("base64url") + data._id;
 
   const hashedforgotVerifyString = await hashPassword(forgotVerifyString);
+
+  const transporter = nodemailer.createTransport(config);
 
   const message = {
     from: "testmaildarwinbox@gmail.com",

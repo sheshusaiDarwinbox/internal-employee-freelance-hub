@@ -19,9 +19,9 @@ const idCounter_model_1 = require("../models/idCounter.model");
 const userAuth_model_1 = require("../models/userAuth.model");
 const session_util_1 = require("../utils/session.util");
 const checkAuth_middleware_1 = require("../middleware/checkAuth.middleware");
-exports.createDepartment = (0, session_util_1.sessionHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createDepartment = (0, session_util_1.sessionHandler)((req, res, session) => __awaiter(void 0, void 0, void 0, function* () {
     const data = zod_util_1.CreateDepartmentSchema.parse(req.body);
-    const DID = yield (0, counterManager_util_1.generateId)(idCounter_model_1.IDs.DID);
+    const DID = yield (0, counterManager_util_1.generateId)(idCounter_model_1.IDs.DID, session);
     const departmentData = Object.assign(Object.assign({}, data), { DID });
     const department = yield department_model_1.DepartmentModel.create(departmentData);
     if (!department)

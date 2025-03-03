@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { JobTypeEnum } from "../models/job.model";
+import { PositionTypeEnum } from "../models/position.model";
 import { RequestTypeEnum } from "../models/request.model";
 
 export const EIDScheme = z.union([
@@ -34,7 +34,7 @@ export const CreateUserSchema = z.object({
   DID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
-  JID: z
+  PID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
   role: z.enum(["Admin", "Employee", "Manager", "Other"]),
@@ -72,7 +72,7 @@ export const CreateDepartmentSchema = z.object({
   teamSize: z.number().int(),
 });
 
-export const CreateJobSchema = z.object({
+export const CreatePositionSchema = z.object({
   title: z.string().regex(/^[a-zA-Z0-9 ]+$/, {
     message: "Title must be alphanumeric with spaces",
   }),
@@ -82,7 +82,7 @@ export const CreateJobSchema = z.object({
       /^[a-zA-Z0-9\s.,!?()&]+$/,
       "Description must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
     ),
-  type: z.nativeEnum(JobTypeEnum),
+  type: z.nativeEnum(PositionTypeEnum),
 
   salary: z.number().int(),
   DID: z
@@ -90,8 +90,8 @@ export const CreateJobSchema = z.object({
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
 
-export const GetJobSchema = z.object({
-  JID: z
+export const GetPositionSchema = z.object({
+  PID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
@@ -108,7 +108,7 @@ export const DepartmentArraySchema = z.array(
   ] as const)
 );
 
-export const JobsArraySchema = z.array(
+export const PositionsArraySchema = z.array(
   z.enum([
     "FullTime",
     "PartTime",
@@ -134,7 +134,7 @@ export const ForgotPasswordResetZodSchema = z.object({
   confirmPassword: PasswordScheme,
 });
 
-export const CreateTaskZodSchema = z.object({
+export const CreateGigZodSchema = z.object({
   ManagerID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "ManagerID must be alphanumeric" }),

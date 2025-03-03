@@ -7,7 +7,7 @@ import {
   managerSidebarNavLinks,
   userSidebarNavLinks,
 } from "./utils/sidebarUtils";
-import AllTasks from "./pages/AllTasks";
+import Gigs from "./pages/Gigs";
 
 import Profile from "./pages/Profile";
 import ChatPage from "./pages/ChatPage";
@@ -75,10 +75,10 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<AllTasks />} />
+          <Route index element={<Gigs />} />
           <Route path="rewards" element={<Rewards />} />
-          <Route index path="view-all-tasks" element={<AllTasks />} />
-          <Route path="my-tasks" element={<MyTasks />} />
+          <Route index path="gigs" element={<Gigs />} />
+          <Route path="work-history" element={<MyTasks />} />
           <Route path="my-activity" element={<MyActivity />} />
           <Route path="profile" element={<Profile />} />
           <Route path="my-account" element={<MyAccount />} />
@@ -93,7 +93,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="tasks" index element={<AllTasks />} />
+          <Route path="gigs" index element={<Gigs />} />
           <Route path="departments" element={<DepartmentManagement />} />
           <Route path="profile" element={<Profile />} />
           <Route path="chat" element={<ChatPage />} />
@@ -108,7 +108,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="view-all-tasks" element={<AllTasks />} />
+          <Route path="gigs" element={<Gigs />} />
           <Route path="profile" element={<Profile />} />
           <Route path="chat" element={<ChatPage />} />
         </Route>

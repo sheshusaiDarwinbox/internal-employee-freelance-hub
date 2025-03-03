@@ -12,34 +12,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendForgotPasswordMail = exports.sendVerificationEmail = exports.config = void 0;
+exports.sendForgotPasswordMail = exports.sendVerificationEmail = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const password_util_1 = require("./password.util");
 const crypto_1 = __importDefault(require("crypto"));
 const userVerification_model_1 = require("../models/userVerification.model");
 const forgotPassword_model_1 = require("../models/forgotPassword.model");
 const httpsStatusCodes_util_1 = require("./httpsStatusCodes.util");
-exports.config = {
-    service: "gmail",
-    auth: {
-        user: process.env.NODEJS_GMAIL_APP_USER,
-        pass: process.env.NODEJS_GMAIL_APP_PASSWORD,
-    },
-};
-const transporter = nodemailer_1.default.createTransport({
-    service: "gmail",
-    auth: {
-        user: "testmaildarwinbox@gmail.com",
-        pass: "pgkjgecbdslibsmc",
-    },
-});
-const sendVerificationEmail = (data, baseUrl, res) => __awaiter(void 0, void 0, void 0, function* () {
+const server_1 = require("../server");
+const sendVerificationEmail = (data, session) => __awaiter(void 0, void 0, void 0, function* () {
+    const transporter = nodemailer_1.default.createTransport(server_1.config);
     const verifyString = crypto_1.default.randomBytes(16).toString("base64url") + data._id;
+    const baseUrl = process.env.BASE_URL;
     const hashedVerifyString = yield (0, password_util_1.hashPassword)(verifyString);
     const message = {
-        from: "testmaildarwinbox@gmail.com", // sender address
-        to: data.email, // list of receivers
-        subject: "Verify your Account", // Subject line
+        from: "testmaildarwinbox@gmail.com",
+        to: data.email,
+        subject: "Verify your Account",
         html: `<p>click <a href=${baseUrl + "/api/verify/" + data._id + "/" + verifyString}>here</a><b></b> to activate your Account</p>
     <br> Your EID is: ${data.EID} <br>
     Your password is: ${data.password} 
@@ -47,26 +36,29 @@ const sendVerificationEmail = (data, baseUrl, res) => __awaiter(void 0, void 0, 
     };
     console.log(`${baseUrl + "/api/verify/" + data._id + "/" + verifyString}`);
     // {baseUrl}/verify/id/verifyString
-    const result = yield userVerification_model_1.UserVerification.create({
-        email: data.email,
-        verifyString: hashedVerifyString,
-        _id: data._id,
-    });
-    if (!result)
+    const [verification] = yield userVerification_model_1.UserVerification.create([
+        {
+            email: data.email,
+            verifyString: hashedVerifyString,
+            _id: data._id,
+        },
+    ], { session });
+    if (!verification)
         throw new Error("userverification doc failed to create");
     const info = yield transporter.sendMail(message);
-    return res.status(201).json({
+    return {
         msg: "Verification Email sent",
         info: info.messageId,
         preview: nodemailer_1.default.getTestMessageUrl(info),
         id: data._id,
         password: data.password,
-    });
+    };
 });
 exports.sendVerificationEmail = sendVerificationEmail;
 const sendForgotPasswordMail = (data, res) => __awaiter(void 0, void 0, void 0, function* () {
     const forgotVerifyString = crypto_1.default.randomBytes(16).toString("base64url") + data._id;
     const hashedforgotVerifyString = yield (0, password_util_1.hashPassword)(forgotVerifyString);
+    const transporter = nodemailer_1.default.createTransport(server_1.config);
     const message = {
         from: "testmaildarwinbox@gmail.com",
         to: data.email,

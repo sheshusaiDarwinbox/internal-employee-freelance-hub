@@ -7,7 +7,7 @@ declare global {
       password?: string;
       role: keyof typeof UserRole;
       email?: string;
-      JID: string;
+      PID: string;
       DID: string;
       ManagerID: string;
       gender?: string;

@@ -13,8 +13,8 @@ export type OngoingStatusType =
   | "Completed"
   | "Reviewed";
 
-export interface TaskSchema {
-  TaskID: string;
+export interface GigSchema {
+  GigID: string;
   DID: string;
   ManagerID: string;
   title: string;
@@ -33,4 +33,4 @@ export interface TaskSchema {
   feedback?: string;
 }
 
-export type TaskModel = Model<TaskSchema>;
+export type GigModel = Model<GigSchema>;

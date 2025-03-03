@@ -1,7 +1,7 @@
 import { type Request, type Response, Router } from "express";
-import { CreateTaskZodSchema, GetIDSchema } from "../utils/zod.util";
+import { CreateGigZodSchema, GetIDSchema } from "../utils/zod.util";
 import { User, UserRole } from "../models/userAuth.model";
-import { ApprovalStatus, OngoingStatus, Task } from "../models/task.model";
+import { ApprovalStatus, OngoingStatus, Gig } from "../models/gig.model";
 import { RequestModel, RequestTypeEnum } from "../models/request.model";
 import { generateId } from "../utils/counterManager.util";
 import { IDs } from "../models/idCounter.model";
@@ -11,41 +11,41 @@ import { UserAuth } from "../types/userAuth.types";
 import { sessionHandler } from "../utils/session.util";
 import { z } from "zod";
 
-export const taskControlRouter = Router();
+export const gigControlRouter = Router();
 
-export const createTask = sessionHandler(
-  async (req: Request, res: Response) => {
-    const data = CreateTaskZodSchema.parse(req.body);
+export const createGig = sessionHandler(
+  async (req: Request, res: Response, session) => {
+    const data = CreateGigZodSchema.parse(req.body);
 
     const manager: UserAuth | null = await User.findOne({
       EID: data.ManagerID,
     });
-    const TaskID = await generateId(IDs.TaskID);
+    const GigID = await generateId(IDs.GigID, session);
 
-    if (!manager || !TaskID)
-      throw new Error("manager not found or TaskID not created");
+    if (!manager || !GigID)
+      throw new Error("manager not found or GigID not created");
 
-    const taskdata = {
+    const gigdata = {
       ...data,
       DID: manager.DID,
-      TaskID: TaskID,
+      GigID: GigID,
       createdAt: Date.now(),
       ongoingStatus: OngoingStatus.UnAssigned,
       approvalStatus:
         data.amount > 0 ? ApprovalStatus.PENDING : ApprovalStatus.APPROVED,
     };
 
-    const task = await Task.create(taskdata);
+    const gig = await Gig.create(gigdata);
 
-    if (!task) throw new Error("failed to create task");
+    if (!gig) throw new Error("failed to create gig");
 
     if (data.amount > 0) {
       const request = await RequestModel.create({
-        ReqID: await generateId(IDs.ReqID),
+        ReqID: await generateId(IDs.ReqID, session),
         From: data.ManagerID,
         To: "EMP000000",
-        reqType: RequestTypeEnum.ApproveTask,
-        description: `Request to approve task from ${data.ManagerID}`,
+        reqType: RequestTypeEnum.ApproveGig,
+        description: `Request to approve gig from ${data.ManagerID}`,
       });
       if (!request) throw new Error("failed to create request");
     }
@@ -53,7 +53,7 @@ export const createTask = sessionHandler(
   }
 );
 
-export const getAllTasks = sessionHandler(
+export const getAllGigs = sessionHandler(
   async (req: Request, res: Response) => {
     const { DIDs, ManagerIDs, search, page = 0 } = req.query;
     let filter: any = {};
@@ -84,23 +84,23 @@ export const getAllTasks = sessionHandler(
       };
     }
 
-    const tasks = await Task.paginate(filter, {
+    const gigs = await Gig.paginate(filter, {
       offset: Number(page) * 10,
       limit: 10,
     });
-    res.status(HttpStatusCodes.OK).send(tasks);
+    res.status(HttpStatusCodes.OK).send(gigs);
   }
 );
 
-export const getTaskById = sessionHandler(
+export const getGigById = sessionHandler(
   async (req: Request, res: Response) => {
-    const { TaskID } = req.params;
-    GetIDSchema.parse({ ID: TaskID });
-    const task = await Task.findOne({ JID: TaskID });
-    res.status(HttpStatusCodes.OK).send(task);
+    const { GigID } = req.params;
+    GetIDSchema.parse({ ID: GigID });
+    const gig = await Gig.findOne({ PID: GigID });
+    res.status(HttpStatusCodes.OK).send(gig);
   }
 );
 
-taskControlRouter.post("/post", checkAuth([UserRole.Manager]), createTask);
-taskControlRouter.get("", checkAuth([]), getAllTasks);
-taskControlRouter.get("/:TaskID", checkAuth([]), getTaskById);
+gigControlRouter.post("/post", checkAuth([UserRole.Manager]), createGig);
+gigControlRouter.get("", checkAuth([]), getAllGigs);
+gigControlRouter.get("/:GigID", checkAuth([]), getGigById);

@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import "./strategies/local.strategy";
 import { indexRouter } from "./routes/index.router";
 import cors from "cors";
+import { parseFile } from "./utils/fileParser.util";
 
 export const createApp = () => {
   const app = express();
@@ -15,7 +16,7 @@ export const createApp = () => {
       origin: "http://localhost:5173",
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
-      methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     })
   );
   app.use(express.static("./public"));
@@ -37,8 +38,35 @@ export const createApp = () => {
   app.use(passport.initialize());
   app.use(passport.session());
   app.use("/api", indexRouter);
+
   app.get("/", (req, res) => {
-    res.send("Hello World");
+    res.send(`
+    <h2>File Upload With <code>"Node.js"</code></h2>
+    <form action="/api/upload" enctype="multipart/form-data" method="post">
+      <div>Select a file: 
+        <input name="file" type="file" />
+      </div>
+      <input type="submit" value="Upload" />
+    </form>
+
+  `);
   });
+
+  app.post("/api/upload", async (req, res) => {
+    await parseFile(req)
+      .then((data) => {
+        res.status(200).json({
+          message: "Success",
+          data,
+        });
+      })
+      .catch((error) => {
+        res.status(400).json({
+          message: "An error occurred.",
+          error,
+        });
+      });
+  });
+
   return app;
 };

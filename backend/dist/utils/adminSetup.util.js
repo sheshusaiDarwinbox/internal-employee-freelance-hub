@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setAdmin = void 0;
 const department_model_1 = require("../models/department.model");
-const job_model_1 = require("../models/job.model");
+const position_model_1 = require("../models/position.model");
 const userAuth_model_1 = require("../models/userAuth.model");
 const password_util_1 = require("./password.util");
 const setAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -22,7 +22,7 @@ const setAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
             yield userAuth_model_1.User.create({
                 DID: "D000000",
                 EID: "EMP000000",
-                JID: "J000000",
+                PID: "P000000",
                 role: "Admin",
                 ManagerID: "EMP000000",
                 doj: new Date(),
@@ -44,17 +44,17 @@ const setAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
             }).then(() => {
                 console.log("Admin Department Created");
             });
-        const findJob = yield job_model_1.JobModel.find({ JID: "J000000" });
-        if (findJob.length === 0)
-            yield job_model_1.JobModel.create({
-                title: "adminJob",
-                description: "this is admin job",
+        const findPosition = yield position_model_1.PositionModel.find({ PID: "P000000" });
+        if (findPosition.length === 0)
+            yield position_model_1.PositionModel.create({
+                title: "adminPosition",
+                description: "this is admin Position",
                 DID: "D000000",
-                JID: "J000000",
+                PID: "P000000",
                 salary: 0,
                 type: "FullTime",
             }).then(() => {
-                console.log("Admin Job Created");
+                console.log("Admin Position Created");
             });
     }
     catch (err) {

@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
-import { JobModel } from "../models/job.model";
 import {
   CreateUserSchema,
   GetUserSchema,
@@ -14,36 +13,48 @@ import { generateRandomPassword, hashPassword } from "../utils/password.util";
 import { IDs } from "../models/idCounter.model";
 import { sendVerificationEmail } from "../utils/mail.util";
 import { sessionHandler } from "../utils/session.util";
+import { PositionModel } from "../models/position.model";
 
 export const createUser = sessionHandler(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response, session) => {
     const data = CreateUserSchema.parse(req.body);
 
-    const department = await DepartmentModel.findOne({ DID: data.DID });
-    const job = await JobModel.findOne({ JID: data.JID });
+    const department = await DepartmentModel.findOne({ DID: data.DID }, null, {
+      session,
+    });
+    const position = await PositionModel.findOne({ PID: data.PID }, null, {
+      session,
+    });
 
-    if (!department || !job) throw new Error("Department or Job not found");
+    if (!department || !position)
+      throw new Error("Department or Position not found");
 
-    const id = await generateId(IDs.EID);
+    const id = await generateId(IDs.EID, session);
     const password = generateRandomPassword();
     const hashedPassword = await hashPassword(password);
-    const user = await User.create({
-      ...data,
-      verified: false,
-      EID: id,
-      password: hashedPassword,
-      doj: new Date(),
-    });
+    const [user] = await User.create(
+      [
+        {
+          ...data,
+          verified: false,
+          EID: id,
+          password: hashedPassword,
+          doj: new Date(),
+        },
+      ],
+      { session }
+    );
     const result = await DepartmentModel.findOneAndUpdate(
       { DID: data.DID },
-      { $inc: { teamSize: 1 } }
+      { $inc: { teamSize: 1 } },
+      { session, new: true }
     );
     if (!result) throw new Error("Department not updated");
-    sendVerificationEmail(
+    const resultStatus = await sendVerificationEmail(
       { EID: id, _id: user._id, password, email: data.email },
-      "http://localhost:3000",
-      res
+      session
     );
+    return resultStatus;
   }
 );
 

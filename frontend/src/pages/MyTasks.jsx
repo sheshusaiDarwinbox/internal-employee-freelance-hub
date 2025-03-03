@@ -1,6 +1,6 @@
 import { Card } from "flowbite-react";
-import task1 from "../assets/Tasks/task1.jpg";
-import task2 from "../assets/Tasks/task2.jpg";
+import task1 from "../assets/Gigs/task1.jpg";
+import task2 from "../assets/Gigs/task2.jpg";
 
 const MyTasks = () => {
   const tasks = [

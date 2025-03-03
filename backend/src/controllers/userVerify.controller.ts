@@ -49,14 +49,13 @@ userVerifyController.get(
 userVerifyController.post(
   "/forgot-password",
   sessionHandler(async (req, res) => {
-    console.log("/forgot-password called to get the link for forgot password");
     ForgotPasswordZodSchema.parse(req.body);
     const { email, redirectUrl } = req.body;
 
     const user = await User.findOne({ email: email });
     if (!user) throw new Error("Email not found");
 
-    sendForgotPasswordMail(
+    await sendForgotPasswordMail(
       {
         _id: user._id,
         email: email,
@@ -70,7 +69,6 @@ userVerifyController.post(
 userVerifyController.post(
   "/forgot-password/:ID/:forgotVerifyString",
   sessionHandler(async (req, res) => {
-    console.log("forgot password reset called");
     const { ID, forgotVerifyString } = req.params;
     ForgotPasswordResetZodSchema.parse(req.body);
     const { newPassword, confirmPassword } = req.body;

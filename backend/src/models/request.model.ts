@@ -3,7 +3,7 @@ import type { Request, RequestModelType } from "../types/request.types";
 import paginate from "mongoose-paginate-v2";
 
 export enum RequestTypeEnum {
-  ApproveTask = "ApproveTask",
+  ApproveGig = "ApproveGig",
   CreateUser = "CreateUser",
   DeleteUser = "DeleteUser",
 }

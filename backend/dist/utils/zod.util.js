@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RequestZodSchema = exports.AssignManagerZodSchema = exports.CreateTaskZodSchema = exports.ForgotPasswordResetZodSchema = exports.ForgotPasswordZodSchema = exports.UsersArraySchema = exports.JobsArraySchema = exports.DepartmentArraySchema = exports.GetJobSchema = exports.CreateJobSchema = exports.CreateDepartmentSchema = exports.GetDepartmentSchema = exports.CreateUserSchema = exports.GetIDSchema = exports.GetUserSchema = exports.PasswordScheme = exports.EIDScheme = void 0;
+exports.RequestZodSchema = exports.AssignManagerZodSchema = exports.CreateGigZodSchema = exports.ForgotPasswordResetZodSchema = exports.ForgotPasswordZodSchema = exports.UsersArraySchema = exports.PositionsArraySchema = exports.DepartmentArraySchema = exports.GetPositionSchema = exports.CreatePositionSchema = exports.CreateDepartmentSchema = exports.GetDepartmentSchema = exports.CreateUserSchema = exports.GetIDSchema = exports.GetUserSchema = exports.PasswordScheme = exports.EIDScheme = void 0;
 const zod_1 = require("zod");
-const job_model_1 = require("../models/job.model");
+const position_model_1 = require("../models/position.model");
 const request_model_1 = require("../models/request.model");
 exports.EIDScheme = zod_1.z.union([
     zod_1.z.string().regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
@@ -32,7 +32,7 @@ exports.CreateUserSchema = zod_1.z.object({
     DID: zod_1.z
         .string()
         .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
-    JID: zod_1.z
+    PID: zod_1.z
         .string()
         .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
     role: zod_1.z.enum(["Admin", "Employee", "Manager", "Other"]),
@@ -64,21 +64,21 @@ exports.CreateDepartmentSchema = zod_1.z.object({
     ]),
     teamSize: zod_1.z.number().int(),
 });
-exports.CreateJobSchema = zod_1.z.object({
+exports.CreatePositionSchema = zod_1.z.object({
     title: zod_1.z.string().regex(/^[a-zA-Z0-9 ]+$/, {
         message: "Title must be alphanumeric with spaces",
     }),
     description: zod_1.z
         .string()
         .regex(/^[a-zA-Z0-9\s.,!?()&]+$/, "Description must be alphanumeric with grammar notations (e.g., spaces, punctuation)."),
-    type: zod_1.z.nativeEnum(job_model_1.JobTypeEnum),
+    type: zod_1.z.nativeEnum(position_model_1.PositionTypeEnum),
     salary: zod_1.z.number().int(),
     DID: zod_1.z
         .string()
         .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
-exports.GetJobSchema = zod_1.z.object({
-    JID: zod_1.z
+exports.GetPositionSchema = zod_1.z.object({
+    PID: zod_1.z
         .string()
         .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
@@ -91,7 +91,7 @@ exports.DepartmentArraySchema = zod_1.z.array(zod_1.z.enum([
     "CustomerSupport",
     "Other",
 ]));
-exports.JobsArraySchema = zod_1.z.array(zod_1.z.enum([
+exports.PositionsArraySchema = zod_1.z.array(zod_1.z.enum([
     "FullTime",
     "PartTime",
     "Internship",
@@ -109,7 +109,7 @@ exports.ForgotPasswordResetZodSchema = zod_1.z.object({
     newPassword: exports.PasswordScheme,
     confirmPassword: exports.PasswordScheme,
 });
-exports.CreateTaskZodSchema = zod_1.z.object({
+exports.CreateGigZodSchema = zod_1.z.object({
     ManagerID: zod_1.z
         .string()
         .regex(/^[a-zA-Z0-9]+$/, { message: "ManagerID must be alphanumeric" }),

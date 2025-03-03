@@ -21,7 +21,7 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
     type: Boolean,
     required: true,
   },
-  JID: { type: Schema.Types.String, ref: "Job", required: true },
+  PID: { type: Schema.Types.String, ref: "Position", required: true },
   DID: { type: Schema.Types.String, ref: "Department", required: true },
   ManagerID: { type: Schema.Types.String, ref: "UserAuth", required: true },
   phone: { type: String },

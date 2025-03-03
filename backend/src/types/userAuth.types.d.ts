@@ -8,7 +8,7 @@ export interface UserAuth {
   role: keyof typeof UserRole;
   email: string;
   verified: boolean;
-  JID: string;
+  PID: string;
   DID: string;
   ManagerID: string;
   gender?: string;
