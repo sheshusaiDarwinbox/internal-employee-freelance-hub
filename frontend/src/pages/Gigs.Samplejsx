@@ -1,84 +1,56 @@
-import { Card, Button, Modal, TextInput, Dropdown } from 'flowbite-react';
-import { HiSearch, HiX } from 'react-icons/hi';
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchGigsAsync } from '../redux/slices/gigsSlice';
-import Gig1 from '../assets/Gigs/Gig1.jpg';
-import Gig2 from '../assets/Gigs/Gig2.jpg';
-import Gig3 from '../assets/Gigs/Gig3.png';
-import Gig4 from '../assets/Gigs/Gig4.webp';
-import Gig5 from '../assets/Gigs/Gig5.png';
-import Gig6 from '../assets/Gigs/Gig6.png';
-import Gig7 from '../assets/Gigs/Gig7.jpg';
-import Gig8 from '../assets/Gigs/Gig8.jpeg';
-import Gig9 from '../assets/Gigs/Gig9.png';
-import Gig10 from '../assets/Gigs/Gig10.jpeg';
+import  { useState } from "react";
+import { Card, Button, Modal, TextInput, Dropdown } from "flowbite-react";
+import { HiSearch, HiX } from "react-icons/hi";
+import task1 from "../assets/Gigs/Gig1.jpg";
+import task2 from "../assets/Gigs/Gig2.jpg";
 
-const Gigss = () => {
-  const dispatch = useDispatch();
-  const authState = useSelector((state) => state.auth);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedGig, setSelectedGig] = useState(null);
-  const [Gigs, setGigs] = useState([]);
-  const gigImages = [Gig1, Gig2, Gig3, Gig4, Gig5, Gig6, Gig7, Gig8, Gig9, Gig10];
+const AllGigs = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedGig, setSelectedGig] = useState(null);
 
-  const handleOpenModal = (Gig) => {
-    setSelectedGig(Gig);
+  const handleOpenModal = (gig) => {
+    setSelectedGig(gig);
     setOpenModal(true);
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return dateString.split('T')[0]; // Extract the date part
-  };
+  const gigs = [
+    {
+      image: task1,
+      postedBy: "John Doe",
+      department: "Engineering",
+      projectTitle: "Gig Management System",
+      description: "Develop a gig management system using React and Node.js",
+      longDescription:
+        "This project involves creating a comprehensive gig management system...",
+      tags: ["React", "Node.js", "MongoDB"],
+      status: "Available",
+      points: 500,
+      deadline: "March 30, 2025",
+      amount: "$1000",
+    },
+    {
+      image: task2,
+      postedBy: "Jane Smith",
+      department: "Design",
+      projectTitle: "UI/UX Redesign",
+      description: "Redesign the user interface for better user experience",
+      longDescription:
+        "This project focuses on enhancing the overall user experience...",
+      tags: ["Figma", "UI/UX", "Prototyping"],
+      status: "Available",
+      points: 250,
+      deadline: "April 10, 2025",
+      amount: "$500",
+    },
+  ];
 
-  useEffect(() => {
-    const fetchGigs = async () => {
-      const departmentNames = {};
-      const response = await dispatch(fetchGigsAsync());
-      if (response && response.payload && response.payload.docs) {
-        
-        const GigsData = await Promise.all(response.payload.docs.map(async (Gig) => {
-          console.log(Gig.DID);
-          const departmentResponse = await fetch(`http://localhost:3000/api/departments/${Gig.DID}`,
-            { credentials:'include' }
-          );
-          const departmentData = await departmentResponse.json();
-          departmentNames[Gig.department] = departmentData.name; 
-          const randomImage = gigImages[Math.floor(Math.random() * gigImages.length)];
-          // console.log(departmentNames[Gig.department]);
-          return {
-            image: randomImage,
-            postedBy: "Manager",
-            department: departmentNames[Gig.department] || Gig.department,
-            projectTitle: Gig.title,
-            description: Gig.description,
-            tags: Gig.skillsRequired,
-            status: Gig.ongoingStatus,
-            points: String(Gig.rewardPoints || 0),
-            deadline: Gig.deadline,
-            amount: Gig.amount,
-            assignedAt: Gig.assignedAt,
-            rating: Gig.rating,
-            feedback: Gig.feedback,
-          };
-        }));
-        setGigs(GigsData);
-      }
-    };
+  const departments = [...new Set(gigs.map((gig) => gig.department))];
+  const allSkills = [...new Set(gigs.flatMap((gig) => gig.tags))];
 
-    fetchGigs();
-  }, []);
-
-  const showButtons = authState?.user?.role === "Employee" || authState?.user?.role === "Other";
-
-  const departments = [...new Set(Gigs.map((gig) => gig.department))];
-  const allSkills = [...new Set(Gigs.flatMap((gig) => gig.tags))];
-
-  const filteredGigs = Gigs.filter((gig) => {
+  const filteredGigs = gigs.filter((gig) => {
     const matchesSearch =
       gig.projectTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       gig.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -93,6 +65,7 @@ const Gigss = () => {
 
   return (
     <div className="p-6 bg-gray-50">
+      {/* Search and Filters */}
       <div className="mb-6 space-y-4">
         <div className="flex gap-4">
           <TextInput
@@ -176,36 +149,37 @@ const Gigss = () => {
         )}
       </div>
 
+      {/* Gigs List */}
       <div className="grid grid-cols-1 gap-6">
-        {filteredGigs.map((Gig, index) => (
+        {filteredGigs.map((gig, index) => (
           <Card
             key={index}
-            onClick={() => handleOpenModal(Gig)}
+            onClick={() => handleOpenModal(gig)}
             className="hover:shadow-lg transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >
             <div className="flex">
               <div className="w-1/3 pr-4">
                 <img
-                  src={Gig.image}
+                  src={gig.image}
                   alt="Gig"
-                  className="w-[90%] h-48 object-cover rounded-lg shadow-sm"
+                  className="w-full h-48 object-cover rounded-lg shadow-sm"
                 />
                 <p className="text-sm mt-2 text-center text-gray-700">
-                  Posted by: {Gig.postedBy}
+                  Posted by: {gig.postedBy}
                 </p>
                 <p className="text-sm text-gray-600 text-center">
-                  Dept: {Gig.department}
+                  Dept: {gig.department}
                 </p>
               </div>
               <div className="w-2/3">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">
-                  {Gig.projectTitle}
+                  {gig.projectTitle}
                 </h2>
                 <p className="text-gray-600 mb-4 line-clamp-3">
-                  {Gig.description}
+                  {gig.description}
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {Gig.tags.map((tag, i) => (
+                  {gig.tags.map((tag, i) => (
                     <span
                       key={i}
                       className="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full text-sm font-medium"
@@ -216,11 +190,11 @@ const Gigss = () => {
                 </div>
                 <div className="flex justify-between items-center mt-auto">
                   <div className="flex gap-4 text-sm text-gray-600">
-                    <span>Points: {Gig.points}</span>
-                    <span>Amount: {Gig.amount}</span>
+                    <span>Points: {gig.points}</span>
+                    <span>Amount: {gig.amount}</span>
                   </div>
                   <span className="text-sm text-gray-500">
-                     Deadline: {formatDate(Gig.deadline)}
+                    Deadline: {gig.deadline}
                   </span>
                 </div>
               </div>
@@ -229,7 +203,8 @@ const Gigss = () => {
         ))}
       </div>
 
-      <Modal show={openModal} onClose={() => setOpenModal(false)} size="3xl">
+      {/* Gig Detail Modal */}
+      <Modal show={openModal} onClose={() => setOpenModal(false)} size="xl">
         <Modal.Header>
           <h3 className="text-xl font-semibold text-gray-900">
             {selectedGig?.projectTitle}
@@ -241,13 +216,13 @@ const Gigss = () => {
               <img
                 src={selectedGig?.image}
                 alt="Gig"
-                className="w-[250px] h-[200px] my-auto rounded-lg shadow-md object-cover"
+                className="w-1/3 rounded-lg shadow-md object-cover"
               />
               <div className="w-2/3 space-y-4">
                 <div>
                   <h4 className="font-semibold text-gray-900">Description</h4>
                   <p className="text-gray-700 mt-1">
-                    {selectedGig?.description}
+                    {selectedGig?.longDescription}
                   </p>
                 </div>
                 <div>
@@ -284,10 +259,6 @@ const Gigss = () => {
                     <h4 className="font-semibold text-gray-900">Amount</h4>
                     <p className="text-gray-700 mt-1">{selectedGig?.amount}</p>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Deadline</h4>
-                    <p className="text-gray-700 mt-1">{formatDate(selectedGig?.deadline)}</p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -295,16 +266,10 @@ const Gigss = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={() => setOpenModal(false)}>Close</Button>
-          {showButtons && (
-            <div className="flex gap-2">
-              <Button className="bg-blue-200 text-green-900 hover:bg-green-300 rounded-full">Add Request</Button>
-              <Button className="bg-green-300 text-green-900 hover:bg-green-400 rounded-full">Refer External</Button>
-            </div>
-          )}
         </Modal.Footer>
       </Modal>
     </div>
   );
 };
 
-export default Gigss;
+export default AllGigs;

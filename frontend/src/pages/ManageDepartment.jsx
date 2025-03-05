@@ -33,8 +33,7 @@ const DepartmentManagement = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    function: "Engineering",
-    teamSize: 0,
+    function: "Engineering", // Default value
   });
 
   const [excelData, setExcelData] = useState(null);
@@ -160,11 +159,8 @@ const DepartmentManagement = () => {
     setView("form");
   };
 
-  const handleDelete = async (DID) => {
-    const response = await api.delete(`api/departments/${DID}`, {
-      withCredentials: true,
-    });
-    setDepartments(departments.filter((dept) => dept.DID !== DID));
+  const handleDelete = (id) => {
+    setDepartments(departments.filter((dept) => dept._id !== id));
   };
 
   const handleSearchChange = useCallback((e) => {
@@ -329,7 +325,9 @@ const DepartmentManagement = () => {
                     )
                   );
                 }}
-                handleDelete={handleDelete}
+                handleDelete={(id) => {
+                  setDepartments(departments.filter((dept) => dept.id !== id));
+                }}
               />
             </div>
           )}
@@ -358,16 +356,7 @@ const DepartmentManagement = () => {
                 handleSubmit={async (e) => {
                   e.preventDefault();
                   try {
-                    const response = await api.post(
-                      "api/departments/create",
-                      formData,
-                      {
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        withCredentials: true,
-                      }
-                    );
+                    const response = await api.post("/departments", formData);
                     setDepartments([...departments, response.data]);
                     handleViewChange("list");
                   } catch (error) {

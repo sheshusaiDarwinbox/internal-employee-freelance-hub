@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useDispatch } from "react-redux";
-import { updateProfileImage } from "../redux/slices/authSlice";
+// import {updateProfileImage} from '../redux/slices/authSlice'
 import { Card, Button, Modal } from "flowbite-react";
 import { useSelector } from "react-redux";
 import UpdateProfileForm from "../components/UpdateProfileForm";
@@ -28,12 +28,13 @@ const Profile = () => {
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
+
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("profileImage", file);
 
     try {
       setUploadLoading(true);
-      await dispatch(updateProfileImage({ formData: formData })).unwrap();
+      // await dispatch(updateProfileImage(formData)).unwrap();
     } catch (error) {
       setError("Failed to upload image");
     } finally {
@@ -77,7 +78,7 @@ const Profile = () => {
 
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {user.fullName || "Name"}
+                {user.name || "Name"}
               </h1>
               <p className="text-gray-600">{user.email || "email"}</p>
               <p className="text-gray-500 capitalize">{user.role || "role"}</p>
@@ -113,7 +114,7 @@ const Profile = () => {
           <div className="space-y-3">
             <InfoRow label="Employee ID" value={user.EID} />
             <InfoRow label="Department" value={user.DID} />
-            <InfoRow label="Job Role" value={user.PID} />
+            <InfoRow label="Job Role" value={user.JID} />
             <InfoRow label="Work Mode" value={user.workmode} />
             <InfoRow label="Date of Joining" value={formatDate(user.doj)} />
           </div>
