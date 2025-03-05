@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { memo } from "react";
 import axios from "axios";
-const API_BASE_URL = "http://localhost:3000/api"; // Update with your backend URL
-const redirectUrl = "http://localhost:5173/reset-password"; //  frontend URL for password reset
+const API_BASE_URL = "http://localhost:3000/api";
+const redirectUrl = "http://localhost:5173/reset-password";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();

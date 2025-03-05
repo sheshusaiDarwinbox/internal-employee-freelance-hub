@@ -5,6 +5,7 @@ import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
 export const checkAuth = (roles: Array<keyof typeof UserRole> | undefined) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.isAuthenticated()) {
+      console.log(req.user);
       res
         .status(HttpStatusCodes.UNAUTHORIZED)
         .json({ message: "Unauthorized" });

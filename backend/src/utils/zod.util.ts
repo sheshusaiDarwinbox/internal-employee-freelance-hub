@@ -60,7 +60,7 @@ export const CreateDepartmentSchema = z.object({
       /^[a-zA-Z0-9\s.,!?()&]+$/,
       "Description must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
     ),
-  type: z.enum([
+  function: z.enum([
     "Engineering",
     "Product",
     "Finance",

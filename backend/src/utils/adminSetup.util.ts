@@ -29,7 +29,7 @@ export const setAdmin = async () => {
         name: "adminDepartment",
         description: "this is admin department",
         DID: "D000000",
-        type: "Engineering",
+        function: "Engineering",
         teamSize: 1,
       }).then(() => {
         console.log("Admin Department Created");

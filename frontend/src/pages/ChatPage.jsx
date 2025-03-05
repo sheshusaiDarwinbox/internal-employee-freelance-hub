@@ -60,7 +60,6 @@ const ChatPage = () => {
 
   return (
     <div className="h-full flex">
-      {/* Contacts Sidebar */}
       <div className="w-1/4 border-r border-gray-200 bg-white flex flex-col h-[calc(100vh-12rem)]">
         <div className="p-4 border-b">
           <TextInput
@@ -114,7 +113,6 @@ const ChatPage = () => {
         </div>
       </div>
 
-      {/* Chat Window */}
       <div className="flex-1 flex flex-col h-[calc(100vh-12rem)] bg-white">
         {activeChat ? (
           <>

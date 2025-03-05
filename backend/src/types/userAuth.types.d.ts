@@ -30,6 +30,7 @@ export interface UserAuth {
   skills?: string[];
   accountBalance?: number;
   img?: string;
+  fullName?: string;
 }
 
 export type UserAuthModel = Model<UserAuth>;

@@ -5,7 +5,6 @@ import { Navigate } from "react-router-dom";
 const PublicRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
 
-  // if (children?.type?.name === "ResetPassword") return children;
   if (location.pathname.includes("reset-password")) {
     return children;
   }

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import api from "../../utils/api";
 
 // Base URL for API calls
 const API_BASE_URL = "http://localhost:3000/api"; // Update with your backend URL
@@ -44,6 +45,44 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+export const updateProfileImage = createAsyncThunk(
+  "auth/updateProfileImg",
+  async ({ formData }, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`api/users/upload-img`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+      });
+      console.log("response" + response);
+      return response.data;
+    } catch (err) {
+      console.log("File upload Error", err.response?.data);
+      return rejectWithValue(err.response?.data);
+    }
+  }
+);
+
+export const updateProfile = createAsyncThunk(
+  "auth/updateProfile",
+  async ({ formData }, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`api/users/update-profile`, formData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      });
+      console.log(response);
+      return response.data;
+    } catch (err) {
+      console.log("update profile err", err.response?.data);
+      return rejectWithValue(err.response?.data);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -76,6 +115,15 @@ const authSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         // localStorage.removeItem("user");
+      })
+      .addCase(updateProfileImage.fulfilled, (state, action) => {
+        state.user.img = action.payload.fileUrl;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.user = {
+          ...state.user,
+          ...action.payload,
+        };
       });
   },
 });

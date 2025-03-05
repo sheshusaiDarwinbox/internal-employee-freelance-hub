@@ -19,12 +19,6 @@ const ChangePasswordForm = ({ onClose }) => {
       return;
     }
     try {
-      //   await dispatch(
-      //     changePassword({
-      //       currentPassword: formData.currentPassword,
-      //       newPassword: formData.newPassword,
-      //     })
-      //   ).unwrap();
       onClose();
     } catch (error) {
       setError(error.message);

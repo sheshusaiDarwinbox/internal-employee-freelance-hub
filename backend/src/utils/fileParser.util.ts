@@ -1,8 +1,18 @@
 import { Upload } from "@aws-sdk/lib-storage";
 import { S3Client } from "@aws-sdk/client-s3";
-import { Readable } from "stream";
 import formidable from "formidable";
 import { Request } from "express";
+import { v4 as uuidV4 } from "uuid";
+import AWS from "aws-sdk";
+import mime from "mime-types";
+import path from "path";
+import fs from "fs";
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  region: process.env.S3_REGION,
+});
 
 interface FileUploadResult {
   fileName: string;
@@ -30,13 +40,19 @@ const uploadToS3 = async (
   fileBuffer: Buffer,
   fileName: string
 ): Promise<string> => {
+  const extension = path.extname(fileName);
+  const contentType = mime.lookup(fileName) || "application/octet-stream";
+
   const upload = new Upload({
     client: s3Client,
     params: {
       Bucket: process.env.S3_BUCKET!,
-      Key: `uploads/${fileName}`,
+      Key: `uploads/${uuidV4()}-${path.basename(
+        fileName,
+        extension
+      )}${extension}`,
       Body: fileBuffer,
-      ContentType: "application/octet-stream",
+      ContentType: contentType,
     },
   });
 
@@ -60,48 +76,57 @@ export const parseFile = async (req: Request): Promise<FileUploadResult> => {
       },
     });
 
-    let fileBuffer: Buffer[] = [];
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        return reject(err);
+      }
 
-    form.parse(req, (err) => {
-      if (err) reject(err);
-    });
+      const fileKey = Object.keys(files)[0];
+      const fileArray = files[fileKey];
 
-    form.on("file", async (formName, file) => {
+      if (!fileArray || !fileArray.length) {
+        return reject(new Error("No file uploaded"));
+      }
+
+      const file = Array.isArray(fileArray) ? fileArray[0] : fileArray;
+
       try {
-        const stream = Readable.from(file.toJSON().filepath);
+        const fileBuffer = fs.readFileSync(file.filepath);
 
-        stream.on("data", (chunk) => {
-          fileBuffer.push(Buffer.from(chunk));
-        });
+        const fileUrl = await uploadToS3(
+          fileBuffer,
+          file.originalFilename || file.newFilename || "unnamed"
+        );
 
-        stream.on("end", async () => {
-          try {
-            const finalBuffer = Buffer.concat(fileBuffer);
-            const fileUrl = await uploadToS3(
-              finalBuffer,
-              file.originalFilename || "unnamed"
-            );
+        fs.unlinkSync(file.filepath);
 
-            resolve({
-              fileName: file.originalFilename || "unnamed",
-              fileUrl,
-              fileSize: file.size,
-            });
-          } catch (error) {
-            reject(error);
-          }
-        });
-
-        stream.on("error", (error) => {
-          reject(error);
+        resolve({
+          fileName: file.originalFilename || file.newFilename || "unnamed",
+          fileUrl,
+          fileSize: file.size,
         });
       } catch (error) {
         reject(error);
       }
     });
-
-    form.on("error", (error) => {
-      reject(error);
-    });
   });
+};
+
+export const generatePresignedUrl = async (
+  bucketName: string,
+  objectKey: string
+) => {
+  const params = {
+    Bucket: bucketName,
+    Key: objectKey,
+    Expires: 60 * 60,
+  };
+
+  try {
+    const signedUrl = s3.getSignedUrl("getObject", params);
+    return signedUrl;
+  } catch (error) {
+    console.error("Error generating presigned URL:", error);
+    throw new Error("Error generating presigned URL");
+  }
 };

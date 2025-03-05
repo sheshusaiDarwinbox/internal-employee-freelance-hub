@@ -4,7 +4,8 @@ import { Dropdown } from "flowbite-react";
 import { Bell, MessageCircle, UserCircle } from "lucide-react";
 import logo from "../assets/darwinbox-logo.png";
 
-const Navbar = () => {
+const Navbar = ({ linkName }) => {
+  console.log(linkName);
   const [notifications, setNotifications] = useState([
     {
       NID: "1",
@@ -41,7 +42,6 @@ const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-200 fixed w-full z-30 top-0 px-4">
       <div className="w-full mx-auto p-4 flex justify-between items-center">
-        {/* Logo & Branding */}
         <Link
           to="/"
           className="flex items-center space-x-3 rtl:space-x-reverse"
@@ -52,13 +52,11 @@ const Navbar = () => {
           </span>
         </Link>
 
-        {/* Right-side icons & User Info */}
         <div className="flex items-center space-x-4 md:space-x-8 flex-wrap">
-          <Link to="/user/" className="text-lg hover:text-blue-600">
+          <Link to={linkName} className="text-lg hover:text-blue-600">
             Home
           </Link>
 
-          {/* Notifications Dropdown */}
           <Dropdown
             label={
               <div className="relative p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
@@ -125,26 +123,18 @@ const Navbar = () => {
             </div>
           </Dropdown>
 
-          {/* Messaging Icon
-          <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-            <MessageCircle className="w-6 h-6 text-blue-700 dark:text-blue-300" />
-          </button> */}
-
-          {/* Messaging Icon */}
-          <Link to="/user/chat">
+          <Link to={`${linkName}/chat`}>
             <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
               <MessageCircle className="w-6 h-6 text-blue-700 dark:text-blue-300" />
             </button>
           </Link>
 
-          {/* Profile Icon */}
           <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 border-b border-gray-200">
-            <Link to="/user/profile">
+            <Link to={`${linkName}/profile`}>
               <UserCircle className="w-6 h-6 text-blue-700 dark:text-blue-300" />
             </Link>
           </button>
 
-          {/* Welcome User Text */}
           <span className="text-gray-900 dark:text-gray-300 font-medium hidden md:inline">
             Welcome, <span className="font-semibold">John Doe</span>
           </span>

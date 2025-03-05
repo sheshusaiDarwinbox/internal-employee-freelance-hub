@@ -6,7 +6,7 @@ import {
   UsersArraySchema,
 } from "../utils/zod.util";
 import { Router } from "express";
-import { User } from "../models/userAuth.model";
+import { User, UserRole } from "../models/userAuth.model";
 import { generateId } from "../utils/counterManager.util";
 import { DepartmentModel } from "../models/department.model";
 import { generateRandomPassword, hashPassword } from "../utils/password.util";
@@ -14,6 +14,9 @@ import { IDs } from "../models/idCounter.model";
 import { sendVerificationEmail } from "../utils/mail.util";
 import { sessionHandler } from "../utils/session.util";
 import { PositionModel } from "../models/position.model";
+import { parseFile } from "../utils/fileParser.util";
+import { checkAuth } from "../middleware/checkAuth.middleware";
+import { generatePresignedUrl } from "../utils/fileParser.util";
 
 export const createUser = sessionHandler(
   async (req: Request, res: Response, session) => {
@@ -73,7 +76,8 @@ export const getAllUsers = sessionHandler(
       offset: pageNum * 10,
       limit: 10,
     });
-    res.status(HttpStatusCodes.OK).send(users);
+    // res.status(HttpStatusCodes.OK).send(users);
+    return users;
   }
 );
 
@@ -85,7 +89,8 @@ export const deleteUserByID = sessionHandler(
     if (!user) throw new Error("Bad Request");
     const result = await User.deleteOne({ EID: ID });
     if (result.acknowledged === false) throw new Error("User Not Deleted");
-    res.status(HttpStatusCodes.OK).send(user);
+    // res.status(HttpStatusCodes.OK).send(user);
+    return user;
   }
 );
 
@@ -93,17 +98,111 @@ export const getUserById = sessionHandler(
   async (req: Request, res: Response) => {
     const { ID } = req.params;
 
-    console.log(ID);
     GetUserSchema.parse({ EID: ID });
     const user = await User.findOne({ EID: ID });
     if (!user) throw new Error("Bad Request");
-    res.status(HttpStatusCodes.OK).send(user);
+    // res.status(HttpStatusCodes.OK).send(user);
+    return user;
+  }
+);
+
+export const uploadProfileImg = sessionHandler(
+  async (req: Request, res: Response, session) => {
+    const data = await parseFile(req);
+    if (!data || !data.fileUrl) throw new Error("failed to upload img");
+    const user = await User.findOneAndUpdate(
+      {
+        EID: req.user?.EID,
+      },
+      { $set: { img: data.fileUrl } },
+      { upsert: true, session }
+    );
+    if (!user) throw new Error("failed to store file url");
+    const url = "https://talent-hive-s3.s3.ap-south-1.amazonaws.com/";
+    const presignedUrl = await generatePresignedUrl(
+      "talent-hive-s3",
+      data.fileUrl.substring(url.length)
+    );
+    console.log(presignedUrl);
+    return {
+      message: "Success",
+      data: {
+        ...data,
+        fileUrl: presignedUrl,
+      },
+    };
+  }
+);
+
+export const getProfile = sessionHandler(
+  async (req: Request, res: Response) => {
+    const EID = req.user?.EID;
+    const user = await User.findOne({ EID: EID });
+    if (!user) throw new Error("User not found");
+    return user;
+  }
+);
+
+export const updateProfile = sessionHandler(
+  async (req: Request, res: Response) => {
+    const EID = req.user?.EID;
+    const user = await User.findOne({ EID: EID });
+    if (!user) throw new Error("User not found");
+    console.log(req.body);
+    const {
+      gender,
+      phone,
+      dob,
+      maritalStatus,
+      nationality,
+      bloodGroup,
+      workmode,
+      address,
+      city,
+      state,
+      country,
+      pincode,
+      emergencyContactNumber,
+      skills,
+      fullName,
+    } = req.body;
+
+    const updatedUser = await User.findOneAndUpdate(
+      { EID: req.user?.EID },
+      {
+        $set: {
+          phone: phone,
+          gender: gender,
+          dob: dob,
+          maritalStatus: maritalStatus,
+          nationality: nationality,
+          bloodGroup: bloodGroup,
+          workmode: workmode,
+          address: address,
+          city: city,
+          state: state,
+          country: country,
+          pincode: pincode,
+          emergencyContactNumber: emergencyContactNumber,
+          skills: skills,
+          fullName: fullName,
+        },
+      },
+      { upsert: true }
+    );
+    if (!updatedUser) throw new Error("user update failed");
+    return {
+      data: updatedUser,
+    };
   }
 );
 
 export const userControlRouter = Router();
 
-userControlRouter.post("/create", createUser);
-userControlRouter.get("", getAllUsers);
-userControlRouter.delete("/:ID", deleteUserByID);
-userControlRouter.get("/:ID", getUserById);
+userControlRouter.post("/create", checkAuth([UserRole.Admin]), createUser);
+userControlRouter.get("", checkAuth([UserRole.Admin]), getAllUsers);
+userControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteUserByID);
+userControlRouter.get("/:ID", checkAuth([UserRole.Admin]), getUserById);
+userControlRouter.post("/upload-img", checkAuth([]), uploadProfileImg);
+userControlRouter.get("/profile", checkAuth([]), getProfile);
+userControlRouter.post("/update-profile", checkAuth([]), updateProfile);

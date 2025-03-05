@@ -23,19 +23,22 @@ export const createDepartment = sessionHandler(
     const departmentData: Department = { ...data, DID };
     const department = await DepartmentModel.create(departmentData);
     if (!department) throw new Error("Server Error");
-    res.status(201).send(department);
+    return {
+      status: HttpStatusCodes.OK,
+      data: department,
+    };
   }
 );
 
 export const getAllDepartments = sessionHandler(
   async (req: Request, res: Response) => {
-    const { types, page = 0, search = "" } = req.query;
+    const { functions, page = 1, search = "" } = req.query;
     const filter: any = {};
-    const pageNum = Number(page);
-    if (types) {
-      const typesArray = (types as string).split(",");
-      DepartmentArraySchema.parse(typesArray);
-      filter.type = { $in: typesArray };
+    const pageNum = Number(page) - 1;
+    if (functions) {
+      const functionsArray = (functions as string).split(",");
+      DepartmentArraySchema.parse(functionsArray);
+      filter.type = { $in: functionsArray };
     }
 
     if (search !== "") {
@@ -46,7 +49,7 @@ export const getAllDepartments = sessionHandler(
       offset: pageNum * 10,
       limit: 10,
     });
-    res.status(HttpStatusCodes.OK).send(departments);
+    return { status: HttpStatusCodes.OK, data: departments };
   }
 );
 
@@ -60,7 +63,10 @@ export const deleteDepartmentByID = sessionHandler(
     if (!department) throw new Error("Bad Request");
     const result = await DepartmentModel.deleteOne({ DID: ID });
     if (result.deletedCount === 0) throw new Error("Department not deleted");
-    res.status(HttpStatusCodes.OK).send(department);
+    return {
+      status: HttpStatusCodes.OK,
+      data: department,
+    };
   }
 );
 
@@ -70,7 +76,10 @@ export const getDepartmentByID = sessionHandler(
     GetDepartmentSchema.parse({ DID: ID });
     const department = await DepartmentModel.findOne({ DID: ID });
     if (!department) throw new Error("Bad Request");
-    res.status(HttpStatusCodes.OK).send(department);
+    return {
+      status: HttpStatusCodes.OK,
+      data: department,
+    };
   }
 );
 
@@ -101,7 +110,10 @@ export const assignManagerToDepartment = sessionHandler(
     );
 
     if (!updatedDepartment) throw new Error("failed to assign manager");
-    res.status(HttpStatusCodes.OK).send(updatedDepartment);
+    return {
+      status: HttpStatusCodes.OK,
+      data: updatedDepartment,
+    };
   }
 );
 

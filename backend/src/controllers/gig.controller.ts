@@ -49,7 +49,11 @@ export const createGig = sessionHandler(
       });
       if (!request) throw new Error("failed to create request");
     }
-    res.status(HttpStatusCodes.CREATED).send(data);
+    // res.status(HttpStatusCodes.CREATED).send(data);
+    return {
+      status: HttpStatusCodes.CREATED,
+      data: data,
+    };
   }
 );
 
@@ -88,7 +92,11 @@ export const getAllGigs = sessionHandler(
       offset: Number(page) * 10,
       limit: 10,
     });
-    res.status(HttpStatusCodes.OK).send(gigs);
+    // res.status(HttpStatusCodes.OK).send(gigs);
+    return {
+      status: HttpStatusCodes.OK,
+      data: gigs,
+    };
   }
 );
 
@@ -97,7 +105,11 @@ export const getGigById = sessionHandler(
     const { GigID } = req.params;
     GetIDSchema.parse({ ID: GigID });
     const gig = await Gig.findOne({ PID: GigID });
-    res.status(HttpStatusCodes.OK).send(gig);
+    // res.status(HttpStatusCodes.OK).send(gig);
+    return {
+      status: HttpStatusCodes.OK,
+      data: gig,
+    };
   }
 );
 

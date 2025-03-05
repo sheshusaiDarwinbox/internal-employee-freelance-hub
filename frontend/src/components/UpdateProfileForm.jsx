@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, Label, TextInput, Select } from "flowbite-react";
 import { useSelector, useDispatch } from "react-redux";
-// import { updateProfile } from "../redux/slices/authSlice";
+import { updateProfile } from "../redux/slices/authSlice";
 
 const UpdateProfileForm = ({ onClose }) => {
   const { user } = useSelector((state) => state.auth);
@@ -10,6 +10,7 @@ const UpdateProfileForm = ({ onClose }) => {
     phone: user.phone || "",
     gender: user.gender || "",
     dob: user.dob || "",
+    fullName: user.fullName || "",
     maritalStatus: user.maritalStatus || "",
     nationality: user.nationality || "",
     bloodGroup: user.bloodGroup || "",
@@ -26,7 +27,7 @@ const UpdateProfileForm = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      //   await dispatch(updateProfile(formData)).unwrap();
+      await dispatch(updateProfile({ formData: formData })).unwrap();
       onClose();
     } catch (error) {
       console.error("Update failed:", error);
@@ -37,6 +38,20 @@ const UpdateProfileForm = ({ onClose }) => {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Personal Information */}
+
+        <div>
+          <Label htmlFor="phone">Full Name</Label>
+          <TextInput
+            id="phone"
+            type="tel"
+            value={formData.fullName}
+            onChange={(e) =>
+              setFormData({ ...formData, fullName: e.target.value })
+            }
+            placeholder="Enter your name"
+          />
+        </div>
+
         <div>
           <Label htmlFor="phone">Phone Number</Label>
           <TextInput

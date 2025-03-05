@@ -12,6 +12,7 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   EID: { type: String, index: true, unique: true, required: true },
   password: { type: String, required: true },
   email: { type: String, unique: true, required: true },
+  fullName: { type: String },
   role: {
     type: String,
     enum: UserRole,

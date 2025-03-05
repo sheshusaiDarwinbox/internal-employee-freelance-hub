@@ -3,8 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../redux/slices/authSlice";
 import { Card } from "flowbite-react";
-import ProfileAvatar from "../assets/about.png";
-import tempUser from "../assets/temp-user.jpg";
+import ProfileAvatar from "../assets/profile-avatar.png";
 
 const Sidebar = ({ navlinks }) => {
   const dispatch = useDispatch();
@@ -34,13 +33,13 @@ const Sidebar = ({ navlinks }) => {
         <div className="flex flex-col items-center mb-8">
           <div className="relative group">
             <img
-              src={user?.img || tempUser}
+              src={user?.img || ProfileAvatar}
               alt="Profile Avatar"
               className="h-40 rounded-[100%] aspect-square object-cover border-4 border-white shadow-md transition-transform duration-300 group-hover:scale-105"
             />
           </div>
           <h2 className="text-2xl font-semibold text-gray-800 mt-4">
-            {user?.name || "John Doe"}
+            {user?.fullName || "John Doe"}
           </h2>
           <h2 className="text-lg font-medium text-blue-500 capitalize">
             {userRole}

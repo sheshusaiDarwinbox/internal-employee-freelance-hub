@@ -7,12 +7,13 @@ declare global {
       password?: string;
       role: keyof typeof UserRole;
       email?: string;
+      fullName?: string;
       PID: string;
       DID: string;
       ManagerID: string;
       gender?: string;
-      DOB?: string;
-      DOJ?: string;
+      dob?: string;
+      doj?: string;
       nationality?: string;
       maritalStatus?: string;
       bloodGroup?: string;
@@ -28,6 +29,7 @@ declare global {
       freelanceRating?: number;
       skills?: string[];
       AccountBalance?: number;
+      img?: string;
     }
   }
 }

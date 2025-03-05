@@ -17,6 +17,7 @@ import z from "zod";
 
 export const createPosition = sessionHandler(
   async (req: Request, res: Response, session) => {
+    if (req.body.salary) req.body.salary = parseInt(req.body.salary);
     const data = CreatePositionSchema.parse(req.body);
     const Department = await DepartmentModel.findOne({ DID: data.DID });
     if (!Department) {
@@ -25,15 +26,18 @@ export const createPosition = sessionHandler(
     const PID = await generateId(IDs.PID, session);
     const position = await PositionModel.create({ ...data, PID });
     if (!position) throw new Error("Position not created");
-    res.status(201).json(position);
+    return {
+      status: HttpStatusCodes.CREATED,
+      data: position,
+    };
   }
 );
 
 export const getAllPositions = sessionHandler(
   async (req: Request, res: Response) => {
-    const { types, page = 0, DIDs, search } = req.query;
+    const { types, page = 1, DIDs, search } = req.query;
     let filter: any = {};
-    const pageNum = Number(page);
+    const pageNum = Number(page) - 1;
 
     if (types) {
       const typesArray = (types as string).split(",");
@@ -59,11 +63,56 @@ export const getAllPositions = sessionHandler(
         $text: { $search: search },
       };
     }
-    const positions = await PositionModel.paginate(filter, {
-      offset: pageNum * 10,
-      limit: 10,
-    });
-    res.status(HttpStatusCodes.OK).send(positions);
+
+    const positions = await PositionModel.aggregate([
+      { $match: filter },
+      { $skip: pageNum * 10 },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: "departments",
+          localField: "DID",
+          foreignField: "DID",
+          as: "department",
+        },
+      },
+      {
+        $unwind: {
+          path: "$department",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          PID: 1,
+          title: 1,
+          description: 1,
+          type: 1,
+          DID: 1,
+          salary: 1,
+          "department.name": 1,
+          "department.function": 1,
+          "department.teamSize": 1,
+        },
+      },
+    ]);
+
+    const total = await PositionModel.countDocuments(filter);
+
+    return {
+      status: HttpStatusCodes.OK,
+      data: {
+        docs: positions,
+        totalDocs: total,
+        limit: 10,
+        page: pageNum + 1,
+        totalPages: Math.ceil(total / 10),
+        hasNextPage: (pageNum + 1) * 10 < total,
+        nextPage: (pageNum + 1) * 10 < total ? pageNum + 2 : null,
+        hasPrevPage: pageNum > 0,
+        prevPage: pageNum > 0 ? pageNum : null,
+      },
+    };
   }
 );
 
@@ -77,7 +126,10 @@ export const deletePositionByID = sessionHandler(
     if (!position) throw new Error("Bad Request");
     const result = await PositionModel.deleteOne({ PID: ID });
     if (result.acknowledged === false) throw new Error("position not deleted");
-    res.status(HttpStatusCodes.OK).send(position);
+    return {
+      status: HttpStatusCodes.OK,
+      data: position,
+    };
   }
 );
 
@@ -87,7 +139,10 @@ export const getPositionById = sessionHandler(
     GetPositionSchema.parse({ PID: ID });
     const position = await PositionModel.findOne({ PID: ID });
     if (!position) throw new Error("Bad Request");
-    res.status(HttpStatusCodes.OK).send(position);
+    return {
+      status: HttpStatusCodes.OK,
+      data: position,
+    };
   }
 );
 

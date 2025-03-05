@@ -1,9 +1,9 @@
 import { Button, TextInput, Label, Select } from "flowbite-react";
 import { DepartmentFunctions } from "../../pages/ManageDepartment";
 
-const FormView = ({ handleCreate, setFormData, formData }) => (
+const FormView = ({ handleSubmit, setFormData, formData }) => (
   <div className="space-y-4">
-    <form onSubmit={handleCreate} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label htmlFor="name">Department Name</Label>
         <TextInput
@@ -40,6 +40,17 @@ const FormView = ({ handleCreate, setFormData, formData }) => (
             </option>
           ))}
         </Select>
+      </div>
+      <div>
+        <Label htmlFor="teamSize">teamSize</Label>
+        <TextInput
+          id="teamSize"
+          required
+          value={formData.teamSize}
+          onChange={(e) =>
+            setFormData({ ...formData, teamSize: e.target.value })
+          }
+        />
       </div>
       <Button type="submit" className="bg-blue-400">
         {formData.id ? "Update Department" : "Create Department"}

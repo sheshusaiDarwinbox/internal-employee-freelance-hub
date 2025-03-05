@@ -20,8 +20,6 @@ export const config = {
 };
 
 connect().then(() => {
-  console.log(user);
-  console.log(process.env);
   const app = createApp();
   app.listen(3000, () => {
     console.log("Server running on port 3000");

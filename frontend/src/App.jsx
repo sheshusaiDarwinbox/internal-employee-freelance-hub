@@ -12,6 +12,7 @@ import Gigs from "./pages/Gigs";
 import Profile from "./pages/Profile";
 import ChatPage from "./pages/ChatPage";
 import JobsManagement from "./pages/ManageJobs";
+import ManagePositions from "./pages/ManagePositions";
 
 const Home = lazy(() => import("./pages/Home/Homepage"));
 const About = lazy(() => import("./pages/Home/About"));
@@ -31,8 +32,6 @@ function App() {
   return (
     <Suspense fallback={<Loading />}>
       <Routes>
-        {/* Root routes with Navbar */}
-
         <Route
           path="/"
           element={
@@ -65,13 +64,11 @@ function App() {
           />
         </Route>
 
-        {/* User Dashboard with Nested Routes */}
-
         <Route
           path="/user"
           element={
             <ProtectedRoute role="Employee">
-              <MainLayout navlinks={userSidebarNavLinks} />
+              <MainLayout linkName="/user" navlinks={userSidebarNavLinks} />
             </ProtectedRoute>
           }
         >
@@ -89,7 +86,7 @@ function App() {
           path="/admin"
           element={
             <ProtectedRoute role="Admin">
-              <MainLayout navlinks={adminSidbarNavLinks} />
+              <MainLayout linkName="/admin" navlinks={adminSidbarNavLinks} />
             </ProtectedRoute>
           }
         >
@@ -98,13 +95,17 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="chat" element={<ChatPage />} />
           <Route path="jobs" element={<JobsManagement />} />
+          <Route path="positions" element={<ManagePositions />} />
         </Route>
 
         <Route
           path="/manager"
           element={
             <ProtectedRoute role="Manager">
-              <MainLayout navlinks={managerSidebarNavLinks} />
+              <MainLayout
+                linkName="/manager"
+                navlinks={managerSidebarNavLinks}
+              />
             </ProtectedRoute>
           }
         >

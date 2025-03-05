@@ -11,7 +11,7 @@ const ListView = memo(
     const [updateFormData, setUpdateFormData] = useState({
       name: "",
       description: "",
-      type: "",
+      function: "",
       teamSize: "",
     });
 
@@ -20,7 +20,7 @@ const ListView = memo(
       setUpdateFormData({
         name: department.name,
         description: department.description,
-        type: department.type,
+        function: department.function,
         teamSize: department.teamSize,
       });
       setShowUpdateModal(true);
@@ -39,7 +39,7 @@ const ListView = memo(
     };
 
     const handleConfirmDelete = () => {
-      handleDelete(departmentToDelete._id);
+      handleDelete(departmentToDelete.DID);
       setShowDeleteModal(false);
       setDepartmentToDelete(null);
     };
@@ -63,7 +63,7 @@ const ListView = memo(
                 <Table.Row key={department._id}>
                   <Table.Cell>{department.name}</Table.Cell>
                   <Table.Cell>{department.description}</Table.Cell>
-                  <Table.Cell>{department.type}</Table.Cell>
+                  <Table.Cell>{department.function}</Table.Cell>
                   <Table.Cell>{department.teamSize}</Table.Cell>
                   <Table.Cell>
                     <div className="flex space-x-2">
