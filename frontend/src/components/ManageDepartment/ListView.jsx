@@ -59,24 +59,87 @@ const ListView = memo(
               .filter((dept) =>
                 dept.name.toLowerCase().includes(searchQuery.toLowerCase())
               )
-              .map((department) => (
-                <Table.Row key={department._id}>
-                  <Table.Cell>{department.name}</Table.Cell>
-                  <Table.Cell>{department.description}</Table.Cell>
-                  <Table.Cell>{department.function}</Table.Cell>
-                  <Table.Cell>{department.teamSize}</Table.Cell>
-                  <Table.Cell>
+              .map((department, index) => (
+                <Table.Row
+                  key={department.DID}
+                  className={`
+        border-b border-gray-200 transition-colors duration-150 hover:bg-gray-50
+        ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+      `}
+                >
+                  <Table.Cell className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-900">
+                        {department.name}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        ID: {department.DID}
+                      </span>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell className="px-6 py-4">
+                    <p className="text-gray-600 line-clamp-2">
+                      {department.description}
+                    </p>
+                  </Table.Cell>
+                  <Table.Cell className="px-6 py-4">
+                    <span
+                      className={`
+          inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+          ${
+            department.function === "Engineering"
+              ? "bg-blue-100 text-blue-800"
+              : ""
+          }
+          ${
+            department.function === "Product"
+              ? "bg-green-100 text-green-800"
+              : ""
+          }
+          ${
+            department.function === "Finance"
+              ? "bg-yellow-100 text-yellow-800"
+              : ""
+          }
+          ${
+            department.function === "Marketing"
+              ? "bg-purple-100 text-purple-800"
+              : ""
+          }
+          ${department.function === "Sales" ? "bg-pink-100 text-pink-800" : ""}
+          ${
+            department.function === "CustomerSupport"
+              ? "bg-indigo-100 text-indigo-800"
+              : ""
+          }
+          ${department.function === "Other" ? "bg-gray-100 text-gray-800" : ""}
+        `}
+                    >
+                      {department.function}
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell className="px-6 py-4">
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-medium">
+                        {department.teamSize}
+                      </div>
+                      <span className="ml-2 text-sm text-gray-500">
+                        members
+                      </span>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell className="px-6 py-4">
                     <div className="flex space-x-2">
                       <Button
                         size="sm"
-                        color="yellow"
+                        className="bg-amber-50 hover:bg-amber-100 text-amber-600 border-0"
                         onClick={() => initiateUpdate(department)}
                       >
                         <HiPencil className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
-                        color="red"
+                        className="bg-red-50 hover:bg-red-100 text-red-600 border-0"
                         onClick={() => confirmDelete(department)}
                       >
                         <HiTrash className="h-4 w-4" />

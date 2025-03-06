@@ -2,10 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import api from "../../utils/api";
 
-// Base URL for API calls
 const API_BASE_URL = "http://localhost:3000/api"; // Update with your backend URL
 
-// Async Thunks for API Calls
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async ({ email, password }, { rejectWithValue }) => {
@@ -87,7 +85,6 @@ const authSlice = createSlice({
   name: "auth",
   initialState: {
     initialState: {
-      // user: JSON.parse(localStorage.getItem("user")) || null,
       user: null,
       isLoading: false,
       error: null,
@@ -104,7 +101,6 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user;
-        // localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -114,16 +110,14 @@ const authSlice = createSlice({
       })
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
-        // localStorage.removeItem("user");
       })
       .addCase(updateProfileImage.fulfilled, (state, action) => {
         state.user.img = action.payload.fileUrl;
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
-        state.user = {
-          ...state.user,
-          ...action.payload,
-        };
+        for (let x in action.payload) {
+          state.user[x] = action.payload[x];
+        }
       });
   },
 });

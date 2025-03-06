@@ -47,6 +47,7 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
 });
 
 userAuthSchema.plugin(paginate);
+userAuthSchema.index({ fullName: "text" });
 
 export const User = model<UserAuth, PaginateModel<UserAuthModel>>(
   "UserAuth",

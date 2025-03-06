@@ -4,6 +4,7 @@ import FormView from "../components/ManageDepartment/FormView";
 import { HiViewList } from "react-icons/hi";
 import Loading from "../components/Loading";
 import useDebounce from "../components/ManageDepartment/Debounce";
+import PaginationControls from "../components/PaginationControl";
 import { HiPlus, HiUpload, HiX, HiCheck } from "react-icons/hi";
 import SearchInput from "../components/SearchInput";
 import * as XLSX from "xlsx";
@@ -29,6 +30,13 @@ const DepartmentManagement = () => {
   const [departments, setDepartments] = useState([]);
   const debouncedSearchQuery = useDebounce(searchQuery, 1500);
   const fileInputRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageSize] = useState(6);
+  const [excelData, setExcelData] = useState(null);
+  const [previewData, setPreviewData] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -36,11 +44,6 @@ const DepartmentManagement = () => {
     function: "Engineering",
     teamSize: 0,
   });
-
-  const [excelData, setExcelData] = useState(null);
-  const [previewData, setPreviewData] = useState(null);
-  const [uploadError, setUploadError] = useState(null);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -134,22 +137,31 @@ const DepartmentManagement = () => {
     const fetchDepartments = async () => {
       try {
         setLoading(true);
-        const response = await api.get(
-          `api/departments?search=${debouncedSearchQuery}`,
-          { withCredentials: true }
-        );
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: pageSize.toString(),
+          search: searchQuery,
+        });
+
+        const response = await api.get(`/api/departments?${params}`, {
+          withCredentials: true,
+        });
         setDepartments(response.data.docs);
+        setTotalPages(Math.ceil(response.data.totalDocs / pageSize));
         setError(null);
       } catch (err) {
-        setError(err.message);
-        setDepartments([]);
+        setError("Failed to fetch departments");
       } finally {
         setLoading(false);
       }
     };
 
     fetchDepartments();
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const handleViewChange = useCallback((newView) => {
     setView(newView);
@@ -181,11 +193,9 @@ const DepartmentManagement = () => {
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Manage Departments</h1>
 
-        {/* View Toggle Buttons */}
         {!isPreviewMode && (
           <Button.Group>
             <Button
@@ -214,7 +224,6 @@ const DepartmentManagement = () => {
         )}
       </div>
 
-      {/* Excel Upload Section */}
       <div className="mb-6">
         {uploadError && (
           <div className="mt-2 text-red-500 text-sm flex items-center gap-1">
@@ -308,7 +317,6 @@ const DepartmentManagement = () => {
           </div>
         )}
 
-        {/* Content Area */}
         <div className="mt-4">
           {!isPreviewMode && view === "list" && (
             <div className="space-y-4">
@@ -330,6 +338,12 @@ const DepartmentManagement = () => {
                   );
                 }}
                 handleDelete={handleDelete}
+              />
+              <PaginationControls
+                setCurrentPage={setCurrentPage}
+                totalPages={totalPages}
+                currentPage={currentPage}
+                loading={loading}
               />
             </div>
           )}

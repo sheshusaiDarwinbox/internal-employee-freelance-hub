@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import ChatPage from "./pages/ChatPage";
 import JobsManagement from "./pages/ManageJobs";
 import ManagePositions from "./pages/ManagePositions";
+import ManageUsers from "./pages/ManageUsers";
 
 const Home = lazy(() => import("./pages/Home/Homepage"));
 const About = lazy(() => import("./pages/Home/About"));
@@ -90,11 +91,13 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="gigs" index element={<Gigs />} />
+          <Route index element={<Gigs />} />
+          <Route path="gigs" element={<Gigs />} />
           <Route path="departments" element={<DepartmentManagement />} />
           <Route path="profile" element={<Profile />} />
           <Route path="chat" element={<ChatPage />} />
           <Route path="jobs" element={<JobsManagement />} />
+          <Route path="users" element={<ManageUsers />} />
           <Route path="positions" element={<ManagePositions />} />
         </Route>
 

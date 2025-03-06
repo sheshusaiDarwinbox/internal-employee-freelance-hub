@@ -46,8 +46,8 @@ export const getAllDepartments = sessionHandler(
     }
 
     const departments = await DepartmentModel.paginate(filter, {
-      offset: pageNum * 10,
-      limit: 10,
+      offset: pageNum * 6,
+      limit: 6,
     });
     return { status: HttpStatusCodes.OK, data: departments };
   }

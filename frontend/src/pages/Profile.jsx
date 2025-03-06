@@ -46,7 +46,6 @@ const Profile = () => {
 
   return (
     <div className="p-2 max-w-7xl mx-auto h-[calc(100vh-160px)">
-      {/* Profile Header */}
       <Card className="mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
@@ -104,7 +103,6 @@ const Profile = () => {
         </div>
       </Card>
 
-      {/* Profile Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <h3 className="text-xl font-semibold mb-4 text-gray-900">
@@ -140,7 +138,10 @@ const Profile = () => {
             <InfoRow label="Phone" value={user.phone} />
             <InfoRow label="Email" value={user.email} />
             <InfoRow label="Address" value={user.address} />
-            <InfoRow label="City" value={`${user.city}, ${user.state}`} />
+            <InfoRow
+              label="State"
+              value={`${user.city} ${user.city ? "," : ""}${user.state}`}
+            />
             <InfoRow
               label="Country"
               value={`${user.country} - ${user.pincode}`}
@@ -185,7 +186,6 @@ const Profile = () => {
         </Card>
       </div>
 
-      {/* Modals */}
       <Modal
         show={showUpdateModal}
         size="xl"
@@ -211,7 +211,6 @@ const Profile = () => {
   );
 };
 
-// Helper component for displaying information rows
 const InfoRow = ({ label, value }) => (
   <div className="flex justify-between">
     <span className="text-gray-600">{label}:</span>

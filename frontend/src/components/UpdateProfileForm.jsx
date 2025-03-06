@@ -37,8 +37,6 @@ const UpdateProfileForm = ({ onClose }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Personal Information */}
-
         <div>
           <Label htmlFor="phone">Full Name</Label>
           <TextInput
@@ -157,7 +155,6 @@ const UpdateProfileForm = ({ onClose }) => {
           </Select>
         </div>
 
-        {/* Address Information */}
         <div className="col-span-2">
           <Label htmlFor="address">Address</Label>
           <TextInput
@@ -216,7 +213,6 @@ const UpdateProfileForm = ({ onClose }) => {
           />
         </div>
 
-        {/* Emergency Contact */}
         <div>
           <Label htmlFor="emergencyContactNumber">
             Emergency Contact Number
@@ -235,7 +231,6 @@ const UpdateProfileForm = ({ onClose }) => {
           />
         </div>
 
-        {/* Skills */}
         <div className="col-span-2">
           <Label htmlFor="skills">Skills (comma separated)</Label>
           <TextInput

@@ -42,7 +42,7 @@ export const createUser = sessionHandler(
           verified: false,
           EID: id,
           password: hashedPassword,
-          doj: new Date(),
+          doj: new Date().toISOString().split("T")[0],
         },
       ],
       { session }
@@ -63,21 +63,25 @@ export const createUser = sessionHandler(
 
 export const getAllUsers = sessionHandler(
   async (req: Request, res: Response) => {
-    const { types, page = 0 } = req.query;
+    const { types, page = 1, search = "" } = req.query;
     const filter: any = {};
-    const pageNum = Number(page);
+    const pageNum = Number(page) - 1;
     if (types) {
       const typesArray = (types as string).split(",");
       UsersArraySchema.parse(typesArray);
       filter.role = { $in: typesArray };
     }
 
+    if (search !== "") filter.$text = { $search: search };
+
     const users = await User.paginate(filter, {
-      offset: pageNum * 10,
-      limit: 10,
+      offset: pageNum * 6,
+      limit: 6,
     });
-    // res.status(HttpStatusCodes.OK).send(users);
-    return users;
+    return {
+      status: HttpStatusCodes.OK,
+      data: users,
+    };
   }
 );
 
@@ -148,7 +152,6 @@ export const updateProfile = sessionHandler(
     const EID = req.user?.EID;
     const user = await User.findOne({ EID: EID });
     if (!user) throw new Error("User not found");
-    console.log(req.body);
     const {
       gender,
       phone,
