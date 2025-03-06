@@ -24,6 +24,7 @@ const MyGigs = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
+  const [departmentNames, setDepartmentNames] = useState({});
 
   const handleOpenModal = (Gig) => {
     setSelectedGig(Gig);
@@ -45,14 +46,44 @@ const MyGigs = () => {
     fetchManagerGigs();
   }, [dispatch, authState?.user?.EID]);
 
+  useEffect(() => {
+    const fetchDepartmentNames = async () => {
+      if (managerGigs && managerGigs.docs) {
+        const names = {};
+        for (const gig of managerGigs.docs) {
+          if (gig.DID && !names[gig.DID]) {
+            try {
+              const response = await fetch(`http://localhost:3000/api/departments/${gig.DID}`,
+                {
+                  credentials:"include",
+                }
+              );
+              const data = await response.json();
+              names[gig.DID] = data.name;
+            } catch (error) {
+              console.error(`Error fetching department ${gig.DID}:`, error);
+              names[gig.DID] = "Unknown";
+            }
+          }
+        }
+        setDepartmentNames(names);
+        
+      }
+    };
+    fetchDepartmentNames();
+  }, [managerGigs]);
+
   const showButtons = authState?.user?.role === "Employee" || authState?.user?.role === "Other";
-  // console.log(managerGigs)
-  // const departments = managerGigs ? [...new Set(managerGigs.map((gig) => gig.department))] : [];
-  const departments = managerGigs && managerGigs.length > 0 
-  ? [...new Set(managerGigs.map((gig) => gig.department))] 
-  : [];
-  // console.log(departments);
-  const allSkills = managerGigs  && managerGigs.length>0 ? [...new Set(managerGigs.flatMap((gig) => gig.skillsRequired))] : [];
+
+  const departments = managerGigs && managerGigs.docs && managerGigs.docs.length > 0
+    ? [...new Set(managerGigs.docs.map((gig) => departmentNames[gig.DID]))]
+    : [];
+
+    console.log("dept :",departmentNames);
+
+  const allSkills = managerGigs && managerGigs.docs && managerGigs.docs.length > 0
+    ? [...new Set(managerGigs.docs.flatMap((gig) => gig.skillsRequired))]
+    : [];
 
   const processedGigs = Array.isArray(managerGigs?.docs) ? managerGigs.docs.map((Gig) => ({
     ...Gig,
@@ -60,7 +91,8 @@ const MyGigs = () => {
     postedBy: "Manager",
     points: String(Gig.rewardPoints || 0),
     deadline: Gig.deadline,
-  })) : []; 
+    department: departmentNames[Gig.DID] // Add department name
+  })) : [];
 
   const filteredGigs = processedGigs.filter((gig) => {
     const matchesSearch =
@@ -75,8 +107,17 @@ const MyGigs = () => {
     return matchesSearch && matchesDepartment && matchesSkills;
   });
 
+  if (!managerGigs || !managerGigs.docs || managerGigs.docs.length === 0) {
+    return (
+      <div className="p-6 bg-gray-50">
+        <p className="text-center text-lg font-semibold text-gray-700">No Gigs assigned</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50">
+      {/* ... (rest of the component remains the same) */}
       <div className="mb-6 space-y-4">
         <div className="flex gap-4">
           <TextInput
@@ -87,7 +128,6 @@ const MyGigs = () => {
             className="w-full"
           />
         </div>
-
         <div className="flex gap-4 flex-wrap">
           <Dropdown label={selectedDepartment || "Select Department"}>
             <Dropdown.Item onClick={() => setSelectedDepartment("")}>
@@ -102,7 +142,6 @@ const MyGigs = () => {
               </Dropdown.Item>
             ))}
           </Dropdown>
-
           <Dropdown label="Select Skills">
             {allSkills.map((skill) => (
               <Dropdown.Item
@@ -126,7 +165,6 @@ const MyGigs = () => {
               </Dropdown.Item>
             ))}
           </Dropdown>
-
           {(selectedDepartment || selectedSkills.length > 0) && (
             <Button
               color="gray"
@@ -139,7 +177,6 @@ const MyGigs = () => {
             </Button>
           )}
         </div>
-
         {selectedSkills.length > 0 && (
           <div className="flex gap-2 flex-wrap">
             {selectedSkills.map((skill) => (
@@ -159,11 +196,10 @@ const MyGigs = () => {
           </div>
         )}
       </div>
-
       <div className="grid grid-cols-1 gap-6">
         {filteredGigs.map((Gig, index) => (
           <Card
-            key={Gig.id ? Gig.id : `gig-${index}`} // Ensure unique key
+            key={Gig.id ? Gig.id : `gig-${index}`}
             onClick={() => handleOpenModal(Gig)}
             className="hover:shadow-lg transition-all duration-300 transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
           >

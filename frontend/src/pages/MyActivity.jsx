@@ -1,9 +1,33 @@
 import { Card, Button, Modal } from "flowbite-react";
 import { CheckCircle, Trophy } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 const MyActivity = () => {
   const [modalOpen, setModalOpen] = useState(false);
+  const [rewards, setRewards] = useState(0); // State to hold total rewards
+  const dispatch = useDispatch();
+  const authState = useSelector((state) => state.auth);
+  const EID = authState?.user?.EID;
+
+  useEffect(() => {
+    const fetchRewards = async () => {
+      if (EID) {
+        try {
+          const response = await fetch(`http://localhost:3000/api/users/total-rewards/${EID}`,{
+            credentials:"include",
+          });
+          const data = await response.json();
+            setRewards(data.gigsWithRewardsCount); // Set the total rewards in state
+           
+          
+        } catch (error) {
+          console.error('Error fetching rewards:', error);
+        }
+      }
+    };
+    fetchRewards();
+  }, [EID, dispatch]);
 
   return (
     <div className="p-6 space-y-6">
@@ -27,7 +51,7 @@ const MyActivity = () => {
           <div className="flex flex-col items-center space-y-3">
             <Trophy className="w-8 h-8 text-green-600" />
             <h3 className="text-xl font-bold text-gray-800">Rewards Earned</h3>
-            <p className="text-3xl font-semibold text-green-800">10</p>
+            <p className="text-3xl font-semibold text-green-800">{rewards}</p> 
           </div>
         </Card>
       </div>  

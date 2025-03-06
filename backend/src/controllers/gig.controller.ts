@@ -113,6 +113,33 @@ export const getGigById = sessionHandler(
   }
 );
 
+export const getGigsByManagerID = sessionHandler(
+  async (req: Request, res: Response) => {
+    const { ManagerID } = req.params;
+    const page = Number(req.query.page) || 0;
+
+    // Validate ManagerID
+    z.string()
+      .regex(/^[a-zA-Z0-9]+$/, { message: "ManagerID must be alphanumeric" })
+      .parse(ManagerID);
+
+    const filter = { ManagerID };
+
+    const gigs = await Gig.paginate(filter, {
+      offset: page * 10,
+      limit: 10,
+    });
+
+    if (!gigs || gigs.docs.length === 0) {
+      return res.status(HttpStatusCodes.OK).send({ message: "No gigs posted" });
+    }
+
+    res.status(HttpStatusCodes.OK).send(gigs);
+  }
+);
+
 gigControlRouter.post("/post", checkAuth([UserRole.Manager]), createGig);
 gigControlRouter.get("", checkAuth([]), getAllGigs);
+// gigControlRouter.get("/:ManagerID", checkAuth([]), getGigsByManagerID);
 gigControlRouter.get("/:GigID", checkAuth([]), getGigById);
+

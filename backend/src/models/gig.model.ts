@@ -42,9 +42,9 @@ const gigSchema = new Schema<GigSchema, GigModel>({
   skillsRequired: [{ type: String, required: true }],
   createdAt: { type: Date, default: Date.now, required: true },
   assignedAt: { type: Date },
-  rewardPoints: { type: Number },
+  rewardPoints: { type: Number, required: true ,default:0},
   rating: { type: Number },
-  amount: { type: Number, required: true },
+  amount: { type: Number, required: true ,default:0},
   feedback: { type: String },
 });
 

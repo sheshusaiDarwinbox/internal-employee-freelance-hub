@@ -13,12 +13,14 @@ import Profile from "./pages/Profile";
 import ChatPage from "./pages/ChatPage";
 import JobsManagement from "./pages/ManageJobs";
 import ManagePositions from "./pages/ManagePositions";
+import Leaderboard from "./pages/Leaderboard";
 
 const Home = lazy(() => import("./pages/Home/Homepage"));
 const About = lazy(() => import("./pages/Home/About"));
 const Login = lazy(() => import("./pages/Login"));
 const Rewards = lazy(() => import("./pages/Rewards"));
-const MyTasks = lazy(() => import("./pages/MyTasks"));
+const MyGigs = lazy(() => import("./pages/MyGigs"));
+const PostGigs = lazy(() => import("./pages/PostGigs"));
 const MyActivity = lazy(() => import("./pages/MyActivity"));
 const MyAccount = lazy(() => import("./pages/MyAccount"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -74,8 +76,9 @@ function App() {
         >
           <Route index element={<Gigs />} />
           <Route path="rewards" element={<Rewards />} />
+          <Route path="leaderboard" element={<Leaderboard />} />
           <Route index path="gigs" element={<Gigs />} />
-          <Route path="work-history" element={<MyTasks />} />
+          <Route path="work-history" element={<MyGigs />} />
           <Route path="my-activity" element={<MyActivity />} />
           <Route path="profile" element={<Profile />} />
           <Route path="my-account" element={<MyAccount />} />
@@ -109,7 +112,9 @@ function App() {
             </ProtectedRoute>
           }
         >
+          <Route path="my-gigs" element={<MyGigs />} />
           <Route path="gigs" element={<Gigs />} />
+          <Route path="post-gigs" element={<PostGigs />} />
           <Route path="profile" element={<Profile />} />
           <Route path="chat" element={<ChatPage />} />
         </Route>

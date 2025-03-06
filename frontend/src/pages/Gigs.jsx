@@ -3,6 +3,7 @@ import { HiSearch, HiX } from 'react-icons/hi';
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchGigsAsync } from '../redux/slices/gigsSlice';
+import { useNavigate } from 'react-router-dom';
 import Gig1 from '../assets/Gigs/Gig1.jpg';
 import Gig2 from '../assets/Gigs/Gig2.jpg';
 import Gig3 from '../assets/Gigs/Gig3.png';
@@ -16,6 +17,7 @@ import Gig10 from '../assets/Gigs/Gig10.jpeg';
 
 const Gigss = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const authState = useSelector((state) => state.auth);
   const [openModal, setOpenModal] = useState(false);
   const [selectedGig, setSelectedGig] = useState(null);
@@ -24,6 +26,9 @@ const Gigss = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
+  const [openReferModal, setOpenReferModal] = useState(false);
+  const [referName, setReferName] = useState("");
+  const [referEmail, setReferEmail] = useState("");
 
   const handleOpenModal = (Gig) => {
     setSelectedGig(Gig);
@@ -52,7 +57,7 @@ const Gigss = () => {
           // console.log(departmentNames[Gig.department]);
           return {
             image: randomImage,
-            postedBy: "Manager",
+            postedBy: "",
             department: departmentNames[Gig.department] || Gig.department,
             projectTitle: Gig.title,
             description: Gig.description,
@@ -71,12 +76,17 @@ const Gigss = () => {
     };
 
     fetchGigs();
-  }, []);
+  }, [dispatch]);
 
   const showButtons = authState?.user?.role === "Employee" || authState?.user?.role === "Other";
 
-  const departments = [...new Set(Gigs.map((gig) => gig.department))];
-  const allSkills = [...new Set(Gigs.flatMap((gig) => gig.tags))];
+  // const departments = [...new Set(Gigs.map((gig) => gig.department))];
+  // const allSkills = [...new Set(Gigs.flatMap((gig) => gig.tags))];
+  const departments =Gigs && Gigs.length > 0 
+  ? [...new Set(Gigs.map((gig) => gig.department))] 
+  : [];
+  // console.log(departments);
+  const allSkills = Gigs  && Gigs.length>0 ? [...new Set(Gigs.flatMap((gig) => gig.skillsRequired))] : [];
 
   const filteredGigs = Gigs.filter((gig) => {
     const matchesSearch =
@@ -90,6 +100,13 @@ const Gigss = () => {
 
     return matchesSearch && matchesDepartment && matchesSkills;
   });
+
+    const handleReferExternalClick = (Gig) => {
+      setSelectedGig(Gig);
+      setOpenModal(false); // Close the card modal
+      setOpenReferModal(true); // Open the refer external modal
+    }
+ 
 
   return (
     <div className="p-6 bg-gray-50">
@@ -223,6 +240,7 @@ const Gigss = () => {
                      Deadline: {formatDate(Gig.deadline)}
                   </span>
                 </div>
+                
               </div>
             </div>
           </Card>
@@ -288,19 +306,42 @@ const Gigss = () => {
                     <h4 className="font-semibold text-gray-900">Deadline</h4>
                     <p className="text-gray-700 mt-1">{formatDate(selectedGig?.deadline)}</p>
                   </div>
+                  
                 </div>
+                {showButtons && (
+            <div className="flex gap-2 mt-4">
+              <Button className="bg-blue-200 text-green-900 hover:bg-green-300 rounded-full" onClick={()=>navigate('#')}>Add Request</Button>
+              <Button className="bg-green-300 text-green-900 hover:bg-green-400 rounded-full" onClick={() => handleReferExternalClick(selectedGig)}>Refer External</Button>
+            </div>
+          )}
               </div>
             </div>
           </div>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={() => setOpenModal(false)}>Close</Button>
-          {showButtons && (
-            <div className="flex gap-2">
-              <Button className="bg-blue-200 text-green-900 hover:bg-green-300 rounded-full">Add Request</Button>
-              <Button className="bg-green-300 text-green-900 hover:bg-green-400 rounded-full">Refer External</Button>
-            </div>
-          )}
+          
+        </Modal.Footer>
+      </Modal>
+
+      {/* refer external modal */}
+      <Modal show={openReferModal} onClose={() => setOpenReferModal(false)}>
+        <Modal.Header>Refer External</Modal.Header>
+        <Modal.Body>
+          <div className="space-y-4">
+            <TextInput placeholder="Name" value={referName} onChange={(e) => setReferName(e.target.value)} />
+            <TextInput placeholder="Email" value={referEmail} onChange={(e) => setReferEmail(e.target.value)} />
+          </div>
+        </Modal.Body>
+        <Modal.Footer >
+          <Button color="gray" onClick={() => setOpenReferModal(false)}>Cancel</Button>
+          <Button onClick={() => {
+            // Handle referral logic here (e.g., send data to backend)
+            console.log("Referral:", referName, referEmail, selectedGig);
+            setOpenReferModal(false);
+            setReferName("");
+            setReferEmail("");
+          }}>Submit</Button>
         </Modal.Footer>
       </Modal>
     </div>

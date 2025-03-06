@@ -20,11 +20,10 @@ export const userSidebarNavLinks = [
 ];
 
 export const managerSidebarNavLinks = [
-  { name: "👥 Manage Users", link: "#" },
   { name: "📩 Requests", link: "#" },
+  { name: "✅ My Gigs", link: "/manager/my-gigs" },
   { name: "✅ Gigs", link: "/manager/gigs" },
-  { name: "Posted Gigs", link: "/manager/posted-gigs" },
-  { name: "🏢 Manage Departments", link: "/admin/departments" },
+  { name: "📝 Post Gigs", link: "/manager/post-gigs" },
   { name: "🙍‍♂️ My Profile", link: "/manager/profile" },
   { name: "💬 Chat", link: "/manager/chat" },
 ];
