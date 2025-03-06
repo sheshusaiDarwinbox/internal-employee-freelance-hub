@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { Button, TextInput, Select, Modal } from "flowbite-react";
+import { Button, TextInput, Select, Modal, Table } from "flowbite-react";
 import { HiSearch, HiPlus, HiPencil, HiTrash } from "react-icons/hi";
 import api from "../utils/api";
 import { Label } from "flowbite-react";
 import SearchableSelect from "../components/SearchableSelect";
+import PaginationControls from "../components/PaginationControl";
 
 const PositionTypeEnum = {
   FullTime: "Full Time",
@@ -26,7 +27,6 @@ const ManagePositions = () => {
   const [showForm, setShowForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
-  const [departments, setDepartments] = useState([]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -88,6 +88,13 @@ const ManagePositions = () => {
     }
   };
 
+  const fetchDepartments = async (search) => {
+    const response = await api.get(`api/departments/?search=${search}`, {
+      withCredentials: true,
+    });
+    return response.data.docs;
+  };
+
   const resetForm = () => {
     setFormData({
       title: "",
@@ -133,54 +140,104 @@ const ManagePositions = () => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="px-4 py-2">Title</th>
-              <th className="px-4 py-2">Type</th>
-              <th className="px-4 py-2">Salary</th>
-              <th className="px-4 py-2">Department</th>
-              <th className="px-4 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {positions.map((position) => (
-              <tr key={position.PID}>
-                <td className="px-4 py-2">{position.title}</td>
-                <td className="px-4 py-2">{PositionTypeEnum[position.type]}</td>
-                <td className="px-4 py-2">{position.salary}</td>
-                <td className="px-4 py-2">{position.department.name}</td>
-                <td className="px-4 py-2">
-                  <div className="flex gap-2">
+        <Table>
+          <Table.Head>
+            <Table.HeadCell>Title</Table.HeadCell>
+            <Table.HeadCell>Type</Table.HeadCell>
+            <Table.HeadCell>Salary</Table.HeadCell>
+            <Table.HeadCell>Department</Table.HeadCell>
+            <Table.HeadCell>Actions</Table.HeadCell>
+          </Table.Head>
+          <Table.Body>
+            {positions.map((position, index) => (
+              <Table.Row
+                key={position.PID}
+                className={`
+      border-b border-gray-200 transition-colors duration-150 hover:bg-gray-50
+      ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+    `}
+              >
+                <Table.Cell className="px-6 py-4">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">
+                      {position.title}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      ID: {position.PID}
+                    </span>
+                  </div>
+                </Table.Cell>
+                <Table.Cell className="px-6 py-4">
+                  <span
+                    className={`
+        inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+        ${position.type === "FullTime" ? "bg-green-100 text-green-800" : ""}
+        ${position.type === "PartTime" ? "bg-blue-100 text-blue-800" : ""}
+        ${position.type === "Contract" ? "bg-yellow-100 text-yellow-800" : ""}
+        ${position.type === "Temporary" ? "bg-orange-100 text-orange-800" : ""}
+        ${position.type === "Internship" ? "bg-purple-100 text-purple-800" : ""}
+      `}
+                  >
+                    {PositionTypeEnum[position.type]}
+                  </span>
+                </Table.Cell>
+                <Table.Cell className="px-6 py-4">
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-medium">
+                      ₹
+                    </div>
+                    <span className="ml-2 text-gray-900 font-medium">
+                      {position.salary?.toLocaleString() || "N/A"}
+                    </span>
+                  </div>
+                </Table.Cell>
+                <Table.Cell className="px-6 py-4">
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-medium">
+                      {position.department?.name?.charAt(0)}
+                    </div>
+                    <span className="ml-2 text-gray-900">
+                      {position.department?.name}
+                    </span>
+                  </div>
+                </Table.Cell>
+                <Table.Cell className="px-6 py-4">
+                  <div className="flex space-x-2">
                     <Button
                       size="sm"
+                      className="bg-amber-50 hover:bg-amber-100 text-amber-600 border-0"
                       onClick={() => {
                         setSelectedPosition(position);
                         setFormData(position);
                         setShowForm(true);
                       }}
                     >
-                      <HiPencil />
+                      <HiPencil className="h-4 w-4" />
                     </Button>
                     <Button
                       size="sm"
-                      color="failure"
+                      className="bg-red-50 hover:bg-red-100 text-red-600 border-0"
                       onClick={() => {
                         setSelectedPosition(position);
                         setShowDeleteModal(true);
                       }}
                     >
-                      <HiTrash />
+                      <HiTrash className="h-4 w-4" />
                     </Button>
                   </div>
-                </td>
-              </tr>
+                </Table.Cell>
+              </Table.Row>
             ))}
-          </tbody>
-        </table>
+          </Table.Body>
+        </Table>
+        <PaginationControls
+          setCurrentPage={setCurrentPage}
+          totalPages={totalPages}
+          currentPage={currentPage}
+          loading={loading}
+        />
       </div>
 
-      {/* Position Form Modal */}
       <Modal
         show={showForm}
         onClose={() => {
@@ -241,26 +298,15 @@ const ManagePositions = () => {
             </div>
             <div>
               <Label>Department</Label>
-              {/* <Select
-                value={formData.DID}
-                onChange={(e) =>
-                  setFormData({ ...formData, DID: e.target.value })
-                }
-                required
-              >
-                <option value="">Select Department</option>
-                {departments.map((dept) => (
-                  <option key={dept._id} value={dept._id}>
-                    {dept.name}
-                  </option>
-                ))}
-              </Select> */}
               <SearchableSelect
-                value={formData.DID}
                 onChange={(e) =>
                   setFormData({ ...formData, DID: e.target.value })
                 }
                 required
+                fetchOptions={fetchDepartments}
+                labelKey="name"
+                valueKey="DID"
+                placeholder="Search departments..."
               />
             </div>
             <Button type="submit">Save Position</Button>
@@ -268,7 +314,6 @@ const ManagePositions = () => {
         </Modal.Body>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
         <Modal.Header>Delete Position</Modal.Header>
         <Modal.Body>Are you sure you want to delete this position?</Modal.Body>

@@ -49,7 +49,6 @@ export const createGig = sessionHandler(
       });
       if (!request) throw new Error("failed to create request");
     }
-    // res.status(HttpStatusCodes.CREATED).send(data);
     return {
       status: HttpStatusCodes.CREATED,
       data: data,
@@ -92,7 +91,6 @@ export const getAllGigs = sessionHandler(
       offset: Number(page) * 10,
       limit: 10,
     });
-    // res.status(HttpStatusCodes.OK).send(gigs);
     return {
       status: HttpStatusCodes.OK,
       data: gigs,
@@ -105,7 +103,6 @@ export const getGigById = sessionHandler(
     const { GigID } = req.params;
     GetIDSchema.parse({ ID: GigID });
     const gig = await Gig.findOne({ PID: GigID });
-    // res.status(HttpStatusCodes.OK).send(gig);
     return {
       status: HttpStatusCodes.OK,
       data: gig,
@@ -113,33 +110,6 @@ export const getGigById = sessionHandler(
   }
 );
 
-export const getGigsByManagerID = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { ManagerID } = req.params;
-    const page = Number(req.query.page) || 0;
-
-    // Validate ManagerID
-    z.string()
-      .regex(/^[a-zA-Z0-9]+$/, { message: "ManagerID must be alphanumeric" })
-      .parse(ManagerID);
-
-    const filter = { ManagerID };
-
-    const gigs = await Gig.paginate(filter, {
-      offset: page * 10,
-      limit: 10,
-    });
-
-    if (!gigs || gigs.docs.length === 0) {
-      return res.status(HttpStatusCodes.OK).send({ message: "No gigs posted" });
-    }
-
-    res.status(HttpStatusCodes.OK).send(gigs);
-  }
-);
-
 gigControlRouter.post("/post", checkAuth([UserRole.Manager]), createGig);
 gigControlRouter.get("", checkAuth([]), getAllGigs);
-// gigControlRouter.get("/:ManagerID", checkAuth([]), getGigsByManagerID);
 gigControlRouter.get("/:GigID", checkAuth([]), getGigById);
-

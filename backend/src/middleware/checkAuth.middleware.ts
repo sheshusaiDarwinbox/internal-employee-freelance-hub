@@ -5,15 +5,16 @@ import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
 export const checkAuth = (roles: Array<keyof typeof UserRole> | undefined) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.isAuthenticated()) {
-      console.log(req.user);
       res
         .status(HttpStatusCodes.UNAUTHORIZED)
         .json({ message: "Unauthorized" });
     }
+    console.log(roles);
     if (roles === undefined || roles?.length === 0) return next();
     for (let role of roles) {
-      if (req.user?.role !== role)
-        res.status(HttpStatusCodes.FORBIDDEN).json({ message: "Forbidden" });
+      // console.log(req.user);
+      if (req.user?.role !== role) console.log(req.user);
+      res.status(HttpStatusCodes.FORBIDDEN).json({ message: "Forbidden" });
     }
     next();
   };

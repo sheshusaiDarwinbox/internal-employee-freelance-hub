@@ -121,7 +121,7 @@ export const PositionsArraySchema = z.array(
 );
 
 export const UsersArraySchema = z.array(
-  z.enum(["Employee", "Admin", "ProjectManager", "Other"])
+  z.enum(["Employee", "Admin", "Manager", "Other"])
 );
 
 export const ForgotPasswordZodSchema = z.object({

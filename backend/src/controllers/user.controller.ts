@@ -18,11 +18,10 @@ import { parseFile } from "../utils/fileParser.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
 import { generatePresignedUrl } from "../utils/fileParser.util";
 import { Gig } from "../models/gig.model";
-import { GigSchema } from "../types/gig.types"; //import the gig schema type
 import z from "zod";
 
 interface UserWithRole extends Document {
-    role: UserRole;
+  role: UserRole;
 }
 
 export const createUser = sessionHandler(
@@ -49,7 +48,7 @@ export const createUser = sessionHandler(
           verified: false,
           EID: id,
           password: hashedPassword,
-          doj: new Date(),
+          doj: new Date().toISOString().split("T")[0],
         },
       ],
       { session }
@@ -70,21 +69,25 @@ export const createUser = sessionHandler(
 
 export const getAllUsers = sessionHandler(
   async (req: Request, res: Response) => {
-    const { types, page = 0 } = req.query;
+    const { types, page = 1, search = "" } = req.query;
     const filter: any = {};
-    const pageNum = Number(page);
+    const pageNum = Number(page) - 1;
     if (types) {
       const typesArray = (types as string).split(",");
       UsersArraySchema.parse(typesArray);
       filter.role = { $in: typesArray };
     }
 
+    if (search !== "") filter.$text = { $search: search };
+
     const users = await User.paginate(filter, {
-      offset: pageNum * 10,
-      limit: 10,
+      offset: pageNum * 6,
+      limit: 6,
     });
-    // res.status(HttpStatusCodes.OK).send(users);
-    return users;
+    return {
+      status: HttpStatusCodes.OK,
+      data: users,
+    };
   }
 );
 
@@ -96,7 +99,6 @@ export const deleteUserByID = sessionHandler(
     if (!user) throw new Error("Bad Request");
     const result = await User.deleteOne({ EID: ID });
     if (result.acknowledged === false) throw new Error("User Not Deleted");
-    // res.status(HttpStatusCodes.OK).send(user);
     return user;
   }
 );
@@ -106,9 +108,8 @@ export const getUserById = sessionHandler(
     const { ID } = req.params;
 
     GetUserSchema.parse({ EID: ID });
-    const user = await User.findOne({ EID: ID }) as UserWithRole;
+    const user = (await User.findOne({ EID: ID })) as UserWithRole;
     if (!user) throw new Error("Bad Request");
-    // res.status(HttpStatusCodes.OK).send(user);
     return user;
   }
 );
@@ -144,7 +145,7 @@ export const uploadProfileImg = sessionHandler(
 export const getProfile = sessionHandler(
   async (req: Request, res: Response) => {
     const EID = req.user?.EID;
-    const user = await User.findOne({ EID: EID }) as UserWithRole;
+    const user = (await User.findOne({ EID: EID })) as UserWithRole;
     if (!user) throw new Error("User not found");
     return user;
   }
@@ -153,9 +154,8 @@ export const getProfile = sessionHandler(
 export const updateProfile = sessionHandler(
   async (req: Request, res: Response) => {
     const EID = req.user?.EID;
-    const user = await User.findOne({ EID: EID }) as UserWithRole;
+    const user = (await User.findOne({ EID: EID })) as UserWithRole;
     if (!user) throw new Error("User not found");
-    console.log(req.body);
     const {
       gender,
       phone,
@@ -204,132 +204,87 @@ export const updateProfile = sessionHandler(
   }
 );
 
-export const getGigsByUserID = sessionHandler(
+export const getGigsByUser = sessionHandler(
   async (req: Request, res: Response) => {
-    const { EID } = req.params;
-    const page = Number(req.query.page) || 0;
+    const { page = 1, search = "", DIDs, ManagerIDs } = req.query;
+    const pageNum = Number(page) - 1;
+    const EID = req.user?.EID;
+    let filter: any = {};
 
-    // Validate EID
-    z.string()
-      .regex(/^[a-zA-Z0-9]+$/, { message: "EID must be alphanumeric" })
-      .parse(EID);
-
-    // Fetch the user using getUserById
-    const user = await User.findOne({ EID: EID }) as UserWithRole;
-
+    const user = (await User.findOne({ EID: EID })) as UserWithRole;
     if (!user) {
-      return res.status(HttpStatusCodes.BAD_REQUEST).send({ message: "User not found" });
-    }
-    
-    if (!user.role) {
-      return res.status(HttpStatusCodes.BAD_REQUEST).send({ message: "User role is not defined" });
+      return {
+        status: HttpStatusCodes.BAD_REQUEST,
+        message: "userNotfound",
+      };
     }
 
-    const filter: any = {};
+    console.log(user);
+    console.log(DIDs);
+    console.log(search);
+
+    if (DIDs) {
+      z.array(
+        z
+          .string()
+          .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
+      ).parse(DIDs);
+      filter.DID = { $in: DIDs };
+    }
+    if (ManagerIDs) {
+      z.array(
+        z
+          .string()
+          .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
+      ).parse(DIDs);
+      filter.ManagerID = { $in: ManagerIDs };
+    }
+    if (search) {
+      z.string().regex(
+        /^[a-zA-Z0-9\s.,!?()&]+$/,
+        "search must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
+      );
+      filter = {
+        ...filter,
+        $text: { $search: search },
+      };
+    }
+
     let gigs;
 
     if (user.role === UserRole.Manager) {
       filter.ManagerID = EID;
       gigs = await Gig.paginate(filter, {
-        offset: page * 10,
-        limit: 10,
+        offset: pageNum * 6,
+        limit: 6,
       });
-
-      if (!gigs || gigs.docs.length === 0) {
-        return res.status(HttpStatusCodes.OK).send({ message: "No gigs posted" });
-      }
-    } else if (user.role === UserRole.Employee) {
+    } else if (user.role === UserRole.Employee || UserRole.Other) {
       filter.EID = EID;
       gigs = await Gig.paginate(filter, {
-        offset: page * 10,
-        limit: 10,
+        offset: pageNum * 6,
+        limit: 6,
       });
-
-      if (!gigs || gigs.docs.length === 0) {
-        return res.status(HttpStatusCodes.OK).send({ message: "No gigs Assigned" });
-      }
     } else {
-        return res.status(HttpStatusCodes.BAD_REQUEST).send({message: "Invalid User Role"});
+      return {
+        status: HttpStatusCodes.OK,
+        message: "Invalid User role",
+      };
     }
 
-    return res.status(HttpStatusCodes.OK).send(gigs);
+    return {
+      status: HttpStatusCodes.OK,
+      data: gigs,
+    };
   }
 );
 
-export const getTotalRewards = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { EID } = req.params;
-
-    z.string()
-      .regex(/^[a-zA-Z0-9]+$/, { message: "EID must be alphanumeric" })
-      .parse(EID);
-
-    const gigs = await Gig.find({ EID: EID });
-
-    if (!gigs || gigs.length === 0) {
-      return res
-        .status(HttpStatusCodes.BAD_REQUEST)
-        .send({ message: "No gigs found for this user." });
-    }
-
-    let totalRewards = 0;
-    let gigsWithRewardsCount = 0;
-
-    gigs.forEach((gig) => {
-      const gigDoc = gig as unknown as GigSchema;
-      if (typeof gigDoc.rewardPoints === "number" && gigDoc.rewardPoints > 0) {
-        totalRewards += gigDoc.rewardPoints;
-        gigsWithRewardsCount++;
-      }
-    });
-
-    return res.status(HttpStatusCodes.OK).send({
-      totalRewards,
-      gigs,
-      gigsWithRewardsCount,
-    });
-  }
-);
-
-export const getTotalAmount = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { EID } = req.params;
-
-    z.string()
-      .regex(/^[a-zA-Z0-9]+$/, { message: "EID must be alphanumeric" })
-      .parse(EID);
-
-    const gigs = await Gig.find({ EID: EID });
-
-    if (!gigs || gigs.length === 0) {
-      return res
-        .status(HttpStatusCodes.BAD_REQUEST)
-        .send({ message: "No gigs found for this user." });
-    }
-
-    const totalAmount = gigs.reduce((sum, gig) => {
-      const gigDoc = gig as unknown as GigSchema;
-      if (typeof gigDoc.amount === "number") {
-        return sum + gigDoc.amount;
-      }
-      return sum;
-    }, 0);
-
-    return res.status(HttpStatusCodes.OK).send({
-      totalAmount,
-      gigs,
-    });
-  }
-);
 export const userControlRouter = Router();
 
 userControlRouter.post("/create", checkAuth([UserRole.Admin]), createUser);
-userControlRouter.get("", checkAuth([UserRole.Admin]), getAllUsers);
+// userControlRouter.get("", checkAuth([UserRole.Admin]), getAllUsers);
 userControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteUserByID);
 userControlRouter.get("/:ID", checkAuth([UserRole.Admin]), getUserById);
-userControlRouter.get("/gigs/:EID", checkAuth([]), getGigsByUserID);
+// userControlRouter.get("/my-gigs", getGigsByUser);
 userControlRouter.post("/upload-img", checkAuth([]), uploadProfileImg);
 userControlRouter.get("/profile", checkAuth([]), getProfile);
 userControlRouter.post("/update-profile", checkAuth([]), updateProfile);
-userControlRouter.get("/total-rewards/:EID", checkAuth([]), getTotalRewards);
-userControlRouter.get("/total-amount/:EID", checkAuth([]), getTotalAmount);

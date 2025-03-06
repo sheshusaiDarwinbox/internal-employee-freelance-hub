@@ -3,13 +3,10 @@ import { Link } from "react-router-dom";
 import { Dropdown } from "flowbite-react";
 import { Bell, MessageCircle, UserCircle } from "lucide-react";
 import logo from "../assets/darwinbox-logo.png";
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
 const Navbar = ({ linkName }) => {
-
-  const dispatch = useDispatch();
-  const authState = useSelector((state) => state.auth);
-  console.log(linkName);
+  const { user } = useSelector((state) => state.auth);
   const [notifications, setNotifications] = useState([
     {
       NID: "1",
@@ -140,7 +137,8 @@ const Navbar = ({ linkName }) => {
           </button>
 
           <span className="text-gray-900 dark:text-gray-300 font-medium hidden md:inline">
-            Welcome, <span className="font-semibold">{authState.user.fullName}</span>
+            Welcome,{" "}
+            <span className="font-semibold">{user.fullName || "user"}</span>
           </span>
         </div>
       </div>

@@ -66,8 +66,8 @@ export const getAllPositions = sessionHandler(
 
     const positions = await PositionModel.aggregate([
       { $match: filter },
-      { $skip: pageNum * 10 },
-      { $limit: 10 },
+      { $skip: pageNum * 6 },
+      { $limit: 6 },
       {
         $lookup: {
           from: "departments",
