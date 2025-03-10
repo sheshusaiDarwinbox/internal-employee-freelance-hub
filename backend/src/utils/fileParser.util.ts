@@ -1,5 +1,5 @@
 import { Upload } from "@aws-sdk/lib-storage";
-import { S3Client } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import formidable from "formidable";
 import { Request } from "express";
 import { v4 as uuidV4 } from "uuid";

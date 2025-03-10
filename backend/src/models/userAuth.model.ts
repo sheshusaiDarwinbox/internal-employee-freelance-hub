@@ -1,6 +1,7 @@
 import { Schema, model, type PaginateModel } from "mongoose";
 import { type UserAuth, type UserAuthModel } from "../types/userAuth.types";
 import paginate from "mongoose-paginate-v2";
+import { extendedTechSkills } from "../utils/insertSkills.util";
 
 export enum UserRole {
   Employee = "Employee",
@@ -8,6 +9,24 @@ export enum UserRole {
   Admin = "Admin",
   Manager = "Manager",
 }
+
+export const skillSchema = new Schema(
+  {
+    skill: {
+      type: String,
+      enum: extendedTechSkills,
+      required: true,
+    },
+    score: {
+      type: Number,
+      min: 0,
+      max: 1,
+      required: false,
+    },
+  },
+  { _id: false }
+);
+
 export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   EID: { type: String, index: true, unique: true, required: true },
   password: { type: String, required: true },
@@ -41,9 +60,9 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   emergencyContactNumber: { type: Number },
   freelanceRewardPoints: { type: Number },
   freelanceRating: { type: Number },
-  skills: { type: [String] },
   accountBalance: { type: Number },
   img: { type: String },
+  skills: { type: [skillSchema] },
 });
 
 userAuthSchema.plugin(paginate);

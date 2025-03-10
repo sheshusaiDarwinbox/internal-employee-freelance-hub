@@ -1,14 +1,15 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../redux/slices/authSlice";
 import { Card } from "flowbite-react";
 import ProfileAvatar from "../assets/profile-avatar.png";
+import api from "../utils/api";
 
 const Sidebar = ({ navlinks }) => {
   const dispatch = useDispatch();
   const location = useLocation();
-  const { user } = useSelector((state) => state.auth);
+  const [user, setUser] = useState(useSelector((state) => state.auth.user));
 
   const handleLogout = async () => {
     try {
@@ -17,6 +18,20 @@ const Sidebar = ({ navlinks }) => {
       console.error("Logout failed:", error);
     }
   };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await api.get(`api/users/profile`, {
+          withCredentials: true,
+        });
+        setUser(response.data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const userRole =
     user?.role === "Admin"

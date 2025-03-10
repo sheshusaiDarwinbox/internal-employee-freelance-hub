@@ -8,7 +8,7 @@ import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
 import { UserRole } from "../models/userAuth.model";
 
-const requestControlRouter = Router();
+export const requestControlRouter = Router();
 
 export const createRequest = sessionHandler(
   async (req: Request, res: Response, session) => {
@@ -22,7 +22,10 @@ export const createRequest = sessionHandler(
       reqType: reqType,
       description: "create user request to admin",
     });
-    res.status(HttpStatusCodes.CREATED).send(request);
+    return {
+      status: HttpStatusCodes.CREATED,
+      data: request,
+    };
   }
 );
 

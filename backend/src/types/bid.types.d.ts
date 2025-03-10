@@ -1,8 +1,8 @@
 import type { Model } from "mongoose";
 
 export interface Bid {
-  BID: string;
-  TaskID: string;
+  BidID: string;
+  GigID: string;
   description: string;
   EID: string;
 }

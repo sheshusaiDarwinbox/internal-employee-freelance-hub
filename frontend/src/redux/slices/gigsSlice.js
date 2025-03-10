@@ -1,11 +1,10 @@
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:3000/api/gigs';
+// const API_URL = 'http://localhost:3000/api/gigs';
 
 export const postGigAsync = createAsyncThunk(
-  'gigs/postGig',
+  "gigs/postGig",
   async (gigData, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${API_URL}/post`, gigData, {
@@ -16,13 +15,15 @@ export const postGigAsync = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'An error occurred');
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "An error occurred"
+      );
     }
   }
 );
 
 export const fetchGigsAsync = createAsyncThunk(
-  'gigs/fetchGigs',
+  "gigs/fetchGigs",
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_URL}/`, {
@@ -30,30 +31,37 @@ export const fetchGigsAsync = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'An error occurred');
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "An error occurred"
+      );
     }
   }
 );
 
 export const fetchGigsByManagerIdAsync = createAsyncThunk(
-  'gigs/fetchGigsByEID',
+  "gigs/fetchGigsByEID",
   async (EID, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`http://localhost:3000/api/users/gigs/${EID}`, {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `http://localhost:3000/api/users/gigs/${EID}`,
+        {
+          withCredentials: true,
+        }
+      );
       return response.data; // Return the entire paginated object
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message || 'An error occurred');
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "An error occurred"
+      );
     }
   }
 );
 
 const gigsSlice = createSlice({
-  name: 'gigs',
+  name: "gigs",
   initialState: {
     gigs: [], // Added  gigs array to store fetched gigs
-    managerGigs: { docs: [] }, // Initialize managerGigs as an object with docs array, 
+    managerGigs: { docs: [] }, // Initialize managerGigs as an object with docs array,
     loading: false,
     error: null,
     success: false,

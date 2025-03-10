@@ -4,6 +4,7 @@ import { Dropdown } from "flowbite-react";
 import { Bell, MessageCircle, UserCircle } from "lucide-react";
 import logo from "../assets/darwinbox-logo.png";
 import { useSelector } from "react-redux";
+import WebSocketComponent from "./WebSocketConnection";
 
 const Navbar = ({ linkName }) => {
   const { user } = useSelector((state) => state.auth);
@@ -54,6 +55,7 @@ const Navbar = ({ linkName }) => {
         </Link>
 
         <div className="flex items-center space-x-4 md:space-x-8 flex-wrap">
+          <WebSocketComponent />
           <Link to={linkName} className="text-lg hover:text-blue-600">
             Home
           </Link>

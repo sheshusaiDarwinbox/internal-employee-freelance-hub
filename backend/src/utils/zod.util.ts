@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { PositionTypeEnum } from "../models/position.model";
 import { RequestTypeEnum } from "../models/request.model";
+import { extendedTechSkills } from "./insertSkills.util";
 
 export const EIDScheme = z.union([
   z.string().regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
@@ -30,18 +31,37 @@ export const GetIDSchema = z.object({
     .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
 });
 
-export const CreateUserSchema = z.object({
-  DID: z
-    .string()
-    .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
-  PID: z
-    .string()
-    .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
-  role: z.enum(["Admin", "Employee", "Manager", "Other"]),
-  ManagerID: z
-    .string()
-    .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
-  email: z.string().email({ message: "Invalid email" }),
+export const CreateUserSchema = z.array(
+  z.object({
+    DID: z
+      .string()
+      .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+    PID: z
+      .string()
+      .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+    role: z.enum(["Admin", "Employee", "Manager", "Other"]),
+    ManagerID: z
+      .string()
+      .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" }),
+    email: z.string().email({ message: "Invalid email" }),
+    skills: z
+      .array(
+        z.object({
+          skill: z.enum(extendedTechSkills), // The skill must be one of the listed extendedTechSkills
+          score: z.number().min(0).max(1).optional(), // Score is optional and between 0 and 1
+        })
+      )
+      .optional(),
+  })
+);
+
+export const UpdateUserSkills = z.object({
+  skills: z.array(
+    z.object({
+      skill: z.enum(extendedTechSkills), // The skill must be one of the listed extendedTechSkills
+      score: z.number().min(0).max(1), // Score is optional and between 0 and 1
+    })
+  ),
 });
 
 export const GetDepartmentSchema = z.object({
@@ -144,7 +164,12 @@ export const CreateGigZodSchema = z.object({
       /^[a-zA-Z0-9\s.,!?()&]+$/,
       "title must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
     ),
-  skillsRequired: z.array(z.string()),
+  skills: z.array(
+    z.object({
+      skill: z.enum(extendedTechSkills),
+      weight: z.number().min(0).max(1),
+    })
+  ),
   amount: z.number().int().gte(0),
   deadline: z
     .string()
@@ -158,12 +183,14 @@ export const CreateGigZodSchema = z.object({
       /^[a-zA-Z0-9\s.,!?()&]+$/,
       "title must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
     ),
+  img: z.string(),
+  rewardPoints: z.number().int().gte(0),
 });
 
 export const AssignManagerZodSchema = z.object({
   EID: z
     .string()
-    .regex(/^[a-zA-Z0-9]+$/, { message: "DID must be alphanumeric" }),
+    .regex(/^[a-zA-Z0-9]+$/, { message: "EID must be alphanumeric" }),
   DID: z
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "DID must be alphanumeric" }),
@@ -171,4 +198,19 @@ export const AssignManagerZodSchema = z.object({
 
 export const RequestZodSchema = z.object({
   reqType: z.nativeEnum(RequestTypeEnum),
+});
+
+export const BidZodSchema = z.object({
+  GigID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "GigID must be alphanumeric" }),
+  description: z
+    .string()
+    .regex(
+      /^[a-zA-Z0-9\s.,!?()&]+$/,
+      "Description must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
+    ),
+  EID: z
+    .string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "EID must be alphanumeric" }),
 });

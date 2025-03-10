@@ -24,13 +24,14 @@ export interface GigSchema {
   approvalStatus: ApprovalStatus;
   progressTracking?: ProgressTracking[];
   ongoingStatus: OngoingStatusType;
-  skillsRequired: string[];
+  skills: object[];
   createdAt: Date;
   assignedAt?: Date;
   rewardPoints?: number;
   rating?: number;
   amount?: number;
   feedback?: string;
+  img?: string;
 }
 
 export type GigModel = Model<GigSchema>;

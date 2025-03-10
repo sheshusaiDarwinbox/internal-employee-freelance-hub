@@ -1,7 +1,12 @@
 import mongoose from "mongoose";
+import { createClient } from "redis";
 
 const MAX_RETRIES = 5;
 const RETRY_INTERVAL = 5000;
+const REDIS_TIMEOUT = 10000;
+const redisUrl = "redis://localhost:6379";
+
+export const client = createClient({ url: redisUrl });
 
 export default async function connect(
   retryCount = 0
@@ -33,7 +38,30 @@ export default async function connect(
       console.log("MongoDB disconnected");
     });
 
-    console.log("Database connected");
+    console.log("Mongo Database connected");
+
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Redis connection timeout"));
+      }, REDIS_TIMEOUT);
+
+      client
+        .connect()
+        .then(() => {
+          clearTimeout(timeout);
+          console.log("Redis connected successfully");
+          resolve(true);
+        })
+        .catch((err) => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+    });
+
+    client.on("error", (err) => {
+      console.error("Redis connection error:", err);
+    });
+
     return db;
   } catch (err) {
     console.error(`Connection attempt ${retryCount + 1} failed:`, err);

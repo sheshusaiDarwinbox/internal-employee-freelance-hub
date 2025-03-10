@@ -45,7 +45,7 @@ services:
       - mongo_network
 
   redis:
-    image: redis:3.2.4
+    image: redis:6.2.0
     container_name: redis-container
     ports:
       - 6379:6379

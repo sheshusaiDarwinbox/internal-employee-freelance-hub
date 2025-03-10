@@ -1,6 +1,7 @@
 import { DepartmentModel } from "../models/department.model";
 import { PositionModel } from "../models/position.model";
 import { User } from "../models/userAuth.model";
+import { insertSkills } from "./insertSkills.util";
 import { hashPassword } from "./password.util";
 
 export const setAdmin = async () => {
@@ -23,7 +24,6 @@ export const setAdmin = async () => {
       });
 
     const findDepartment = await DepartmentModel.find({ DID: "D000000" });
-    // console.log(findDepartment)
     if (findDepartment.length === 0)
       await DepartmentModel.create({
         name: "adminDepartment",
@@ -46,6 +46,7 @@ export const setAdmin = async () => {
       }).then(() => {
         console.log("Admin Position Created");
       });
+    await insertSkills();
   } catch (err) {
     console.log(err);
   }

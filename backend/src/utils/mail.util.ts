@@ -3,20 +3,17 @@ import nodemailer from "nodemailer";
 import { hashPassword } from "./password.util";
 import crypto from "crypto";
 import { UserVerification } from "../models/userVerification.model";
-import mongoose, { Types } from "mongoose";
+import { Types } from "mongoose";
 import { forgotPassword } from "../models/forgotPassword.model";
 import { HttpStatusCodes } from "./httpsStatusCodes.util";
 import { config } from "../server";
 
-export const sendVerificationEmail = async (
-  data: {
-    EID: string;
-    _id: Types.ObjectId;
-    email: string;
-    password: string;
-  },
-  session: mongoose.ClientSession
-) => {
+export const sendVerificationEmail = async (data: {
+  EID: string;
+  _id: Types.ObjectId;
+  email: string;
+  password: string;
+}) => {
   const transporter = nodemailer.createTransport(config);
   const verifyString = crypto.randomBytes(16).toString("base64url") + data._id;
   const baseUrl = process.env.BASE_URL;
@@ -36,16 +33,13 @@ export const sendVerificationEmail = async (
   console.log(`${baseUrl + "/api/verify/" + data._id + "/" + verifyString}`);
   // {baseUrl}/verify/id/verifyString
 
-  const [verification] = await UserVerification.create(
-    [
-      {
-        email: data.email,
-        verifyString: hashedVerifyString,
-        _id: data._id,
-      },
-    ],
-    { session }
-  );
+  const [verification] = await UserVerification.create([
+    {
+      email: data.email,
+      verifyString: hashedVerifyString,
+      _id: data._id,
+    },
+  ]);
 
   if (!verification) throw new Error("userverification doc failed to create");
 

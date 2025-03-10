@@ -1,8 +1,10 @@
 import type { Request, Response } from "express";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
+import { Types } from "mongoose";
 import {
   CreateUserSchema,
   GetUserSchema,
+  UpdateUserSkills,
   UsersArraySchema,
 } from "../utils/zod.util";
 import { Router } from "express";
@@ -18,7 +20,9 @@ import { parseFile } from "../utils/fileParser.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
 import { generatePresignedUrl } from "../utils/fileParser.util";
 import { Gig } from "../models/gig.model";
-import z from "zod";
+import z, { date } from "zod";
+import { UserAuth } from "../types/userAuth.types";
+import { client } from "../database/connection";
 
 interface UserWithRole extends Document {
   role: UserRole;
@@ -26,44 +30,111 @@ interface UserWithRole extends Document {
 
 export const createUser = sessionHandler(
   async (req: Request, res: Response, session) => {
-    const data = CreateUserSchema.parse(req.body);
+    const users = CreateUserSchema.parse(req.body);
+    let usersEmailData: {
+      EID: string;
+      password: string;
+      email: string;
+      _id?: string;
+    }[] = [];
 
-    const department = await DepartmentModel.findOne({ DID: data.DID }, null, {
-      session,
-    });
-    const position = await PositionModel.findOne({ PID: data.PID }, null, {
-      session,
-    });
+    console.log(users);
+    const updatedUsers = await Promise.all(
+      users.map(async (user) => {
+        const { skills, ...data } = user;
+        const department = await DepartmentModel.findOne(
+          { DID: data.DID },
+          null,
+          {
+            session,
+          }
+        );
+        const position = await PositionModel.findOne({ PID: data.PID }, null, {
+          session,
+        });
 
-    if (!department || !position)
-      throw new Error("Department or Position not found");
+        const findUser = await User.findOne({ email: user.email });
 
-    const id = await generateId(IDs.EID, session);
-    const password = generateRandomPassword();
-    const hashedPassword = await hashPassword(password);
-    const [user] = await User.create(
-      [
-        {
+        if (!department || !position || findUser)
+          throw new Error(
+            "Department or Position not found or email already exists"
+          );
+
+        const result = await DepartmentModel.findOneAndUpdate(
+          { DID: data.DID },
+          { $inc: { teamSize: 1 } },
+          { session, new: true }
+        );
+        if (!result) throw new Error("Department not updated");
+        const id = await generateId(IDs.EID, session);
+        const password = generateRandomPassword();
+        const hashedPassword = await hashPassword(password);
+
+        if (skills) {
+          skills.forEach(({ skill, score }) => {
+            const hashKey = `skills:${skill}`;
+            if (score && score !== 0) client.hSet(hashKey, id, score);
+          });
+        }
+
+        usersEmailData.push({
+          EID: id,
+          password,
+          email: user.email,
+        });
+
+        return {
           ...data,
+          skills: skills,
           verified: false,
           EID: id,
           password: hashedPassword,
           doj: new Date().toISOString().split("T")[0],
+        };
+      })
+    );
+
+    console.log(updatedUsers);
+
+    const insertedUsers = await User.create(updatedUsers, { session });
+
+    insertedUsers.forEach((user, idx) => {
+      sendVerificationEmail({ ...usersEmailData[idx], _id: user._id });
+    });
+
+    return {
+      status: HttpStatusCodes.CREATED,
+      data: updatedUsers,
+    };
+  }
+);
+
+export const updateUserSkills = sessionHandler(
+  async (req: Request, res: Response) => {
+    const { EID } = req.params;
+    const user: UserAuth | null = await User.findOne({ EID: EID });
+    if (!user) throw new Error("Bad Request");
+    const { skills } = UpdateUserSkills.parse(req.body);
+    if (skills) {
+      skills.forEach(async ({ skill, score }) => {
+        const hashKey = `skills:${skill}`;
+        if (score && score === -1) await client.hDel(hashKey, EID);
+        else if (score && score !== 0) await client.hSet(hashKey, EID, score);
+      });
+    }
+    const updatedUser = await User.findOneAndUpdate(
+      { EID: EID },
+      {
+        $push: {
+          skills: { $each: skills },
         },
-      ],
-      { session }
+      },
+      { new: true, upsert: true }
     );
-    const result = await DepartmentModel.findOneAndUpdate(
-      { DID: data.DID },
-      { $inc: { teamSize: 1 } },
-      { session, new: true }
-    );
-    if (!result) throw new Error("Department not updated");
-    const resultStatus = await sendVerificationEmail(
-      { EID: id, _id: user._id, password, email: data.email },
-      session
-    );
-    return resultStatus;
+    return {
+      status: HttpStatusCodes.OK,
+      data: updatedUser,
+    };
   }
 );
 
@@ -110,7 +181,10 @@ export const getUserById = sessionHandler(
     GetUserSchema.parse({ EID: ID });
     const user = (await User.findOne({ EID: ID })) as UserWithRole;
     if (!user) throw new Error("Bad Request");
-    return user;
+    return {
+      status: HttpStatusCodes.OK,
+      data: user,
+    };
   }
 );
 
@@ -154,45 +228,44 @@ export const getProfile = sessionHandler(
 export const updateProfile = sessionHandler(
   async (req: Request, res: Response) => {
     const EID = req.user?.EID;
-    const user = (await User.findOne({ EID: EID })) as UserWithRole;
+    const user: UserAuth | null = await User.findOne({ EID: EID });
     if (!user) throw new Error("User not found");
     const {
-      gender,
-      phone,
-      dob,
-      maritalStatus,
-      nationality,
-      bloodGroup,
-      workmode,
-      address,
-      city,
-      state,
-      country,
-      pincode,
-      emergencyContactNumber,
-      skills,
-      fullName,
+      gender = user.gender,
+      phone = user.phone,
+      dob = user.dob,
+      maritalStatus = user.maritalStatus,
+      nationality = user.nationality,
+      bloodGroup = user.bloodGroup,
+      workmode = user.workmode,
+      address = user.address,
+      city = user.city,
+      state = user.state,
+      country = user.country,
+      pincode = user.pincode,
+      emergencyContactNumber = user.emergencyContactNumber,
+      fullName = user.fullName,
     } = req.body;
 
     const updatedUser = await User.findOneAndUpdate(
       { EID: req.user?.EID },
       {
         $set: {
-          phone: phone,
-          gender: gender,
-          dob: dob,
-          maritalStatus: maritalStatus,
-          nationality: nationality,
-          bloodGroup: bloodGroup,
-          workmode: workmode,
-          address: address,
-          city: city,
-          state: state,
-          country: country,
-          pincode: pincode,
-          emergencyContactNumber: emergencyContactNumber,
-          skills: skills,
-          fullName: fullName,
+          phone: phone || user.phone,
+          gender: gender || user.gender,
+          dob: dob || user.dob,
+          maritalStatus: maritalStatus || user.maritalStatus,
+          nationality: nationality || user.nationality,
+          bloodGroup: bloodGroup || user.bloodGroup,
+          workmode: workmode || user.workmode,
+          address: address || user.address,
+          city: city || user.city,
+          state: state || user.state,
+          country: country || user.country,
+          pincode: pincode || user.pincode,
+          emergencyContactNumber:
+            emergencyContactNumber || user.emergencyContactNumber,
+          fullName: fullName || user.fullName,
         },
       },
       { upsert: true }
@@ -218,10 +291,6 @@ export const getGigsByUser = sessionHandler(
         message: "userNotfound",
       };
     }
-
-    console.log(user);
-    console.log(DIDs);
-    console.log(search);
 
     if (DIDs) {
       z.array(
@@ -278,13 +347,70 @@ export const getGigsByUser = sessionHandler(
   }
 );
 
+export const resendVerifyMail = sessionHandler(
+  async (req: Request, res: Response) => {
+    const { email } = req.body;
+    z.string().email({ message: "Invalid email" }).parse(email);
+
+    const user: (UserAuth & { _id: Types.ObjectId }) | null =
+      await User.findOne({ email: email });
+    if (!user)
+      return {
+        status: HttpStatusCodes.BAD_REQUEST,
+        data: {
+          message: "User not found",
+        },
+      };
+
+    if (user.verified)
+      return {
+        status: HttpStatusCodes.BAD_REQUEST,
+        data: {
+          message: "User already verified",
+        },
+      };
+
+    const password = generateRandomPassword();
+    const hashedPassword = hashPassword(password);
+    const updatedUser = User.findOneAndUpdate(
+      { email: user.email },
+      {
+        $set: {
+          password: hashedPassword,
+        },
+      }
+    );
+    sendVerificationEmail({
+      EID: user.EID,
+      email: user.email,
+      password,
+      _id: user._id,
+    });
+
+    return {
+      status: HttpStatusCodes.OK,
+      data: updatedUser,
+    };
+  }
+);
+
 export const userControlRouter = Router();
 
 userControlRouter.post("/create", checkAuth([UserRole.Admin]), createUser);
-// userControlRouter.get("", checkAuth([UserRole.Admin]), getAllUsers);
+userControlRouter.get(
+  "",
+  checkAuth([UserRole.Admin, UserRole.Manager]),
+  getAllUsers
+);
 userControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteUserByID);
-userControlRouter.get("/:ID", checkAuth([UserRole.Admin]), getUserById);
-// userControlRouter.get("/my-gigs", getGigsByUser);
+userControlRouter.get("/get-user/:ID", checkAuth([]), getUserById);
+userControlRouter.get("/my-gigs", checkAuth([]), getGigsByUser);
 userControlRouter.post("/upload-img", checkAuth([]), uploadProfileImg);
 userControlRouter.get("/profile", checkAuth([]), getProfile);
 userControlRouter.post("/update-profile", checkAuth([]), updateProfile);
+userControlRouter.post(
+  "/update-user-skills/:EID",
+  checkAuth([UserRole.Admin, UserRole.Manager]),
+  updateUserSkills
+);
+userControlRouter.post("/resend-verify-mail", resendVerifyMail);

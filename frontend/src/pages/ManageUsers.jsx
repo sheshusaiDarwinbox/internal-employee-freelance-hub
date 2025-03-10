@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button, TextInput, Select, Modal, Label, Table } from "flowbite-react";
+import { Spinner } from "flowbite-react";
 import {
   HiSearch,
   HiPlus,
@@ -41,6 +42,24 @@ const ManageUsers = () => {
   const fileInputRef = useRef(null);
   const debouncedSearchQuery = useDebounce(searchQuery);
   const [pageSize] = useState(10);
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
+      await api.delete(`/api/users/${selectedUser.EID}`, {
+        withCredentials: true,
+      });
+      setUsers(users.filter((user) => user.EID !== selectedUser.EID));
+      setShowDeleteModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [formData, setFormData] = useState({
     email: "",
@@ -117,7 +136,7 @@ const ManageUsers = () => {
 
       setLoading(true);
 
-      await api.post(`api/users/create`, validatedData, {
+      const user = await api.post(`api/users/create`, [validatedData], {
         headers: {
           "Content-Type": "application/json",
         },
@@ -391,6 +410,39 @@ const ManageUsers = () => {
           />
         </div>
       )}
+
+      <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+        <Modal.Header>Confirm Delete</Modal.Header>
+        <Modal.Body>
+          <div className="p-6">
+            <p className="text-gray-700">
+              Are you sure you want to delete user{" "}
+              <span className="font-semibold">{selectedUser?.fullName}</span>?
+            </p>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <div className="flex justify-end gap-2">
+            <Button
+              color="gray"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button color="failure" onClick={handleDelete} disabled={loading}>
+              {loading ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
 
       <Modal show={showForm} onClose={() => setShowForm(false)} size="xl">
         <Modal.Header>

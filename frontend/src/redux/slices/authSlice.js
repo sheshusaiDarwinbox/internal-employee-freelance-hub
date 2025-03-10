@@ -72,7 +72,6 @@ export const updateProfile = createAsyncThunk(
         },
         withCredentials: true,
       });
-      console.log(response);
       return response.data;
     } catch (err) {
       console.log("update profile err", err.response?.data);
@@ -118,6 +117,7 @@ const authSlice = createSlice({
         for (let x in action.payload) {
           state.user[x] = action.payload[x];
         }
+        console.log(state);
       });
   },
 });

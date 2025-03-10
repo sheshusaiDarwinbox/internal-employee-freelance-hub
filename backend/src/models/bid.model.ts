@@ -3,8 +3,8 @@ import type { Bid, BidModelType } from "../types/bid.types";
 import paginate from "mongoose-paginate-v2";
 
 const bidSchema = new Schema<Bid, BidModelType>({
-  BID: { type: String, required: true, index: true, unique: true },
-  TaskID: { type: String, required: true },
+  BidID: { type: String, required: true, index: true, unique: true },
+  GigID: { type: String, required: true },
   description: { type: String, required: true },
   EID: { type: String, required: true },
 });

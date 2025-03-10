@@ -23,6 +23,7 @@ const requestSchema = new Schema<Request, RequestModelType>({
     enum: Object.values(RequestTypeEnum),
   },
   description: { type: String },
+  status: { type: String, required: true, enum: Object.values(ReqStatus) },
 });
 
 requestSchema.plugin(paginate);

@@ -10,12 +10,18 @@ import { checkAuth } from "../middleware/checkAuth.middleware";
 import { UserAuth } from "../types/userAuth.types";
 import { sessionHandler } from "../utils/session.util";
 import { z } from "zod";
+import { splitStringByCommas } from "../utils/requestParsing.util";
 
 export const gigControlRouter = Router();
 
 export const createGig = sessionHandler(
   async (req: Request, res: Response, session) => {
+    console.log(req.body);
+    req.body.ManagerID = req.user?.EID;
+    req.body.rewardPoints = parseInt(req.body.rewardPoints);
     const data = CreateGigZodSchema.parse(req.body);
+
+    console.log(data);
 
     const manager: UserAuth | null = await User.findOne({
       EID: data.ManagerID,
@@ -35,7 +41,7 @@ export const createGig = sessionHandler(
         data.amount > 0 ? ApprovalStatus.PENDING : ApprovalStatus.APPROVED,
     };
 
-    const gig = await Gig.create(gigdata);
+    const [gig] = await Gig.create([gigdata], { session });
 
     if (!gig) throw new Error("failed to create gig");
 
@@ -51,14 +57,23 @@ export const createGig = sessionHandler(
     }
     return {
       status: HttpStatusCodes.CREATED,
-      data: data,
+      data: gigdata,
     };
   }
 );
 
 export const getAllGigs = sessionHandler(
   async (req: Request, res: Response) => {
-    const { DIDs, ManagerIDs, search, page = 0 } = req.query;
+    const {
+      DIDs,
+      ManagerIDs,
+      search,
+      page = 1,
+      approvalStatus = "APPROVED",
+      ongoingStatus = "UnAssigned",
+    } = req.query;
+
+    const parsedManagerIDs = splitStringByCommas(ManagerIDs as string);
     let filter: any = {};
     if (DIDs) {
       z.array(
@@ -68,13 +83,13 @@ export const getAllGigs = sessionHandler(
       ).parse(DIDs);
       filter.DID = { $in: DIDs };
     }
-    if (ManagerIDs) {
+    if (parsedManagerIDs) {
       z.array(
         z
           .string()
           .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
-      ).parse(DIDs);
-      filter.ManagerID = { $in: ManagerIDs };
+      ).parse(parsedManagerIDs);
+      filter.ManagerID = { $in: parsedManagerIDs };
     }
     if (search) {
       z.string().regex(
@@ -86,14 +101,72 @@ export const getAllGigs = sessionHandler(
         $text: { $search: search },
       };
     }
+    filter.approvalStatus = approvalStatus;
+    filter.ongoingStatus = ongoingStatus;
 
-    const gigs = await Gig.paginate(filter, {
-      offset: Number(page) * 10,
-      limit: 10,
-    });
+    const gigs = await Gig.aggregate([
+      { $match: filter },
+      { $skip: (Number(page) - 1) * 6 },
+      { $limit: 6 },
+      {
+        $lookup: {
+          from: "departments",
+          localField: "DID",
+          foreignField: "DID",
+          as: "department",
+        },
+      },
+      {
+        $lookup: {
+          from: "userauths",
+          localField: "ManagerID",
+          foreignField: "EID",
+          as: "userauth",
+        },
+      },
+      {
+        $unwind: {
+          path: "$department",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          GigID: 1,
+          DID: 1,
+          ManagerID: 1,
+          title: 1,
+          description: 1,
+          deadline: 1,
+          approvalStatus: 1,
+          ongoingStatus: 1,
+          skills: 1,
+          createdAt: 1,
+          rewardPoints: 1,
+          amount: 1,
+          img: 1,
+          "department.name": 1,
+          "userauth.fullName": 1,
+        },
+      },
+    ]);
+
+    const total = await Gig.countDocuments(filter);
+
+    const pageNum = Number(page) - 1;
     return {
       status: HttpStatusCodes.OK,
-      data: gigs,
+      data: {
+        docs: gigs,
+        totalDocs: total,
+        limit: 6,
+        page: pageNum + 1,
+        totalPages: Math.ceil(total / 6),
+        hasNextPage: (pageNum + 1) * 6 < total,
+        nextPage: (pageNum + 1) * 6 < total ? pageNum + 2 : null,
+        hasPrevPage: pageNum > 0,
+        prevPage: pageNum > 0 ? pageNum : null,
+      },
     };
   }
 );
@@ -101,8 +174,14 @@ export const getAllGigs = sessionHandler(
 export const getGigById = sessionHandler(
   async (req: Request, res: Response) => {
     const { GigID } = req.params;
-    GetIDSchema.parse({ ID: GigID });
-    const gig = await Gig.findOne({ PID: GigID });
+    const gig = await Gig.findOne({ GigID: GigID });
+    if (!gig)
+      return {
+        status: HttpStatusCodes.BAD_REQUEST,
+        data: {
+          msg: "Gig not found",
+        },
+      };
     return {
       status: HttpStatusCodes.OK,
       data: gig,

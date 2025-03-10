@@ -4,7 +4,8 @@ import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import authReducer from "./slices/authSlice";
 import forgotPasswordReducer from "./slices/forgotPasswordSlice";
-import gigsReducer from "./slices/gigsSlice"
+import gigsReducer from "./slices/gigsSlice";
+import websocketReducer from "./slices/webSocketSlice";
 
 const persistConfig = {
   key: "root",
@@ -14,7 +15,8 @@ const persistConfig = {
 const rootReducer = combineReducers({
   auth: authReducer,
   forgotPassword: forgotPasswordReducer,
-  gigs : gigsReducer
+  gigs: gigsReducer,
+  websocket: websocketReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -27,6 +29,7 @@ export const store = configureStore({
           "persist/PERSIST",
           "persist/REHYDRATE",
           "persist/REGISTER",
+          "websocket/setSocket",
         ],
       },
     }),
