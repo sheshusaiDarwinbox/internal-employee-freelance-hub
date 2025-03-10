@@ -20,9 +20,11 @@ import { parseFile } from "../utils/fileParser.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
 import { generatePresignedUrl } from "../utils/fileParser.util";
 import { Gig } from "../models/gig.model";
+import { GigSchema } from "../types/gig.types"; 
 import z, { date } from "zod";
 import { UserAuth } from "../types/userAuth.types";
 import { client } from "../database/connection";
+import { AccountDetailsModel } from "../models/accountDetails.model"; 
 
 interface UserWithRole extends Document {
   role: UserRole;
@@ -31,6 +33,7 @@ interface UserWithRole extends Document {
 export const createUser = sessionHandler(
   async (req: Request, res: Response, session) => {
     const users = CreateUserSchema.parse(req.body);
+    let id; // Initialize id here
     let usersEmailData: {
       EID: string;
       password: string;
@@ -66,7 +69,14 @@ export const createUser = sessionHandler(
           { session, new: true }
         );
         if (!result) throw new Error("Department not updated");
-        const id = await generateId(IDs.EID, session);
+        let id = ""; // Initialize id with a default value
+      if(data.role === "Other"){
+        id = await generateId(IDs.OID, session);
+      }
+      else{
+        id = await generateId(IDs.EID, session);
+      }
+
         const password = generateRandomPassword();
         const hashedPassword = await hashPassword(password);
 
@@ -98,14 +108,35 @@ export const createUser = sessionHandler(
 
     const insertedUsers = await User.create(updatedUsers, { session });
 
+    let accountDetails;
+    const { role } = users[0]; // Extract role from the first user
+    if (role === "Employee" || role === "Other") {
+      const existingAccount = await AccountDetailsModel.findOne({ EID: id });
+      if (!existingAccount) {
+        accountDetails = await AccountDetailsModel.create(
+          [
+            {
+              EID: id,
+              bankName: "",
+              accountNo: "",
+              IFSCNo: "",
+              totalBalance: 0,
+            },
+          ],
+          { session }
+        );
+      } else {
+        accountDetails = existingAccount; // Use the existing account
+      }
+    } else {
+      accountDetails = null; // Skip account creation for other roles
+    }
+
     insertedUsers.forEach((user, idx) => {
       sendVerificationEmail({ ...usersEmailData[idx], _id: user._id });
     });
 
-    return {
-      status: HttpStatusCodes.CREATED,
-      data: updatedUsers,
-    };
+    return res.status(HttpStatusCodes.CREATED).send( { user: insertedUsers as any, accountDetails, resultStatus: HttpStatusCodes.CREATED } ); // Ensure it returns an object with a data property
   }
 );
 
@@ -394,6 +425,89 @@ export const resendVerifyMail = sessionHandler(
   }
 );
 
+export const getAllEmployees = sessionHandler(
+  async (req: Request, res: Response) => {
+    const { page = 0 } = req.query;
+    const filter: any = {
+      role: { $in: [UserRole.Employee, UserRole.Other] }, // Filter for Employee and Other roles
+    };
+    const pageNum = Number(page);
+
+    const users = await User.paginate(filter, {
+      offset: pageNum * 10,
+      limit: 10,
+    });
+
+    return users;
+  }
+);
+
+export const getTotalRewards = sessionHandler(
+  async (req: Request, res: Response) => {
+    const { EID } = req.params;
+
+    z.string()
+      .regex(/^[a-zA-Z0-9]+$/, { message: "EID must be alphanumeric" })
+      .parse(EID);
+
+    const gigs = await Gig.find({ EID: EID });
+
+    if (!gigs || gigs.length === 0) {
+      return res
+        .status(HttpStatusCodes.BAD_REQUEST)
+        .send({ message: "No gigs found for this user." });
+    }
+
+    let totalRewards = 0;
+    let gigsWithRewardsCount = 0;
+
+    gigs.forEach((gig) => {
+      const gigDoc = gig as unknown as GigSchema;
+      if (typeof gigDoc.rewardPoints === "number" && gigDoc.rewardPoints > 0) {
+        totalRewards += gigDoc.rewardPoints;
+        gigsWithRewardsCount++;
+      }
+    });
+
+    return res.status(HttpStatusCodes.OK).send({
+      totalRewards,
+      gigs,
+      gigsWithRewardsCount,
+    });
+  }
+);
+
+export const getTotalAmount = sessionHandler(
+  async (req: Request, res: Response) => {
+    const { EID } = req.params;
+
+    z.string()
+      .regex(/^[a-zA-Z0-9]+$/, { message: "EID must be alphanumeric" })
+      .parse(EID);
+
+    const gigs = await Gig.find({ EID: EID });
+
+    if (!gigs || gigs.length === 0) {
+      return res
+        .status(HttpStatusCodes.BAD_REQUEST)
+        .send({ message: "No gigs found for this user." });
+    }
+
+    const totalAmount = gigs.reduce((sum, gig) => {
+      const gigDoc = gig as unknown as GigSchema;
+      if (typeof gigDoc.amount === "number") {
+        return sum + gigDoc.amount;
+      }
+      return sum;
+    }, 0);
+
+    return res.status(HttpStatusCodes.OK).send({
+      totalAmount,
+      gigs,
+    });
+  }
+);
+
 export const userControlRouter = Router();
 
 userControlRouter.post("/create", checkAuth([UserRole.Admin]), createUser);
@@ -403,6 +517,7 @@ userControlRouter.get(
   getAllUsers
 );
 userControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteUserByID);
+userControlRouter.get("/emp", checkAuth([]), getAllEmployees);
 userControlRouter.get("/get-user/:ID", checkAuth([]), getUserById);
 userControlRouter.get("/my-gigs", checkAuth([]), getGigsByUser);
 userControlRouter.post("/upload-img", checkAuth([]), uploadProfileImg);
@@ -414,3 +529,5 @@ userControlRouter.post(
   updateUserSkills
 );
 userControlRouter.post("/resend-verify-mail", resendVerifyMail);
+userControlRouter.get("/total-rewards/:EID", checkAuth([]), getTotalRewards);
+userControlRouter.get("/total-amount/:EID", checkAuth([]), getTotalAmount);

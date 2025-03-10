@@ -10,6 +10,7 @@ export const adminSidbarNavLinks = [
 
 export const userSidebarNavLinks = [
   { name: "🏆 Rewards", link: "/user/rewards" },
+  { name: "🏆 LeaderBoard", link: "/user/leaderboard" },
   { name: "📋 Work History", link: "/user/work-history" },
   { name: "📝 Gigs", link: "/user/gigs" },
   { name: "📊 My Activity", link: "/user/my-activity" },

@@ -30,6 +30,7 @@ declare global {
       skills?: string[];
       AccountBalance?: number;
       img?: string;
+      role?: UserRole; // Added role property to ensure it is included in the User type
     }
   }
 }

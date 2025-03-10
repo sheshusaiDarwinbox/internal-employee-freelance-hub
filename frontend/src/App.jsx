@@ -9,11 +9,10 @@ import {
   userSidebarNavLinks,
 } from "./utils/sidebarUtils";
 import AllGigs from "./pages/Gigs";
-
+import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
 import ChatPage from "./pages/ChatPage";
 import ManagePositions from "./pages/ManagePositions";
-import Leaderboard from "./pages/Leaderboard";
 import ManageUsers from "./pages/ManageUsers";
 
 const Home = lazy(() => import("./pages/Home/Homepage"));

@@ -23,7 +23,11 @@ const requestSchema = new Schema<Request, RequestModelType>({
     enum: Object.values(RequestTypeEnum),
   },
   description: { type: String },
-  status: { type: String, required: true, enum: Object.values(ReqStatus) },
+  name: { type: String }, // Add name field
+  email: { type: String }, // Add email field
+  skillset: { type: [String] }, // Add skillset field
+  reqStatus: { type: String, required: true, enum: Object.values(ReqStatus)  },
+  GID: { type: String } // Add GID field
 });
 
 requestSchema.plugin(paginate);

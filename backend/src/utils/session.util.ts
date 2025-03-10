@@ -8,7 +8,7 @@ export const sessionHandler = (
     session: mongoose.ClientSession
   ) => Promise<any>
 ) => {
-  return async (req: Request, res: Response): Promise<void> => {
+  return async (req: Request, res: Response): Promise<any> => {
     let session: mongoose.ClientSession | null = null;
     try {
       session = await mongoose.startSession();
