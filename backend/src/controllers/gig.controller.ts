@@ -104,7 +104,8 @@ export const getAllGigs = sessionHandler(
     filter.approvalStatus = approvalStatus;
     filter.ongoingStatus = ongoingStatus;
 
-    const gigs = await Gig.aggregate([
+    console.log("Filter:", filter); // Debugging log for filter
+const gigs = await Gig.aggregate([
       { $match: filter },
       { $skip: (Number(page) - 1) * 6 },
       { $limit: 6 },
@@ -152,6 +153,7 @@ export const getAllGigs = sessionHandler(
     ]);
 
     const total = await Gig.countDocuments(filter);
+console.log("Total Documents:", total); // Debugging log for total documents
 
     const pageNum = Number(page) - 1;
     return {

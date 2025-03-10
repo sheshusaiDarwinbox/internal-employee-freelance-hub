@@ -35,8 +35,8 @@ export const createRequest = sessionHandler(
     const request = await RequestModel.create({
       ReqID: ReqID,
       From: req.user?.EID, // Set From to authenticated user's EID
-      // To: gig.ManagerID, // Set To to the ManagerID based on reqType
-      To:"EMP000000",
+      To: gig.ManagerID, // Set To to the ManagerID based on reqType
+      // To:"EMP000000",
       reqStatus: "Pending", // Set reqStatus to Pending by default
       reqType: reqType,
       name: reqType === "CreateUser" ? name : undefined, // Add name if reqType is CreateUser
@@ -57,13 +57,15 @@ export const approveOrRejectRequest = sessionHandler(
 
     const request = await RequestModel.findOne({ ReqID: requestId }) as any; // Fetch the request by ReqID and cast to any
     const gig = await Gig.findOne({ GigID: request.GID }) as any; // Fetch gig details using GID
+    if (gig.EID) {
+      return res.status(HttpStatusCodes.BAD_REQUEST).send({ message: "Gig was already assigned." });
+    }
     if (!gig) {
         return res.status(HttpStatusCodes.NOT_FOUND).send({ message: "Gig not found" });
     }
     if (!request) {
       return res.status(HttpStatusCodes.NOT_FOUND).send({ message: "Request not found" });
     }
-
     // Update the request status
     request.reqStatus = reqStatus;
     await request.save({ session });
@@ -168,10 +170,38 @@ export const getSentRequests = sessionHandler(
   }
 );
 
+export const referExternalRequests = sessionHandler(
+  async (req: Request, res: Response, session) => {
+    const { ReqID } = req.params; // Get ReqID from request parameters
+
+    const request = await RequestModel.findOne({ ReqID }) as any; // Fetch the request by ReqID
+    if (!request) {
+      return res.status(HttpStatusCodes.NOT_FOUND).send({ message: "Request not found" });
+    }
+
+    if (request.reqType !== "CreateUser") {
+      return res.status(HttpStatusCodes.BAD_REQUEST).send({ message: "Only CreateUser requests can be processed." });
+    }
+
+    // Update the request fields
+    request.From = request.ManagerID; // Set From to ManagerID
+    request.To = "EMP000000"; // Set To to EMP000000
+    await request.save({ session }); // Save the updated request
+
+    return res.status(HttpStatusCodes.OK).send({ message: "Request processed successfully." });
+  }
+);
+
 requestControlRouter.post(
   "/create",
   checkAuth([UserRole.Manager]),
   createRequest
+);
+
+requestControlRouter.post(
+  "/refer-external/:ReqID",
+  checkAuth([UserRole.Manager]),
+  referExternalRequests
 );
 
 requestControlRouter.get("/sent", checkAuth([]), getSentRequests);
