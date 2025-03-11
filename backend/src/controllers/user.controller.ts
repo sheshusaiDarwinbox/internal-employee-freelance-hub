@@ -38,7 +38,7 @@ export const createUser = sessionHandler(
       _id?: string;
     }[] = [];
 
-    console.log(users);
+    // console.log(users);
     const updatedUsers = await Promise.all(
       users.map(async (user) => {
         const { skills, ...data } = user;
@@ -94,9 +94,11 @@ export const createUser = sessionHandler(
       })
     );
 
-    console.log(updatedUsers);
+    // console.log(updatedUsers);
 
     const insertedUsers = await User.create(updatedUsers, { session });
+
+    console.log(usersEmailData);
 
     insertedUsers.forEach((user, idx) => {
       sendVerificationEmail({ ...usersEmailData[idx], _id: user._id });
@@ -114,7 +116,9 @@ export const updateUserSkills = sessionHandler(
     const { EID } = req.params;
     const user: UserAuth | null = await User.findOne({ EID: EID });
     if (!user) throw new Error("Bad Request");
+    console.log(req.body);
     const { skills } = UpdateUserSkills.parse(req.body);
+    console.log(skills);
     if (skills) {
       skills.forEach(async ({ skill, score }) => {
         const hashKey = `skills:${skill}`;

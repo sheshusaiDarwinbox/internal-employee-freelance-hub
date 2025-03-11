@@ -18,6 +18,8 @@ import { checkAuth } from "../middleware/checkAuth.middleware";
 
 export const createDepartment = sessionHandler(
   async (req: Request, res: Response, session) => {
+    console.log(req.body);
+    req.body.teamSize = parseInt(req.body.teamSize);
     const data = CreateDepartmentSchema.parse(req.body);
     const DID = await generateId(IDs.DID, session);
     const departmentData: Department = { ...data, DID };

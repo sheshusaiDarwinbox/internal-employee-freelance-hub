@@ -8,6 +8,8 @@ import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
 import { UserRole } from "../models/userAuth.model";
 import { z } from "zod";
+import { Gig } from "../models/gig.model";
+import { client } from "../database/connection";
 export const bidControlRouter = Router();
 
 export const createBid = sessionHandler(
@@ -42,12 +44,6 @@ export const createBid = sessionHandler(
   }
 );
 
-// export const getUserBids = sessionHandler(
-//     async (req: Request, res: Response) => {
-//         const bids
-//     }
-// )
-
 export const getBidsByGig = sessionHandler(
   async (req: Request, res: Response) => {
     const { GigID } = req.params;
@@ -56,6 +52,15 @@ export const getBidsByGig = sessionHandler(
     z.string()
       .regex(/^[a-zA-Z0-9]+$/, { message: "GigID must be alphanumeric" })
       .parse(GigID);
+
+    const gig = await Gig.findOne({ GigID: GigID });
+    if (!gig)
+      return {
+        status: HttpStatusCodes.BAD_REQUEST,
+        data: {
+          msg: "Gig does not exist",
+        },
+      };
 
     const bids = await BidModel.aggregate([
       { $match: { GigID: GigID } },
