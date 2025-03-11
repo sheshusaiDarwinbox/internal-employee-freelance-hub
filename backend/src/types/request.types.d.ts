@@ -13,9 +13,6 @@ export interface Request {
   reqStatus: {
     type: keyof typeof ReqStatus;
   }; // Ensure reqStatus is defined as keyof ReqStatus
-  email: string; // Ensure email is defined
-  name: string; // Add name field
-  skillset: string[]; // Add skillset field
   GID: string; // Add GID field
 }
 
