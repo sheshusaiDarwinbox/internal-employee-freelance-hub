@@ -118,7 +118,7 @@ export const getBidsByGig = sessionHandler(
 );
 
 export const assignGig = sessionHandler(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response,session) => {
     const { bidID } = req.params;
 
     // Fetch the bid using the bidID

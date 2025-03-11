@@ -8,7 +8,8 @@ import { gigRouter } from "./gig.router";
 import { positionRouter } from "./position.router";
 import { utilRouter } from "./util.router";
 import { bidRouter } from "./bid.router";
-import { requestRouter } from "./request.router"
+import { requestRouter } from "./request.router";
+import { referRouter } from "./refers.router";
 
 export const indexRouter = Router();
 
@@ -21,3 +22,4 @@ indexRouter.use(gigRouter);
 indexRouter.use(utilRouter);
 indexRouter.use(bidRouter);
 indexRouter.use(requestRouter);
+indexRouter.use(referRouter);

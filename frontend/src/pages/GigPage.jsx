@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../utils/api";
 import { Pagination } from "flowbite-react";
 import { Button } from "flowbite-react";
+import { Toast } from "flowbite-react";
 
 const GigPage = () => {
   const { id } = useParams();
@@ -12,6 +13,22 @@ const GigPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(6);
   const navigate = useNavigate();
+  const [showToast, setShowToast] = useState(false);
+
+  const handleAssignBid = async (bidId) => {
+    try {
+      await api.post(`http://localhost:3000/api/bids/assign/${bidId}`,
+        {
+          withCredentials: true,
+        }
+      );
+      setShowToast(true);
+      // Optionally, refetch gigs or update state here
+    } catch (error) {
+      console.error("Error assigning bid:", error);
+    }
+  };
+
 
   useEffect(() => {
     const fetchGigDetails = async () => {
@@ -39,6 +56,7 @@ const GigPage = () => {
         console.error("Error fetching bids:", error);
       }
     };
+    
 
     fetchGigDetails();
     fetchBids(currentPage);
@@ -46,6 +64,11 @@ const GigPage = () => {
 
   return (
     <div className="p-6">
+      {showToast && (
+              <Toast>
+                <Toast.Body>Gig assigned successfully!</Toast.Body>
+              </Toast>
+            )}
       {gigDetails && (
         <div>
           <h2 className="text-3xl font-semibold">{gigDetails.title}</h2>
@@ -73,9 +96,8 @@ const GigPage = () => {
 
                   <Button
                     className="h-9 px-4  rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold hover:bg-gradient-to-r hover:from-indigo-600 hover:to-blue-500 focus:ring-4 focus:ring-blue-300 transition duration-300"
-                    onClick={() => {}}
                     color="blue"
-                    size="sm"
+                    size="sm" onClick={() => handleAssignBid(bid.BidID)}
                   >
                     Assign
                   </Button>

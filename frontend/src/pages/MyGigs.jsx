@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Table, Button, Dropdown, TextInput, Pagination } from "flowbite-react";
-import { HiSearch, HiX } from "react-icons/hi";
+import { HiSearch } from "react-icons/hi";
+
 import api from "../utils/api";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -26,7 +27,6 @@ const MyGigs = () => {
         }
       );
       setGigs(response.data.docs);
-      console.log(response.data);
       setTotalGigs(response.data.totalDocs);
     } catch (error) {
       console.error("Error fetching gigs:", error);
@@ -37,6 +37,7 @@ const MyGigs = () => {
     fetchGigs(currentPage);
   }, [currentPage]);
 
+ 
   const departments = [...new Set(gigs.map((gig) => gig.DID))];
   const allSkills = [
     ...new Set(gigs.flatMap((gig) => gig.skills.map((skill) => skill.skill))),
@@ -63,6 +64,7 @@ const MyGigs = () => {
 
   return (
     <div className="p-6 bg-gray-50">
+      
       <div className="p-6 bg-gray-50">
         {/* Search and Filter Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
@@ -154,82 +156,97 @@ const MyGigs = () => {
             <Table.HeadCell>Actions</Table.HeadCell>
           </Table.Head>
           <Table.Body>
-            {filteredGigs.map((gig, index) => (
-              <Table.Row
-                key={gig._id}
-                onClick={() => handleOpenGig(gig.GigID)}
-                className={`
-            border-b border-gray-200 cursor-pointer transition-colors duration-150 hover:bg-gray-50
-            ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-          `}
-              >
-                <Table.Cell className="px-6 py-4">
-                  <span className="font-medium text-gray-900">{gig.title}</span>
-                </Table.Cell>
-                <Table.Cell className="px-6 py-4">
-                  <span className="text-gray-900">{gig.department.name}</span>
-                </Table.Cell>
-                <Table.Cell className="px-6 py-4">
-                  {gig.skills.map(({ skill }, i) => (
-                    <span
-                      key={i}
-                      className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-medium mr-2"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </Table.Cell>
-
-                <Table.Cell className="px-6 py-4">
-                  <span className="text-gray-900">
-                    {formatDate(gig.createdAt)}
-                  </span>
-                </Table.Cell>
-
-                <Table.Cell className="px-6 py-4">
-                  <span
-                    className={`
-        inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-        ${
-          gig.ongoingStatus === "UnAssigned"
-            ? "bg-green-100 text-green-800"
-            : ""
-        }
-        ${gig.ongoingStatus === "Ongoing" ? "bg-blue-100 text-blue-800" : ""}
-        ${
-          gig.ongoingStatus === "Completed"
-            ? "bg-yellow-100 text-yellow-800"
-            : ""
-        }
-        ${
-          gig.ongoingStatus === "Reviewed"
-            ? "bg-orange-100 text-orange-800"
-            : ""
-        }
-        ${
-          gig.ongoingStatus === "Internship"
-            ? "bg-purple-100 text-purple-800"
-            : ""
-        }
-      `}
-                  >
-                    {gig.ongoingStatus}
-                  </span>
-                </Table.Cell>
-
-                <Table.Cell className="px-6 py-4">
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      className="bg-blue-50 hover:bg-blue-100 text-blue-600 border-0"
-                      onClick={() => handleOpenGig(gig.GigID)}
-                    >
-                      View
-                    </Button>
-                  </div>
+            {filteredGigs.length === 0 ? (
+              <Table.Row>
+                <Table.Cell colSpan={6} className="text-center text-black">
+                  {user.role==="Manager"? "There are no bids for this Gig":"No Gigs"}
                 </Table.Cell>
               </Table.Row>
-            ))}
+            ) : (
+              filteredGigs.map((gig, index) => (
+                <Table.Row
+                  key={gig._id}
+                  onClick={() => handleOpenGig(gig.GigID)}
+                  className={`
+                border-b border-gray-200 cursor-pointer transition-colors duration-150 hover:bg-gray-50
+                ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+              `}
+                >
+                  <Table.Cell className="px-6 py-4">
+                    <span className="font-medium text-gray-900">{gig.title}</span>
+                  </Table.Cell>
+                  <Table.Cell className="px-6 py-4">
+                    <span className="text-gray-900">{gig.department.name}</span>
+                  </Table.Cell>
+                  <Table.Cell className="px-6 py-4">
+                    {gig.skills.map(({ skill }, i) => (
+                      <span
+                        key={i}
+                        className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-medium mr-2"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </Table.Cell>
+
+                  <Table.Cell className="px-6 py-4">
+                    <span className="text-gray-900">
+                      {formatDate(gig.createdAt)}
+                    </span>
+                  </Table.Cell>
+
+                  <Table.Cell className="px-6 py-4">
+                    <span
+                      className={`
+              inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+              ${
+                gig.ongoingStatus === "UnAssigned"
+                  ? "bg-green-100 text-green-800"
+                  : ""
+              }
+              ${gig.ongoingStatus === "Ongoing" ? "bg-blue-100 text-blue-800" : ""}
+              ${
+                gig.ongoingStatus === "Completed"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : ""
+              }
+              ${
+                gig.ongoingStatus === "Reviewed"
+                  ? "bg-orange-100 text-orange-800"
+                  : ""
+              }
+              ${
+                gig.ongoingStatus === "Internship"
+                  ? "bg-purple-100 text-purple-800"
+                  : ""
+              }
+            `}
+                    >
+                      {gig.ongoingStatus}
+                    </span>
+                  </Table.Cell>
+
+                  <Table.Cell className="px-6 py-4">
+                  <div className="flex space-x-2">
+
+                      
+                        <Button
+                        size="sm"
+                        className="bg-blue-50 hover:bg-blue-100 text-blue-600 border-0"
+                        onClick={() => handleOpenGig(gig._id)}
+                      >
+
+                        View
+                      </Button>
+
+
+
+
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ))
+            )}
           </Table.Body>
         </Table>
       </div>

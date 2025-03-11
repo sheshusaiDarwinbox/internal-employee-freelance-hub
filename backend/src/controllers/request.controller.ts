@@ -23,8 +23,9 @@ interface CreateUserResponse {
 
 export const createRequest = sessionHandler(
   async (req: Request, res: Response, session) => {
+    RequestZodSchema.parse(req.body);
     const { GID } = req.params; // Get GID from request parameters
-    const { reqType, description, name, email, skillset } = req.body; // Get reqType, description, name, email, and skillset from body
+    const { reqType } = req.body; // Get reqType, description, name, email, and skillset from body
 
     const ReqID = await generateId(IDs.ReqID, session); // Generate ReqID
     const gig = await Gig.findOne({ GigID: GID }) as any; // Fetch gig details using GID
@@ -32,17 +33,13 @@ export const createRequest = sessionHandler(
       return res.status(HttpStatusCodes.NOT_FOUND).send({ message: "Gig not found" });
     }
 
+
     const request = await RequestModel.create({
       ReqID: ReqID,
-      From: req.user?.EID, // Set From to authenticated user's EID
-      To: gig.ManagerID, // Set To to the ManagerID based on reqType
-      // To:"EMP000000",
-      reqStatus: "Pending", // Set reqStatus to Pending by default
+      From: req.user?.EID,
+      To: "EMP000000",
       reqType: reqType,
-      name: reqType === "CreateUser" ? name : undefined, // Add name if reqType is CreateUser
-      email: reqType === "CreateUser" ? email : undefined, // Add email if reqType is CreateUser
-      skillset: reqType === "CreateUser" ? skillset : undefined, // Add skillset if reqType is CreateUser
-      description: description,
+      description: "create user request to admin",
       GID: GID, // Add GID to the request document
     });
 
@@ -52,10 +49,10 @@ export const createRequest = sessionHandler(
 
 // export const approveOrRejectRequest = sessionHandler(
 //   async (req: Request , res: Response, session) => { // Update req type to include user
-//     const { requestId } = req.params; // Get requestId from request parameters
-//     const { reqStatus } = req.body; // Get reqStatus from body
+//     const { ReqID } = req.params; // Get ReqID from request parameters
+//     // const { reqStatus } = req.body; // Get reqStatus from body
 
-//     const request = await RequestModel.findOne({ ReqID: requestId }) as any; // Fetch the request by ReqID and cast to any
+//     const request = await RequestModel.findOne({ ReqID: ReqID }) as any; // Fetch the request by ReqID and cast to any
 //     const gig = await Gig.findOne({ GigID: request.GID }) as any; // Fetch gig details using GID
 //     if (gig.EID) {
 //       return res.status(HttpStatusCodes.BAD_REQUEST).send({ message: "Gig was already assigned." });
@@ -83,7 +80,7 @@ export const createRequest = sessionHandler(
 
 //     // Call createUser method if the request is approved
 //     if (reqStatus === "Complete") {
-//       const requestDoc = await RequestModel.findOne({ ReqID: requestId }) as any;
+//       const requestDoc = await RequestModel.findOne({ ReqID: ReqID }) as any;
 //       const emailToUse = requestDoc?.email || userEmail;
 //       const reqType = request.reqType;
 //       const gid = request.GID;
@@ -123,7 +120,7 @@ export const createRequest = sessionHandler(
 //       } else if (reqType === "ApproveGig") {
 //         console.log("Gid:", gid, "newID:", request.From);
 //         await Gig.findOneAndUpdate({ GID: gid }, { EID: request.From });
-//         await RequestModel.findOneAndUpdate({ ReqID: requestId },{reqStatus:"Complete"});
+//         await RequestModel.findOneAndUpdate({ ReqID: ReqID },{reqStatus:"Complete"});
 //       }  
 //       // Send approval email related to reqType
 //       const approvalMessage = reqType === "ApproveGig" 
@@ -134,7 +131,7 @@ export const createRequest = sessionHandler(
     
 //     } else if (reqStatus === "Rejected") {
 //       // Send rejection email
-//       await RequestModel.findOneAndUpdate({ ReqID: requestId },{reqStatus:"Complete"});
+//       await RequestModel.findOneAndUpdate({ ReqID: ReqID },{reqStatus:"Complete"});
 //       const rejectionMessage = request.description || "Your request has been rejected.";
 //       // await sendEmail(userEmail, rejectionMessage);
 //     }
@@ -207,7 +204,7 @@ requestControlRouter.post(
 requestControlRouter.get("/sent", checkAuth([]), getSentRequests);
 requestControlRouter.get("/received", checkAuth([]), getReceivedRequests);
 // requestControlRouter.post(
-//   "/approve-reject/:requestId",
+//   "/approve-reject/:ReqID",
 //   checkAuth([UserRole.Manager]), // Assuming only managers can approve/reject
 //   approveOrRejectRequest
 // );
