@@ -72,3 +72,4 @@ gigSchema.index({ title: "text" });
 gigSchema.plugin(paginate);
 
 export const Gig = model<GigSchema, PaginateModel<GigModel>>("Gig", gigSchema);
+export type { GigSchema }; // Export GigSchema

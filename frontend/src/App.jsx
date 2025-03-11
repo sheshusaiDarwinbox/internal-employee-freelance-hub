@@ -31,6 +31,7 @@ const PublicRoute = lazy(() => import("./components/PublicRoute"));
 const PublicLayout = lazy(() => import("./layouts/PublicLayout"));
 const UserProfile = lazy(() => import("../src/pages/UserProfile"));
 const UpdateUser = lazy(() => import("../src/pages/UpdateUsers"));
+const Requests = lazy(() => import("../src/pages/requests"));
 
 const styles = `
   body {
@@ -130,6 +131,7 @@ function App() {
               <Route path="chat" element={<ChatPage />} />
               <Route path="users" element={<ManageUsers />} />
               <Route path="positions" element={<ManagePositions />} />
+              <Route path="requests" element={<Requests />} />
             </Route>
 
             <Route
@@ -152,6 +154,7 @@ function App() {
               <Route path="chat" element={<ChatPage />} />
               <Route path="gig/:id" element={<GigPage />} />
               <Route path="users/:userId" element={<UserProfile />} />
+              <Route path="requests" element={<Requests />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

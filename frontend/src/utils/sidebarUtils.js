@@ -1,6 +1,6 @@
 export const adminSidbarNavLinks = [
   { name: "👥 Manage Users", link: "/admin/users" },
-  { name: "📩 Requests", link: "#" },
+  { name: "📩 Requests", link: "/admin/requests" },
   { name: "✅ Gigs", link: "/admin/gigs" },
   { name: "🏢 Manage Departments", link: "/admin/departments" },
   { name: "🏢 Manage Positions", link: "/admin/positions" },
@@ -21,7 +21,7 @@ export const userSidebarNavLinks = [
 
 export const managerSidebarNavLinks = [
   { name: "👥 Users", link: "/manager/users" },
-  { name: "📩 Requests", link: "#" },
+  { name: "📩 Requests", link: "/manager/requests" },
   { name: "✅ My Gigs", link: "/manager/my-gigs" },
   { name: "✅ Gigs", link: "/manager/all-gigs" },
   { name: "📝 Post Gig", link: "/manager/post-gigs" },

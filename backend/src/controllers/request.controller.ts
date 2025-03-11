@@ -50,97 +50,97 @@ export const createRequest = sessionHandler(
   }
 );
 
-export const approveOrRejectRequest = sessionHandler(
-  async (req: Request , res: Response, session) => { // Update req type to include user
-    const { requestId } = req.params; // Get requestId from request parameters
-    const { reqStatus } = req.body; // Get reqStatus from body
+// export const approveOrRejectRequest = sessionHandler(
+//   async (req: Request , res: Response, session) => { // Update req type to include user
+//     const { requestId } = req.params; // Get requestId from request parameters
+//     const { reqStatus } = req.body; // Get reqStatus from body
 
-    const request = await RequestModel.findOne({ ReqID: requestId }) as any; // Fetch the request by ReqID and cast to any
-    const gig = await Gig.findOne({ GigID: request.GID }) as any; // Fetch gig details using GID
-    if (gig.EID) {
-      return res.status(HttpStatusCodes.BAD_REQUEST).send({ message: "Gig was already assigned." });
-    }
-    if (!gig) {
-        return res.status(HttpStatusCodes.NOT_FOUND).send({ message: "Gig not found" });
-    }
-    if (!request) {
-      return res.status(HttpStatusCodes.NOT_FOUND).send({ message: "Request not found" });
-    }
-    // Update the request status
-    request.reqStatus = reqStatus;
-    await request.save({ session });
+//     const request = await RequestModel.findOne({ ReqID: requestId }) as any; // Fetch the request by ReqID and cast to any
+//     const gig = await Gig.findOne({ GigID: request.GID }) as any; // Fetch gig details using GID
+//     if (gig.EID) {
+//       return res.status(HttpStatusCodes.BAD_REQUEST).send({ message: "Gig was already assigned." });
+//     }
+//     if (!gig) {
+//         return res.status(HttpStatusCodes.NOT_FOUND).send({ message: "Gig not found" });
+//     }
+//     if (!request) {
+//       return res.status(HttpStatusCodes.NOT_FOUND).send({ message: "Request not found" });
+//     }
+//     // Update the request status
+//     request.reqStatus = reqStatus;
+//     await request.save({ session });
 
-    // Fetch user email from User model
-    const user = req.user; // Ensure user is retrieved from the request
-    if (!user) {
-        return res.status(HttpStatusCodes.UNAUTHORIZED).send({ message: "User not authenticated" });
-    }
+//     // Fetch user email from User model
+//     const user = req.user; // Ensure user is retrieved from the request
+//     if (!user) {
+//         return res.status(HttpStatusCodes.UNAUTHORIZED).send({ message: "User not authenticated" });
+//     }
 
-    const userEmail = user.email; // Access email property directly
-    if (!userEmail) {
-        return res.status(HttpStatusCodes.NOT_FOUND).send({ message: "User email not found" });
-    }
+//     const userEmail = user.email; // Access email property directly
+//     if (!userEmail) {
+//         return res.status(HttpStatusCodes.NOT_FOUND).send({ message: "User email not found" });
+//     }
 
-    // Call createUser method if the request is approved
-    if (reqStatus === "Complete") {
-      const requestDoc = await RequestModel.findOne({ ReqID: requestId }) as any;
-      const emailToUse = requestDoc?.email || userEmail;
-      const reqType = request.reqType;
-      const gid = request.GID;
+//     // Call createUser method if the request is approved
+//     if (reqStatus === "Complete") {
+//       const requestDoc = await RequestModel.findOne({ ReqID: requestId }) as any;
+//       const emailToUse = requestDoc?.email || userEmail;
+//       const reqType = request.reqType;
+//       const gid = request.GID;
 
-      if (reqType === "CreateUser") {
-        try {
-          const createUserResponse = (await createUser({
-            body: {
-              PID: "P00000O",
-              DID: "D00000O",
-              ManagerID: request.From,
-              doj: new Date().toISOString(),
-              email: emailToUse,
-              role: request.role || "Other",
-            },
-          } as Request, res)); // Removed the casting to CreateUserResponse
+//       if (reqType === "CreateUser") {
+//         try {
+//           // const createUserResponse = (await createUser({
+//           //   body: {
+//           //     PID: "P00000O",
+//           //     DID: "D00000O",
+//           //     ManagerID: request.From,
+//           //     doj: new Date().toISOString(),
+//           //     email: emailToUse,
+//           //     role: request.role || "Other",
+//           //   },
+//           // } as Request, res)); // Removed the casting to CreateUserResponse
 
-          if (createUserResponse as any ) {
-            const newEID = createUserResponse.user.EID; // Ensure this is correctly accessed
-            console.log("Gid:", gid, "newID:", newEID);
-            await Gig.findOneAndUpdate({ GID: gid }, { EID: newEID });
-          } else {
-            console.error(
-              "Unexpected response from createUser:",
-              createUserResponse
-            );
-            return res
-              .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
-              .send({ message: "Failed to create user." });
-          }
-        } catch (error) {
-          console.error("Error creating user:", error);
-          return res
-            .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
-            .send({ message: "Failed to create user." });
-        }
-      } else if (reqType === "ApproveGig") {
-        console.log("Gid:", gid, "newID:", request.From);
-        await Gig.findOneAndUpdate({ GID: gid }, { EID: request.From });
-        await RequestModel.findOneAndUpdate({ ReqID: requestId },{reqStatus:"Complete"});
-      }  
-      // Send approval email related to reqType
-      const approvalMessage = reqType === "ApproveGig" 
-        ? "Your gig has been approved." 
-        : "Your request has been approved.";
-      console.log("Sending approval email:", approvalMessage);
-      // await sendEmail(emailToUse, approvalMessage);
+//           if (createUserResponse as any ) {
+//             const newEID = createUserResponse.user.EID; // Ensure this is correctly accessed
+//             console.log("Gid:", gid, "newID:", newEID);
+//             await Gig.findOneAndUpdate({ GID: gid }, { EID: newEID });
+//           } else {
+//             console.error(
+//               "Unexpected response from createUser:",
+//               createUserResponse
+//             );
+//             return res
+//               .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
+//               .send({ message: "Failed to create user." });
+//           }
+//         } catch (error) {
+//           console.error("Error creating user:", error);
+//           return res
+//             .status(HttpStatusCodes.INTERNAL_SERVER_ERROR)
+//             .send({ message: "Failed to create user." });
+//         }
+//       } else if (reqType === "ApproveGig") {
+//         console.log("Gid:", gid, "newID:", request.From);
+//         await Gig.findOneAndUpdate({ GID: gid }, { EID: request.From });
+//         await RequestModel.findOneAndUpdate({ ReqID: requestId },{reqStatus:"Complete"});
+//       }  
+//       // Send approval email related to reqType
+//       const approvalMessage = reqType === "ApproveGig" 
+//         ? "Your gig has been approved." 
+//         : "Your request has been approved.";
+//       console.log("Sending approval email:", approvalMessage);
+//       // await sendEmail(emailToUse, approvalMessage);
     
-    } else if (reqStatus === "Rejected") {
-      // Send rejection email
-      await RequestModel.findOneAndUpdate({ ReqID: requestId },{reqStatus:"Complete"});
-      const rejectionMessage = request.description || "Your request has been rejected.";
-      // await sendEmail(userEmail, rejectionMessage);
-    }
-    return res.status(HttpStatusCodes.OK).send({ message: "Request processed successfully" });
-  }
-);
+//     } else if (reqStatus === "Rejected") {
+//       // Send rejection email
+//       await RequestModel.findOneAndUpdate({ ReqID: requestId },{reqStatus:"Complete"});
+//       const rejectionMessage = request.description || "Your request has been rejected.";
+//       // await sendEmail(userEmail, rejectionMessage);
+//     }
+//     return res.status(HttpStatusCodes.OK).send({ message: "Request processed successfully" });
+//   }
+// );
 
 export const getReceivedRequests = sessionHandler(
   async (req: Request, res: Response) => {
@@ -206,8 +206,8 @@ requestControlRouter.post(
 
 requestControlRouter.get("/sent", checkAuth([]), getSentRequests);
 requestControlRouter.get("/received", checkAuth([]), getReceivedRequests);
-requestControlRouter.post(
-  "/approve-reject/:requestId",
-  checkAuth([UserRole.Manager]), // Assuming only managers can approve/reject
-  approveOrRejectRequest
-);
+// requestControlRouter.post(
+//   "/approve-reject/:requestId",
+//   checkAuth([UserRole.Manager]), // Assuming only managers can approve/reject
+//   approveOrRejectRequest
+// );

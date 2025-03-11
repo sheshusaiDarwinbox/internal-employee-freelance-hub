@@ -2,7 +2,7 @@ import { type Request, type Response, Router } from "express";
 import { CreateGigZodSchema, GetIDSchema } from "../utils/zod.util";
 import { User, UserRole } from "../models/userAuth.model";
 import { ApprovalStatus, OngoingStatus, Gig } from "../models/gig.model";
-import { RequestModel, RequestTypeEnum } from "../models/request.model";
+import { RequestModel, RequestTypeEnum ,ReqStatus } from "../models/request.model";
 import { generateId } from "../utils/counterManager.util";
 import { IDs } from "../models/idCounter.model";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
@@ -51,6 +51,7 @@ export const createGig = sessionHandler(
         From: data.ManagerID,
         To: "EMP000000",
         reqType: RequestTypeEnum.ApproveGig,
+        reqStatus:ReqStatus.Pending,
         description: `Request to approve gig from ${data.ManagerID}`,
       });
       if (!request) throw new Error("failed to create request");
