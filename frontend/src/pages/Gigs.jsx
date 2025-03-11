@@ -278,7 +278,7 @@ const AllGigs = () => {
           <div className="space-y-6">
             <div className="flex gap-6">
               <img
-                src={selectedGig?.img || defaultAvatar}
+                src={selectedGig?.img || defaultGig}
                 alt="Gig"
                 className="w-1/3 rounded-lg shadow-md object-cover"
               />

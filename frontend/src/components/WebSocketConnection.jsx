@@ -11,8 +11,16 @@ const WebSocketComponent = () => {
   const dispatch = useDispatch();
   const { socket, connected } = useSelector((state) => state.websocket);
 
+  const handleSendMessage = (message) => {
+    if (socket && message) {
+      // Emit the message to the server
+      socket.emit("user_input", message);
+      console.log("Message sent:", message);
+    }
+  };
+
   useEffect(() => {
-    const sckt = io("http://localhost:4000", {});
+    const sckt = io("http://localhost:3000", {});
 
     sckt.on("connect", () => {
       //   console.log("Connected to server with socket ID:", sckt.id);
@@ -30,6 +38,16 @@ const WebSocketComponent = () => {
       console.log("WebSocket disconnected");
       dispatch(setConnected(false));
     });
+
+    const handleSendMessage = (message) => {
+      if (sckt && message) {
+        // Emit the message to the server
+        sckt.emit("user_input", message);
+        console.log("Message sent:", message);
+      }
+    };
+
+    handleSendMessage("message from the client");
 
     // Cleanup on unmount
     return () => {

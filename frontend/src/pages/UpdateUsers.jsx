@@ -88,9 +88,15 @@ const UsersPage = () => {
 
   const handleUpdateSkills = async () => {
     try {
-      await axios.put(`/api/users/${selectedUser.EID}/skills`, {
-        skills: skillsToUpdate,
-      });
+      await api.post(
+        `api/users/update-user-skills/${selectedUser.EID}`,
+        {
+          skills: formData.skills,
+        },
+        {
+          withCredentials: true,
+        }
+      );
       // After updating, refresh the user list or modify accordingly
       setShowModal(false);
     } catch (err) {

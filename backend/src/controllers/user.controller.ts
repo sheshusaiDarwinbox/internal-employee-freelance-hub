@@ -41,7 +41,7 @@ export const createUser = sessionHandler(
       _id?: string;
     }[] = [];
 
-    console.log(users);
+    // console.log(users);
     const updatedUsers = await Promise.all(
       users.map(async (user) => {
         const { skills, ...data } = user;
@@ -104,33 +104,9 @@ export const createUser = sessionHandler(
       })
     );
 
-    console.log(updatedUsers);
+    // console.log(updatedUsers);
 
     const insertedUsers = await User.create(updatedUsers, { session });
-
-    let accountDetails;
-    const { role } = users[0]; // Extract role from the first user
-    if (role === "Employee" || role === "Other") {
-      const existingAccount = await AccountDetailsModel.findOne({ EID: id });
-      if (!existingAccount) {
-        accountDetails = await AccountDetailsModel.create(
-          [
-            {
-              EID: id,
-              bankName: "",
-              accountNo: "",
-              IFSCNo: "",
-              totalBalance: 0,
-            },
-          ],
-          { session }
-        );
-      } else {
-        accountDetails = existingAccount; // Use the existing account
-      }
-    } else {
-      accountDetails = null; // Skip account creation for other roles
-    }
 
     insertedUsers.forEach((user, idx) => {
       sendVerificationEmail({ ...usersEmailData[idx], _id: user._id });
@@ -145,7 +121,9 @@ export const updateUserSkills = sessionHandler(
     const { EID } = req.params;
     const user: UserAuth | null = await User.findOne({ EID: EID });
     if (!user) throw new Error("Bad Request");
+    console.log(req.body);
     const { skills } = UpdateUserSkills.parse(req.body);
+    console.log(skills);
     if (skills) {
       skills.forEach(async ({ skill, score }) => {
         const hashKey = `skills:${skill}`;

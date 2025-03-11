@@ -370,7 +370,13 @@ const DepartmentManagement = () => {
                 handleSubmit={async (e) => {
                   e.preventDefault();
                   try {
-                    const response = await api.post("/departments", formData);
+                    const response = await api.post(
+                      "api/departments/create",
+                      formData,
+                      {
+                        withCredentials: true,
+                      }
+                    );
                     setDepartments([...departments, response.data]);
                     handleViewChange("list");
                   } catch (error) {
