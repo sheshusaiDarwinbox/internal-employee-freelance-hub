@@ -35,7 +35,7 @@ const UsersPage = () => {
 
   const handleAddSkill = () => {
     if (newSkill && weight && !isNaN(weight) && weight >= 0 && weight <= 100) {
-      const newSkillObj = { skill: newSkill, weight: parseFloat(weight) / 100 };
+      const newSkillObj = { skill: newSkill, score: parseFloat(weight) / 100 };
       setFormData({
         ...formData,
         skills: [...formData.skills, newSkillObj],
@@ -88,6 +88,7 @@ const UsersPage = () => {
 
   const handleUpdateSkills = async () => {
     try {
+      console.log(formData.skills);
       await api.post(
         `api/users/update-user-skills/${selectedUser.EID}`,
         {
@@ -111,7 +112,9 @@ const UsersPage = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-semibold mb-4">Manage Users</h1>
+      <h1 className="text-3xl font-semibold text-slate-600 mb-4">
+        Manage Users
+      </h1>
 
       {/* Search and Filter */}
       <div className="flex items-center justify-between mb-6">
@@ -143,7 +146,7 @@ const UsersPage = () => {
             {currentUsers.map((user) => (
               <Table.Row key={user.EID} className="cursor-pointer">
                 <Table.Cell
-                  className="hover:underline"
+                  className="hover:underline font-extrabold text-base text-slate-500"
                   onClick={() => {
                     navigate(`/manager/users/${user.EID}`);
                   }}
@@ -156,7 +159,7 @@ const UsersPage = () => {
                   {user.skills.map((skill, index) => (
                     <span
                       key={index}
-                      className="inline-block bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs mr-2"
+                      className="inline-block bg-blue-100 text-slate-600 px-2 py-1 rounded-full text-sm mr-2"
                     >
                       {skill.skill}
                     </span>
@@ -165,7 +168,7 @@ const UsersPage = () => {
                 <Table.Cell>
                   <Button
                     size="sm"
-                    color="blue"
+                    className="bg-slate-500"
                     onClick={() => {
                       setSelectedUser(user);
                       setSkillsToUpdate(user.skills);
@@ -229,7 +232,7 @@ const UsersPage = () => {
                 <button
                   type="button"
                   onClick={handleAddSkill}
-                  className="mt-2 inline-block bg-blue-500 text-white px-4 py-2 rounded-md"
+                  className="mt-2 inline-block bg-slate-500 text-white px-4 py-2 rounded-md"
                 >
                   Add Skill
                 </button>
@@ -244,13 +247,13 @@ const UsersPage = () => {
               <div>
                 <label className="text-sm text-gray-600">Selected Skills</label>
                 <ul className="mt-2">
-                  {formData.skills.map(({ skill, weight }, index) => (
+                  {formData.skills.map(({ skill, score }, index) => (
                     <li
                       key={index}
                       className="flex justify-between items-center"
                     >
                       <span>{skill}</span>
-                      <span>{weight}%</span>
+                      <span>{score}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveSkill(skill)}
@@ -265,7 +268,9 @@ const UsersPage = () => {
             </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button onClick={handleUpdateSkills}>Update Skills</Button>
+            <Button className="bg-slate-400" onClick={handleUpdateSkills}>
+              Update Skills
+            </Button>
             <Button color="gray" onClick={() => setShowModal(false)}>
               Close
             </Button>

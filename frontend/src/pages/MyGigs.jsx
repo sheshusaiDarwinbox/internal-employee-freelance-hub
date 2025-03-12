@@ -57,8 +57,10 @@ const MyGigs = () => {
     return matchesSearch && matchesDepartment && matchesSkills;
   });
 
-  const handleOpenGig = (gigId) => {
-    navigate(`/manager/gig/${gigId}`); // Redirect to the gig page
+  const handleOpenGig = (gig) => {
+    if (gig.ongoingStatus === "UnAssigned")
+      navigate(`/manager/gig/${gig.GigID}`); // Redirect to the gig page
+    else navigate(`/manager/gig-assign/${gig.GigID}`);
   };
 
   return (
@@ -157,7 +159,7 @@ const MyGigs = () => {
             {filteredGigs.map((gig, index) => (
               <Table.Row
                 key={gig._id}
-                onClick={() => handleOpenGig(gig.GigID)}
+                onClick={() => handleOpenGig(gig)}
                 className={`
             border-b border-gray-200 cursor-pointer transition-colors duration-150 hover:bg-gray-50
             ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}

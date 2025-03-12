@@ -2,9 +2,11 @@ import dotenv from "dotenv";
 import path from "path";
 import { Server } from "socket.io";
 import http from "http";
-import { Queue, Worker } from "bullmq";
+import { Worker } from "bullmq";
 import express from "express";
-import {} from "redis";
+import { createClient } from "redis";
+import { promisify } from "util";
+import Queue from "bull";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -12,7 +14,6 @@ import { createApp } from "./app";
 import connect, { client } from "./database/connection";
 import { setAdmin } from "./utils/adminSetup.util";
 import { initializeCounters } from "./utils/counterManager.util";
-import { RedisCommander } from "ioredis";
 import { Gig } from "./models/gig.model";
 import { BidModel } from "./models/bid.model";
 import { GigModel, GigSchema } from "./types/gig.types";
@@ -28,6 +29,8 @@ export const config = {
   },
 };
 
+export const userSockets: any = {};
+
 connect().then(() => {
   const app = createApp();
   const app2 = express();
@@ -41,28 +44,83 @@ connect().then(() => {
     },
   });
 
-  const inputQueue = new Queue("inputQueue");
-  const resultQueue = new Queue("resultQueue", {
-    connection: { host: "localhost", port: 6379 },
+  const client2 = createClient({
+    url: "redis://localhost:6379",
   });
 
-  inputQueue.on("error", (err) => {
-    console.log(err);
+  client2.connect().catch((err) => {
+    console.error("Failed to connect to Redis:", err);
   });
 
-  let userSockets: any = {};
+  async function processJob(job: string) {
+    console.log("Processing job:", job);
 
-  function execMultiAsync(multi: any): Promise<any> {
-    return new Promise((resolve, reject) => {
-      multi.exec((err: any, replies: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(replies);
-        }
-      });
-    });
+    const data = job.split(" ");
+    if (data.length <= 1) return;
+    const socket = userSockets[data[0]];
+    const GigID = data[1];
+    const page = data[2];
+    delete data[0];
+    delete data[1];
+    delete data[2];
+
+    const modifiedData = [];
+    let total = 0;
+    for (let i = 3; i < data.length - 1; i += 2) {
+      const EID = "EMP" + data[i].padStart(6, "0");
+      const [bid] = await BidModel.aggregate([
+        { $match: { GigID: GigID, EID: EID } },
+        {
+          $lookup: {
+            from: "userauths",
+            localField: "EID",
+            foreignField: "EID",
+            as: "userauth",
+          },
+        },
+        {
+          $project: {
+            GigID: 1,
+            BidID: 1,
+            description: 1,
+            "userauth.fullName": 1,
+            "userauth.EID": 1,
+          },
+        },
+      ]);
+      total = await BidModel.countDocuments({ GigID: GigID, EID: EID });
+      (bid as any).score = data[i + 1];
+      modifiedData.push(bid);
+    }
+
+    const result = {
+      data: modifiedData,
+      total: total,
+    };
+
+    socket.emit("result", result);
   }
+
+  async function listenToQueue() {
+    while (true) {
+      try {
+        const job = await client2.rPop("resultQueue");
+
+        if (job) {
+          await processJob(job);
+        } else {
+          // console.log("No job in the queue. Waiting for new jobs...");
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // wait for 1 second
+        }
+      } catch (error) {
+        console.error("Error while processing job:", error);
+      }
+    }
+  }
+
+  listenToQueue();
+
+  const myJobQueue = new Queue("resultQueue", "redis://127.0.0.1:6379");
 
   const multi = client.multi();
   io.on("connection", async (socket) => {
@@ -85,8 +143,12 @@ connect().then(() => {
             gigSkills: gig.skills,
             bids: bids,
             socketId: socket.id,
+            page: page,
+            GigID: GigID,
           })
         );
+
+        myJobQueue.add(inputData);
 
         multi.exec();
         socket.emit("Processing the request submitted");
@@ -105,22 +167,26 @@ connect().then(() => {
     console.log("failed to connect ");
   });
 
-  const resultWorker = new Worker(
-    "resultQueue",
-    async (job) => {
-      const result = job.data.result;
-      const socketId = job.data.socketId;
+  const subscriber = createClient({
+    url: "redis://localhost:6379",
+  });
 
-      console.log("Sending result:", result);
+  subscriber.subscribe("resultQueue", () => {
+    console.log("Subscribed to resultQueue");
+  });
 
-      const socket = userSockets[socketId];
-      if (socket) {
-        socket.emit("result", result);
-        console.log("Result sent to user:", result);
+  subscriber.on("message", (channel, message) => {
+    if (channel === "resultQueue") {
+      console.log("Message received from resultQueue:", message);
+
+      try {
+        const data = JSON.parse(message); // Assuming the message is a JSON string
+        console.log(data);
+      } catch (error) {
+        console.error("Error processing result:", error);
       }
-    },
-    { connection: { host: "localhost", port: 6379 } }
-  );
+    }
+  });
 
   process.on("SIGINT", async () => {
     try {
@@ -139,7 +205,4 @@ connect().then(() => {
     setAdmin();
     initializeCounters();
   });
-  // server.listen(4000, () => {
-  //   console.log("ws server running on port 4000");
-  // });
 });

@@ -138,7 +138,7 @@ const Navbar = ({ linkName }) => {
             </Link>
           </button>
 
-          <span className="text-gray-900 dark:text-gray-300 font-medium hidden md:inline">
+          <span className="text-slate-900 dark:text-gray-300 font-medium hidden md:inline">
             Welcome,{" "}
             <span className="font-semibold">{user.fullName || "user"}</span>
           </span>

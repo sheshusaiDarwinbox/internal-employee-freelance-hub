@@ -56,7 +56,7 @@ const Sidebar = ({ navlinks }) => {
           <h2 className="text-2xl font-semibold text-gray-800 mt-4">
             {user?.fullName || "John Doe"}
           </h2>
-          <h2 className="text-lg font-medium text-blue-500 capitalize">
+          <h2 className="text-lg font-medium text-slate-500 capitalize">
             {userRole}
           </h2>
         </div>

@@ -139,7 +139,6 @@ export default function PostGigs() {
       });
 
       setSuccess(true);
-      console.log("hello");
       setFormData({
         title: "",
         description: "",
@@ -160,7 +159,7 @@ export default function PostGigs() {
     <div className="bg-gradient-to-br from-slate-50 to-gray-100 py-12 px-4">
       <div className="mx-auto">
         <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-          <div className="bg-gradient-to-r from-blue-400 to-blue-400 px-8 py-6 rounded-md">
+          <div className="bg-gradient-to-r from-slate-400 to-slate-400 px-8 py-6 rounded-md">
             <h1 className="text-2xl font-medium text-white">Create New Gig</h1>
             <p className="mt-2 text-gray-300 text-sm">
               Share an opportunity with your team
@@ -305,7 +304,7 @@ export default function PostGigs() {
                   <button
                     type="button"
                     onClick={handleAddSkill}
-                    className="mt-2 inline-block bg-blue-500 text-white px-4 py-2 rounded-md"
+                    className="mt-2 inline-block bg-slate-500 text-white px-4 py-2 rounded-md"
                   >
                     Add Skill
                   </button>

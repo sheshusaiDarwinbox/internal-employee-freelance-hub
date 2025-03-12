@@ -1,46 +1,63 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { TextInput, Button } from "flowbite-react";
 import { HiSearch, HiPaperAirplane } from "react-icons/hi";
+import api from "../utils/api";
 
 const ChatPage = () => {
   const [contacts, setContacts] = useState([
-    { id: 1, name: "John Doe", lastMessage: "Hello!", online: true },
-    { id: 2, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 3, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 4, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 5, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 6, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 7, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 8, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 9, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 10, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 11, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 12, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 13, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 14, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 15, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 16, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 17, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 18, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 19, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 21, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 22, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 23, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 24, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 25, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 26, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 27, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 28, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 29, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    { id: 30, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 1, name: "John Doe", lastMessage: "Hello!", online: true },
+    // { id: 2, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 3, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 4, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 5, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 6, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 7, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 8, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 9, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 10, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 11, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 12, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 13, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 14, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 15, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 16, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 17, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 18, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 19, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 21, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 22, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 23, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 24, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 25, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 26, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 27, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 28, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 29, name: "Jane Smith", lastMessage: "How are you?", online: false },
+    // { id: 30, name: "Jane Smith", lastMessage: "How are you?", online: false },
   ]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await api.get(`api/users`, {
+          withCredentials: true,
+        });
+        setContacts(response.data.docs);
+        console.log(response.data.docs);
+      } catch (err) {
+        console.error("Error fetching users:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChat, setActiveChat] = useState(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
   const filteredContacts = contacts.filter((contact) =>
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase())
+    contact.fullName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSendMessage = (e) => {
@@ -73,18 +90,18 @@ const ChatPage = () => {
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
           {filteredContacts.map((contact) => (
             <div
-              key={contact.id}
+              key={contact._id}
               onClick={() => setActiveChat(contact)}
-              className={`p-4 cursor-pointer ${
-                activeChat?.id === contact.id
-                  ? "bg-blue-400 hover:bg-blue-500 text-white"
+              className={`p-4 cursor-pointer rounded-md ${
+                activeChat?._id === contact._id
+                  ? "bg-slate-400 hover:bg-slate-500 text-white"
                   : "hover:bg-gray-100"
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                    {contact.name.charAt(0)}
+                    {contact.fullName.charAt(0)}
                   </div>
                   {contact.online && (
                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
@@ -93,14 +110,14 @@ const ChatPage = () => {
                 <div>
                   <h3
                     className={`font-medium ${
-                      activeChat?.id === contact.id ? "text-white" : ""
+                      activeChat?._id === contact._id ? "text-white" : ""
                     }`}
                   >
-                    {contact.name}
+                    {contact.fullName}
                   </h3>
                   <p
                     className={`text-sm truncate ${
-                      activeChat?.id === contact.id
+                      activeChat?._id === contact._id
                         ? "text-white/70"
                         : "text-gray-500"
                     }`}
@@ -121,10 +138,10 @@ const ChatPage = () => {
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                  {activeChat.name.charAt(0)}
+                  {activeChat.fullName.charAt(0)}
                 </div>
                 <div>
-                  <h2 className="font-medium">{activeChat.name}</h2>
+                  <h2 className="font-medium">{activeChat.fullName}</h2>
                   <p className="text-sm text-gray-500">
                     {activeChat.online ? "Online" : "Offline"}
                   </p>
@@ -166,8 +183,7 @@ const ChatPage = () => {
                   />
                   <Button
                     type="submit"
-                    color="blue"
-                    className="p-2.5 rounded-full"
+                    className="p-2.5 bg-slate-600 rounded-full"
                   >
                     <HiPaperAirplane className="w-5 h-5 rotate-90" />
                   </Button>

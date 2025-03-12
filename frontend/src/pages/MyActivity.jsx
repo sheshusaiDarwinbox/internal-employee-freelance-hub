@@ -1,140 +1,340 @@
-import { Card, Button, Modal } from "flowbite-react";
-import { CheckCircle, Trophy } from "lucide-react";
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState, useEffect } from "react";
+import {
+  Trophy,
+  CheckCircle,
+  Search,
+  Upload,
+  ChevronRight,
+  Star,
+  Clock,
+  ArrowUpRight,
+} from "lucide-react";
+import { useSelector } from "react-redux";
+import api from "../utils/api";
+
+const ProgressBar = ({ progress }) => (
+  <div className="w-full bg-gray-100 rounded-full h-2">
+    <div
+      className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300"
+      style={{ width: `${progress}%` }}
+    />
+  </div>
+);
 
 const MyActivity = () => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [rewards, setRewards] = useState(0); // State to hold total rewards
-  const dispatch = useDispatch();
+  const [rewards, setRewards] = useState(0);
+  const [tasks, setTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
+  const [taskProgress, setTaskProgress] = useState({});
+  const [fileUploads, setFileUploads] = useState({});
+  const [selectedTask, setSelectedTask] = useState(null);
   const authState = useSelector((state) => state.auth);
   const EID = authState?.user?.EID;
 
   useEffect(() => {
+    const fetchTasks = async () => {
+      const mockTasks = [
+        {
+          id: 1,
+          name: "Build A Task Management System",
+          progress: 10,
+          dueDate: "2024-03-25",
+          priority: "High",
+        },
+        {
+          id: 2,
+          name: "Design A Landing Page",
+          progress: 60,
+          dueDate: "2024-03-28",
+          priority: "Medium",
+        },
+        {
+          id: 3,
+          name: "Develop E-Commerce Website",
+          progress: 90,
+          dueDate: "2024-03-30",
+          priority: "Low",
+        },
+      ];
+
+      const response = await api.post(
+        "api/gigs/my-gigs",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      console.log(response.data);
+      setTasks([...mockTasks, ...response.data.docs]);
+      setFilteredTasks(mockTasks);
+    };
+
     const fetchRewards = async () => {
       if (EID) {
         try {
-          const response = await fetch(`http://localhost:3000/api/users/total-rewards/${EID}`,{
-            credentials:"include",
-          });
-          const data = await response.json();
-            setRewards(data.gigsWithRewardsCount); // Set the total rewards in state
-           
-          
+          setRewards(50);
         } catch (error) {
-          console.error('Error fetching rewards:', error);
+          console.error("Error fetching rewards:", error);
         }
       }
     };
+
+    fetchTasks();
     fetchRewards();
-  }, [EID, dispatch]);
+  }, [EID]);
+
+  const handleFilterChange = (e) => {
+    const filter = e.target.value.toLowerCase();
+    const filtered = tasks.filter((task) =>
+      task.name.toLowerCase().includes(filter)
+    );
+    setFilteredTasks(filtered);
+  };
+
+  const handleProgressChange = (taskId, progress) => {
+    setTaskProgress((prev) => ({
+      ...prev,
+      [taskId]: Math.min(progress, 100),
+    }));
+  };
+
+  const handleFileChange = (taskId, files) => {
+    setFileUploads((prev) => ({
+      ...prev,
+      [taskId]: files,
+    }));
+  };
+
+  const handleSubmitTask = (taskId) => {
+    alert(`Task ${taskId} submitted successfully`);
+    setModalOpen(false);
+  };
+
+  const openTaskModal = (task) => {
+    setSelectedTask(task);
+    setModalOpen(true);
+  };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      <Card className="p-6 text-center bg-gradient-to-br from-yellow-50 to-yellow-100 hover:shadow-lg transition-shadow">
-        <div className="flex flex-col items-center space-y-3">
-          <h3 className="text-xl font-bold text-gray-800">Overall Rating</h3>
-          <p className="text-3xl font-semibold text-yellow-800">4.5 ⭐</p>
-        </div>
-      </Card>
-
-      
-        <Card className="p-6 text-center bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-shadow">
-          <div className="flex flex-col items-center space-y-3">
-            <CheckCircle className="w-8 h-8 text-blue-600" />
-            <h3 className="text-xl font-bold text-gray-800">Total Tasks Done</h3>
-            <p className="text-3xl font-semibold text-blue-800">10</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">
+              My Activity Dashboard
+            </h1>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center bg-blue-50 px-4 py-2 rounded-lg">
+                <Trophy className="w-5 h-5 text-blue-600 mr-2" />
+                <span className="text-blue-600 font-semibold">
+                  {rewards} Points
+                </span>
+              </div>
+            </div>
           </div>
-        </Card>
-        <Card className="p-6 text-center bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-shadow">
-          <div className="flex flex-col items-center space-y-3">
-            <Trophy className="w-8 h-8 text-green-600" />
-            <h3 className="text-xl font-bold text-gray-800">Rewards Earned</h3>
-            <p className="text-3xl font-semibold text-green-800">{rewards}</p> 
-          </div>
-        </Card>
-      </div>  
-      <div className="text-blue-700 font-semibold text-2xl text-center mt-10">CURRENT TASK</div>
-      <div className="p-6 bg-white w-full md:w-2/3 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Build A Task Management System</h3>
-        <div className="space-y-4">
-  {/* Custom Progress Bar with Fixed Width */}
-  <div className="relative h-2 bg-gray-300 rounded-full overflow-hidden">
-    <div 
-      className="absolute top-0 left-0 h-full bg-blue-500 rounded-full transition-all duration-500" 
-      style={{ width: "10%" }} 
-    ></div>
-  </div>
-  
-  <p className="text-sm text-gray-600">10% Complete</p>
-
-        {/* Buttons */}
-        <div className="flex gap-5 justify-start">
-          <Button 
-            className="w-full md:w-auto bg-green-300 hover:bg-green-400 px-4 py-1 rounded-full text-green-800" 
-            onClick={() => setModalOpen(true)}
-          >
-            Submit
-          </Button>
-          <Button 
-            className="w-full md:w-auto bg-blue-300 hover:bg-blue-400 px-4 py-1 rounded-full text-blue-800"
-          >
-            Update
-          </Button>
         </div>
       </div>
 
+      {/* Stats Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div className="flex items-center">
+              <div className="p-3 bg-yellow-50 rounded-lg">
+                <Star className="w-6 h-6 text-yellow-500" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-500">Overall Rating</p>
+                <p className="text-2xl font-bold text-gray-900">4.5</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-50 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-500">Completed Tasks</p>
+                <p className="text-2xl font-bold text-gray-900">10</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <Clock className="w-6 h-6 text-blue-500" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-500">In Progress</p>
+                <p className="text-2xl font-bold text-gray-900">3</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tasks Section */}
+        <div className="mt-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Current Tasks
+                </h2>
+                <div className="relative">
+                  <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search tasks..."
+                    onChange={handleFilterChange}
+                    className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="divide-y divide-gray-100">
+              {filteredTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="p-6 hover:bg-gray-50 transition-colors duration-150"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-base font-medium text-gray-900">
+                          {task.name}
+                        </h3>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            task.priority === "High"
+                              ? "bg-red-100 text-red-700"
+                              : task.priority === "Medium"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-green-100 text-green-700"
+                          }`}
+                        >
+                          {task.priority}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-1">
+                          <ProgressBar
+                            progress={taskProgress[task.id] || task.progress}
+                          />
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {taskProgress[task.id] || task.progress}%
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="text-sm text-gray-500">
+                          Due: {task.dueDate}
+                        </span>
+                        <button
+                          onClick={() => openTaskModal(task)}
+                          className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          Update Progress
+                          <ArrowUpRight className="w-4 h-4 ml-1" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Modal 
-      show={modalOpen} 
-      onClose={() => setModalOpen(false)} 
-      size="md"
-      className="pt-[10%] shadow-2xl rounded-lg  inset-0 bg-black bg-opacity-50"
-    >
-       {/* Override Modal Background */}
-  {/* <div className="fixed inset-0 bg-black bg-opacity-50"></div> */}
-
-      <Modal.Header className="text-xl font-semibold text-gray-900 border-b pb-3 p-5">
-        Submit Task
-      </Modal.Header>
-      <Modal.Body>
-        <div className="flex flex-col space-y-4 mt-6">
-          <input 
-            type="text" 
-            placeholder="Project Link" 
-            className="border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-          <textarea 
-            placeholder="Description" 
-            className="border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500" 
-            rows="3"
-          ></textarea>
-          <input 
-            type="file" 
-            className="border border-gray-300 p-3 rounded-md cursor-pointer bg-gray-100"
-          />
+      {/* Modal */}
+      {modalOpen && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4">
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Update Task Progress
+              </h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Progress
+                </label>
+                <input
+                  type="number"
+                  value={taskProgress[selectedTask.id] || selectedTask.progress}
+                  onChange={(e) =>
+                    handleProgressChange(selectedTask.id, e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  min="0"
+                  max="100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Project Link
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Add any additional notes..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Attachments
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">
+                    Drop files here or click to upload
+                  </p>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={(e) =>
+                      handleFileChange(selectedTask.id, e.target.files)
+                    }
+                    className="hidden"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-100 flex justify-end space-x-3">
+              <button
+                onClick={() => setModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSubmitTask(selectedTask.id)}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
         </div>
-      </Modal.Body>
-      <Modal.Footer className="flex justify-end space-x-4 pt-4 border-t">
-        <Button 
-          className="bg-gray-300 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-400 transition"
-          onClick={() => setModalOpen(false)}
-        >
-          Cancel
-        </Button>
-        <Button 
-          className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition"
-          onClick={() => setModalOpen(false)}
-        >
-          Submit
-        </Button>
-      </Modal.Footer>
-    </Modal>
-
-
-
+      )}
     </div>
   );
 };

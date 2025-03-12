@@ -11,6 +11,8 @@ import { UserAuth } from "../types/userAuth.types";
 import { sessionHandler } from "../utils/session.util";
 import { z } from "zod";
 import { splitStringByCommas } from "../utils/requestParsing.util";
+import { BidModel } from "../models/bid.model";
+import { Bid } from "../types/bid.types";
 
 export const gigControlRouter = Router();
 
@@ -70,7 +72,6 @@ export const getAllGigs = sessionHandler(
       search,
       page = 1,
       approvalStatus = "APPROVED",
-      ongoingStatus = "UnAssigned",
     } = req.query;
 
     const parsedManagerIDs = splitStringByCommas(ManagerIDs as string);
@@ -102,7 +103,6 @@ export const getAllGigs = sessionHandler(
       };
     }
     filter.approvalStatus = approvalStatus;
-    filter.ongoingStatus = ongoingStatus;
 
     const gigs = await Gig.aggregate([
       { $match: filter },
@@ -189,6 +189,68 @@ export const getGigById = sessionHandler(
   }
 );
 
+export const assignGig = sessionHandler(async (req: Request, res: Response) => {
+  const { GigID, BidID, EID } = req.body;
+  console.log(req.body);
+
+  const gig = await Gig.findOne({ GigID: GigID });
+  const bid: Bid | null = await BidModel.findOne({ BidID: BidID });
+  console.log(gig);
+  console.log(bid);
+  if (gig && bid && bid.GigID === GigID) {
+    const updatedGig = await Gig.findOneAndUpdate(
+      { GigID: GigID },
+      {
+        $set: {
+          EID: EID,
+          ongoingStatus: "Ongoing",
+        },
+      }
+    );
+
+    return {
+      status: HttpStatusCodes.OK,
+      data: updatedGig,
+    };
+  }
+
+  return {
+    status: HttpStatusCodes.BAD_REQUEST,
+    data: {
+      msg: "Bad Request",
+    },
+  };
+});
+
+export const getMyGigs = sessionHandler(async (req: Request, res: Response) => {
+  const { page = 1 } = req.query;
+  const pageNum = Number(page);
+
+  const gigs = await Gig.paginate(
+    { EID: req.user?.EID },
+    {
+      limit: 6,
+      offset: (pageNum - 1) * 6,
+    }
+  );
+
+  console.log(gigs);
+  if (gigs)
+    return {
+      status: HttpStatusCodes.OK,
+      data: gigs,
+    };
+
+  return {
+    status: HttpStatusCodes.BAD_REQUEST,
+    data: {
+      msg: "bad request",
+    },
+  };
+});
+
 gigControlRouter.post("/post", checkAuth([UserRole.Manager]), createGig);
 gigControlRouter.get("", checkAuth([]), getAllGigs);
 gigControlRouter.get("/:GigID", checkAuth([]), getGigById);
+gigControlRouter.post("/assign", checkAuth([UserRole.Manager]), assignGig);
+gigControlRouter.post("/my-gigs", checkAuth([]), getMyGigs);

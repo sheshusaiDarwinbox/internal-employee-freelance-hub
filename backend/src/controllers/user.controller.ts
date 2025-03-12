@@ -116,9 +116,7 @@ export const updateUserSkills = sessionHandler(
     const { EID } = req.params;
     const user: UserAuth | null = await User.findOne({ EID: EID });
     if (!user) throw new Error("Bad Request");
-    console.log(req.body);
-    const { skills } = UpdateUserSkills.parse(req.body);
-    console.log(skills);
+    const { skills } = UpdateUserSkills.parse({ skills: req.body.skills });
     if (skills) {
       skills.forEach(async ({ skill, score }) => {
         const hashKey = `skills:${skill}`;
@@ -403,7 +401,7 @@ export const userControlRouter = Router();
 userControlRouter.post("/create", checkAuth([UserRole.Admin]), createUser);
 userControlRouter.get(
   "",
-  checkAuth([UserRole.Admin, UserRole.Manager]),
+  checkAuth([UserRole.Admin, UserRole.Manager, UserRole.Employee]),
   getAllUsers
 );
 userControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteUserByID);

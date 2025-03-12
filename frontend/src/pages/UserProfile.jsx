@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { HiPhone, HiMail, HiUser, HiLocationMarker } from "react-icons/hi";
 import { useParams } from "react-router-dom";
 import api from "../utils/api";
@@ -24,25 +23,26 @@ const UserDetails = () => {
       }
     };
 
-    console.log(userId);
     fetchUserDetails();
-  }, [userId]); // Re-fetch data when userId changes
+  }, [userId]);
 
-  // Show a loading message or error if there is any issue
   if (loading) {
     return (
-      <div className="text-center text-gray-500">Loading user details...</div>
+      <div className="text-center text-gray-500 py-10">
+        Loading user details...
+      </div>
     );
   }
 
   if (error) {
-    return <div className="text-center text-red-500">{error}</div>;
+    return <div className="text-center text-red-500 py-10">{error}</div>;
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <div className="flex items-center space-x-6">
-        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300">
+    <div className="max-w-7xl mx-auto p-6 bg-slate-50 rounded-lg shadow-md">
+      {/* Profile Header */}
+      <div className="flex items-center space-x-8">
+        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-400 shadow-sm">
           <img
             src={user.img || "/default-avatar.png"}
             alt="User Profile"
@@ -50,87 +50,84 @@ const UserDetails = () => {
           />
         </div>
         <div>
-          <h2 className="text-3xl font-semibold text-gray-800">
+          <h2 className="text-3xl font-semibold text-slate-800">
             {user.fullName}
           </h2>
-          <p className="text-lg text-gray-600">{user.role}</p>
+          <p className="text-xl text-slate-600">{user.role}</p>
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-8">
-        <div className="space-y-4">
-          <div className="flex items-center text-gray-700">
-            <HiUser className="h-5 w-5 mr-2 text-blue-600" />
-            <p>{user.EID}</p>
+      {/* User Details Section */}
+      <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div className="flex items-center text-slate-700">
+            <HiUser className="h-5 w-5 mr-3 text-slate-500" />
+            <p className="text-lg">{user.EID}</p>
           </div>
-
-          <div className="flex items-center text-gray-700">
-            <HiMail className="h-5 w-5 mr-2 text-blue-600" />
-            <p>{user.email}</p>
+          <div className="flex items-center text-slate-700">
+            <HiMail className="h-5 w-5 mr-3 text-slate-500" />
+            <p className="text-lg">{user.email}</p>
           </div>
-
-          <div className="flex items-center text-gray-700">
-            <HiPhone className="h-5 w-5 mr-2 text-blue-600" />
-            <p>{user.phone || "N/A"}</p>
+          <div className="flex items-center text-slate-700">
+            <HiPhone className="h-5 w-5 mr-3 text-slate-500" />
+            <p className="text-lg">{user.phone || "N/A"}</p>
           </div>
-
-          <div className="flex items-center text-gray-700">
-            <HiLocationMarker className="h-5 w-5 mr-2 text-blue-600" />
-            <p>
+          <div className="flex items-center text-slate-700">
+            <HiLocationMarker className="h-5 w-5 mr-3 text-slate-500" />
+            <p className="text-lg">
               {user.city}, {user.state}, {user.country}
             </p>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="text-gray-700">
+        <div className="space-y-6">
+          <div className="text-lg text-slate-700">
             <strong>Date of Birth: </strong>
             {user.dob || "N/A"}
           </div>
-
-          <div className="text-gray-700">
+          <div className="text-lg text-slate-700">
             <strong>Joining Date: </strong>
             {new Date(user.doj).toLocaleDateString()}
           </div>
-
-          <div className="text-gray-700">
+          <div className="text-lg text-slate-700">
             <strong>Marital Status: </strong>
             {user.maritalStatus || "N/A"}
           </div>
-
-          <div className="text-gray-700">
+          <div className="text-lg text-slate-700">
             <strong>Nationality: </strong>
             {user.nationality || "N/A"}
           </div>
         </div>
       </div>
 
-      <div className="mt-8">
-        <h3 className="text-2xl font-semibold text-gray-800 mb-4">Skills</h3>
-        <div className="flex flex-wrap gap-2">
+      {/* Skills Section */}
+      <div className="mt-12">
+        <h3 className="text-3xl font-semibold text-slate-800 mb-4">Skills</h3>
+        <div className="flex flex-wrap gap-4">
           {user.skills && user.skills.length > 0 ? (
             user.skills.map((skill, index) => (
               <span
                 key={index}
-                className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium"
+                className="bg-slate-200 text-slate-700 px-6 py-3 rounded-full text-sm font-medium shadow-md hover:shadow-lg transition duration-300"
               >
                 {skill.skill} -{" "}
                 {skill.score ? (skill.score * 100).toFixed(0) : "N/A"}%
               </span>
             ))
           ) : (
-            <p className="text-gray-600">No skills listed.</p>
+            <p className="text-slate-500">No skills listed.</p>
           )}
         </div>
       </div>
 
-      <div className="mt-8">
-        <h3 className="text-2xl font-semibold text-gray-800 mb-4">
+      {/* Emergency Contact Section */}
+      <div className="mt-12">
+        <h3 className="text-3xl font-semibold text-slate-800 mb-4">
           Emergency Contact
         </h3>
-        <div className="flex items-center text-gray-700">
-          <HiPhone className="h-5 w-5 mr-2 text-blue-600" />
-          <p>{user.emergencyContactNumber || "N/A"}</p>
+        <div className="flex items-center text-slate-700">
+          <HiPhone className="h-5 w-5 mr-3 text-slate-500" />
+          <p className="text-lg">{user.emergencyContactNumber || "N/A"}</p>
         </div>
       </div>
     </div>
