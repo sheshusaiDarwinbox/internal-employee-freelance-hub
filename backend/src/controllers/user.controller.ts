@@ -8,7 +8,7 @@ import {
   UsersArraySchema,
 } from "../utils/zod.util";
 import { Router } from "express";
-import { User, UserRole } from "../models/userAuth.model";
+import { User, UserRole , UserStatus } from "../models/userAuth.model";
 import { generateId } from "../utils/counterManager.util";
 import { DepartmentModel } from "../models/department.model";
 import { generateRandomPassword, hashPassword } from "../utils/password.util";

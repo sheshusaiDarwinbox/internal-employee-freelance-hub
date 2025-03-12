@@ -8,6 +8,7 @@ export interface UserAuth {
   role: keyof typeof UserRole;
   email: string;
   verified: boolean;
+  status: keyof typeof UserStatus; //online or offline status
   PID: string;
   DID: string;
   ManagerID: string;

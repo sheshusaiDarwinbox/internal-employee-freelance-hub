@@ -17,6 +17,9 @@ import { Gig } from "./models/gig.model";
 import { BidModel } from "./models/bid.model";
 import { GigModel, GigSchema } from "./types/gig.types";
 
+// import { initializeSocket } from "./socket"; // ✅ Import the socket setup function
+import { setupSocket } from "./socket";
+
 export const user = process.env.NODEJS_GMAIL_APP_USER;
 export const pass = process.env.NODEJS_GMAIL_APP_PASSWORD;
 
@@ -27,6 +30,15 @@ export const config = {
     pass: pass,
   },
 };
+
+// connect().then(() => {
+//   const app = createApp();
+//   const server = http.createServer(app);
+
+//   initializeSocket(server); // ✅ Attach the WebSocket server to HTTP server
+// })
+
+setupSocket(io);
 
 connect().then(() => {
   const app = createApp();

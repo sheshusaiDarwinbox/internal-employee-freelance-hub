@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { Textarea } from "flowbite-react"; // Import Textarea component
 import {
   Button,
   Modal,
@@ -6,11 +7,9 @@ import {
   TextInput,
   Card,
   Pagination,
-  Textarea,
 } from "flowbite-react";
-import { HiSearch, HiX } from "react-icons/hi";
+import { HiSearch } from "react-icons/hi";
 import api from "../utils/api";
-import defaultAvatar from "../assets/profile-avatar.png";
 import defaultGig from "../assets/gig.jpeg";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -28,15 +27,13 @@ const AllGigs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(6); // Items per page
   const user = useSelector((state) => state.auth.user);
-  const navigate = useNavigate();
-
+  
   const fetchGigs = async (page = 1) => {
     try {
       const response = await api.get("api/gigs", {
         params: { page, limit: pageSize },
         withCredentials: true,
       });
-      console.log(response.data.docs);
       setGigs(response.data.docs);
       setTotalGigs(response.data.totalDocs);
     } catch (error) {
@@ -76,6 +73,29 @@ const AllGigs = () => {
   const [bidDescription, setBidDescription] = useState("");
   const [referName, setReferName] = useState("");
   const [referEmail, setReferEmail] = useState("");
+  const [tags, setTags] = useState(""); // State for tags
+
+  const submitReferral = async () => {
+    const gigID = selectedGig.GigID; // Assuming selectedGig is defined
+    const EID = user.EID; // Assuming user is available
+    const email = referEmail; // Use email from input
+    const name = referName; // Use name from input
+    const skillset = tags.split(",").map(tag => tag.trim()); // Convert tags to array
+
+    try {
+      await api.post(`http://localhost:3000/api/requests/create/${gigID}`, {
+        GigID: gigID,
+        EID: EID,
+        email: email,
+        name: name,
+        skillset: skillset,
+      });
+      // Handle success (e.g., show a success message)
+    } catch (error) {
+      console.error("Error creating referral:", error);
+      // Handle error (e.g., show an error message)
+    }
+  };
 
   return (
     <div className="p-6 bg-gray-50">
@@ -429,7 +449,11 @@ const AllGigs = () => {
               placeholder="Enter Email"
               className="w-full"
             />
-            
+            <Textarea
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="Enter tags separated by commas"
+            />
           </div>
         </Modal.Body>
         <Modal.Footer>
@@ -441,12 +465,7 @@ const AllGigs = () => {
             Close
           </Button>
           <Button
-            onClick={() => {
-              // handle refer submission logic here
-              console.log("Referral Name:", referName);
-              console.log("Referral Email:", referEmail);
-              setOpenReferModal(false);
-            }}
+            onClick={submitReferral}
             className="bg-green-600 text-white hover:bg-green-700 focus:ring-4 focus:ring-green-200 rounded-lg"
           >
             Submit Referral
