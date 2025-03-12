@@ -159,7 +159,8 @@ const MyGigs = () => {
             {filteredGigs.length === 0 ? (
               <Table.Row>
                 <Table.Cell colSpan={6} className="text-center text-black">
-                  {user.role==="Manager"? "There are no bids for this Gig":"No Gigs"}
+                  {/* {user.role==="Manager"? "There are no bids for this Gig":"No Gigs"} */}
+                  <p>No Gigs</p>
                 </Table.Cell>
               </Table.Row>
             ) : (

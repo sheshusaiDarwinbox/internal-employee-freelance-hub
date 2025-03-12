@@ -6,6 +6,7 @@ import {
   TextInput,
   Card,
   Pagination,
+  Textarea,
 } from "flowbite-react";
 import { HiSearch, HiX } from "react-icons/hi";
 import api from "../utils/api";
@@ -428,6 +429,7 @@ const AllGigs = () => {
               placeholder="Enter Email"
               className="w-full"
             />
+            
           </div>
         </Modal.Body>
         <Modal.Footer>

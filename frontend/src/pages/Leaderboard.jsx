@@ -29,7 +29,7 @@ const Leaderboard = () => {
         const data = await response.json();
         const usersWithGigs = await Promise.all(
           data.docs.map(async (user) => {
-            const gigsResponse = await fetch(`http://localhost:3000/api/users/gigs/${user.EID}`, {
+            const gigsResponse = await fetch(`http://localhost:3000/api/my-gigs`, {
               credentials: 'include',
             });
             const gigsData = await gigsResponse.json();
