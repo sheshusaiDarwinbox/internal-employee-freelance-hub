@@ -28,12 +28,12 @@ const WebSocketComponent = () => {
       dispatch(setSocket(sckt));
     });
 
-    sckt.on("result", (result) => {
-      console.log("Received result from server:", result);
-      const message = JSON.parse(result.data);
-      console.log("Message from server:", message);
-      dispatch(addMessage(message));
-    });
+    // sckt.on("result", (result) => {
+    //   console.log("Received result from server:", result);
+    //   const message = JSON.parse(result.data);
+    //   console.log("Message from server:", message);
+    //   dispatch(addMessage(message));
+    // });
     sckt.on("close", () => {
       console.log("WebSocket disconnected");
       dispatch(setConnected(false));

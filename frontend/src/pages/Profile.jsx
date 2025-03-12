@@ -135,7 +135,7 @@ top 41 - 60 transition-all duration-300 flex items-center justify-center"
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={() => setShowUpdateModal(true)}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <HiPencil className="h-5 w-5" />
                 <span>Edit Profile</span>
@@ -358,7 +358,7 @@ top 41 - 60 transition-all duration-300 flex items-center justify-center"
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="px-6 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
                     >
                       Save Changes
                     </button>
@@ -422,7 +422,7 @@ top 41 - 60 transition-all duration-300 flex items-center justify-center"
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="px-6 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700"
                     >
                       Update Password
                     </button>

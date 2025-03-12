@@ -1,7 +1,7 @@
 export const adminSidbarNavLinks = [
   { name: "👥 Manage Users", link: "/admin/users" },
-  { name: "📩 Requests", link: "/admin/requests" },
-  { name: "✅ Gigs", link: "/admin/gigs" },
+  { name: "📩 Requests", link: "#" },
+  { name: "✅ Gigs", link: "/admin/all-gigs" },
   { name: "🏢 Manage Departments", link: "/admin/departments" },
   { name: "🏢 Manage Positions", link: "/admin/positions" },
   { name: "🙍‍♂️ My Profile", link: "/admin/profile" },

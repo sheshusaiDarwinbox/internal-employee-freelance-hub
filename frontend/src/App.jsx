@@ -14,6 +14,7 @@ import Profile from "./pages/Profile";
 import ChatPage from "./pages/ChatPage";
 import ManagePositions from "./pages/ManagePositions";
 import ManageUsers from "./pages/ManageUsers";
+import GigAssignPage from "./pages/GigAssignPage";
 
 const Home = lazy(() => import("./pages/Home/Homepage"));
 const About = lazy(() => import("./pages/Home/About"));
@@ -125,7 +126,7 @@ function App() {
               }
             >
               <Route index element={<AllGigs />} />
-              <Route path="all-gigs" element={<AllGigs />} />
+              <Route path="all-gigs" index element={<AllGigs />} />
               <Route path="departments" element={<DepartmentManagement />} />
               <Route path="profile" element={<Profile />} />
               <Route path="chat" element={<ChatPage />} />
@@ -153,6 +154,7 @@ function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="gig/:id" element={<GigPage />} />
+              <Route path="gig-assign/:id" element={<GigAssignPage />} />
               <Route path="users/:userId" element={<UserProfile />} />
               <Route path="requests" element={<Requests />} />
             </Route>

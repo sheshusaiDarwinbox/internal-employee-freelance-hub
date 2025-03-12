@@ -5,6 +5,7 @@ export interface ProgressTracking {
   subject: string;
   description: string;
   work_percentage: number;
+  files: string[];
 }
 
 export type OngoingStatusType =

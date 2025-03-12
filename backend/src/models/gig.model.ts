@@ -51,6 +51,7 @@ const gigSchema = new Schema<GigSchema, GigModel>({
       subject: { type: String },
       description: { type: String },
       work_percentage: { type: Number },
+      files: { type: [String] },
     },
   ],
   ongoingStatus: {
