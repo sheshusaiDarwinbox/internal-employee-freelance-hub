@@ -29,7 +29,7 @@ const Leaderboard = () => {
         const data = await response.json();
         const usersWithGigs = await Promise.all(
           data.docs.map(async (user) => {
-            const gigsResponse = await fetch(`http://localhost:3000/api/my-gigs`, {
+            const gigsResponse = await fetch(`http://localhost:3000/api/gigs/my-gigs`, {
               credentials: 'include',
             });
             const gigsData = await gigsResponse.json();
@@ -79,7 +79,7 @@ const Leaderboard = () => {
               className="flex flex-col items-center bg-blue-100 p-6 rounded-lg shadow-md w-64"
             >
               <Avatar
-                img={`https://i.pravatar.cc/100?img=${index + 1}`}
+                img={``} alt='img'
                 size="xl"
                 rounded
               />

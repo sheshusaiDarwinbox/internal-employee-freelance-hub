@@ -10,6 +10,7 @@ import { utilRouter } from "./util.router";
 import { bidRouter } from "./bid.router";
 import { requestRouter } from "./request.router";
 import { referRouter } from "./refers.router";
+import { chatRouter } from "./chat.routes";
 
 export const indexRouter = Router();
 
@@ -23,3 +24,4 @@ indexRouter.use(utilRouter);
 indexRouter.use(bidRouter);
 indexRouter.use(requestRouter);
 indexRouter.use(referRouter);
+indexRouter.use(chatRouter);

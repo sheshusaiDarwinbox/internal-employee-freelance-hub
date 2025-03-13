@@ -17,9 +17,9 @@ import { initializeCounters } from "./utils/counterManager.util";
 import { Gig } from "./models/gig.model";
 import { BidModel } from "./models/bid.model";
 import { GigModel, GigSchema } from "./types/gig.types";
-
-// import { initializeSocket } from "./socket"; // ✅ Import the socket setup function
-import { setupSocket } from "./socket";
+import { setupSocket } from "./socket"; // Import setupSocket
+import { MessageModel, MessageStatus } from "./models/messages.model";
+import { User } from "./models/userAuth.model";
 
 export const user = process.env.NODEJS_GMAIL_APP_USER;
 export const pass = process.env.NODEJS_GMAIL_APP_PASSWORD;
@@ -46,6 +46,10 @@ connect().then(() => {
       methods: ["GET", "POST"],
     },
   });
+
+
+  // Setup Socket.IO
+  setupSocket(io); // Initialize Socket.IO using setupSocket
 
   const client2 = createClient({
     url: "redis://localhost:6379",
@@ -158,7 +162,41 @@ connect().then(() => {
       } else {
         socket.emit("result", "bad request");
       }
-    });
+      });
+
+          // socket.on(
+          //   "sendMessage",
+          //   async ({ MsgID, SenderID, ReceiverID, Content }) => {
+          //           const message = await MessageModel.create({
+          //             Timestamp: Date.now(),
+          //             MsgID,
+          //             SenderID,
+          //             ReceiverID,
+          //             Content,
+          //             Status: MessageStatus.Sent,
+          //           });
+            
+          //           const receiverSocket = userSockets.get(ReceiverID);
+          //           if (receiverSocket) {
+          //             io.to(receiverSocket).emit("receiveMessage", message);
+          //             await MessageModel.findByIdAndUpdate(message._id, {
+          //               Status: MessageStatus.Delivered,
+          //             });
+          //           }
+          //           socket.emit("receiveMessage", message);
+          //         }
+          // );
+    
+
+          // socket.on("getChatHistory", async ({ user1Id, user2Id }) => {
+          //   const chatHistory = await MessageModel.find({
+          //     $or: [
+          //       { SenderID: user1Id, ReceiverID: user2Id },
+          //       { SenderID: user2Id, ReceiverID: user1Id },
+          //     ],
+          //   }).sort({ Timestamp: 1 });
+          //   socket.emit("chatHistory", "hi");
+          // });
 
     socket.on("disconnect", () => {
       console.log("User disconnected");

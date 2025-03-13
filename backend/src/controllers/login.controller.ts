@@ -21,5 +21,8 @@ loginControlRouter.get("/logout", (req, res) => {
   });
 });
 loginControlRouter.get("/status", (req, res) => {
-  res.send(req.user);
+  res.json({
+    message: "User status retrieved successfully",
+    user: req.user,
+  });
 });

@@ -10,7 +10,7 @@ export const setupSocket = (io: Server) => {
 
     // Handle user online status
     socket.on("userOnline", async (userID) => {
-      users.set(userID, socket.id);
+      users.set(userID, socket);
       await User.findByIdAndUpdate(userID, { status: "online" });
       io.emit("updateUserStatus", { userID, status: "online" });
     });
@@ -19,7 +19,9 @@ export const setupSocket = (io: Server) => {
     socket.on(
       "sendMessage",
       async ({ MsgID, SenderID, ReceiverID, Content }) => {
+        console.log("Received sendMessage event:", { MsgID, SenderID, ReceiverID, Content });
         const message = await MessageModel.create({
+          Timestamp: Date.now(),
           MsgID,
           SenderID,
           ReceiverID,
@@ -34,8 +36,37 @@ export const setupSocket = (io: Server) => {
             Status: MessageStatus.Delivered,
           });
         }
+        socket.emit("receiveMessage", message);
       }
     );
+
+    //Handle recive message.
+    socket.on("receiveMessage", async (messageID)=>{
+        await MessageModel.findByIdAndUpdate(messageID, {
+            Status: MessageStatus.Delivered,
+          });
+    })
+
+    // Handle chat history retrieval
+    // ... your existing code ...
+
+socket.on("getChatHistory", async ({ user1Id, user2Id }) => {
+  console.log("Received getChatHistory event:", { user1Id, user2Id }); // Added log
+  try {
+    const chatHistory = await MessageModel.find({
+      $or: [
+        { SenderID: user1Id, ReceiverID: user2Id },
+        { SenderID: user2Id, ReceiverID: user1Id },
+      ],
+    }).sort({ Timestamp: 1 });
+    console.log("Chat history retrieved:", chatHistory); // Added log
+    socket.emit("chatHistory", chatHistory);
+  } catch (error) {
+    console.error("Error retrieving chat history:", error); // Added log
+  }
+});
+
+// ... your existing code ...
 
     // Handle user disconnect
     socket.on("disconnect", async () => {
@@ -46,6 +77,12 @@ export const setupSocket = (io: Server) => {
         io.emit("updateUserStatus", { userID, status: "offline" });
       }
     });
+
+    //Handle user offline.
+    socket.on("userOffline", async (userID)=>{
+        await User.findByIdAndUpdate(userID, {status:"offline"});
+        io.emit("updateUserStatus", {userID, status:"offline"});
+    })
   });
 
   io.on("error", (err) => {

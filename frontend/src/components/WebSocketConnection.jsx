@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setSocket,
@@ -9,31 +9,25 @@ import { io } from "socket.io-client";
 
 const WebSocketComponent = () => {
   const dispatch = useDispatch();
-  const { socket, connected } = useSelector((state) => state.websocket);
+  const { connected } = useSelector((state) => state.websocket);
 
-  const handleSendMessage = (message) => {
-    if (socket && message) {
-      // Emit the message to the server
-      socket.emit("user_input", message);
-      console.log("Message sent:", message);
-    }
-  };
+    // Remove duplicate definition of handleSendMessage
 
   useEffect(() => {
     const sckt = io("http://localhost:3000", {});
 
     sckt.on("connect", () => {
-      //   console.log("Connected to server with socket ID:", sckt.id);
+      console.log("Connected to server with socket ID:", sckt.id); // Log socket ID
       dispatch(setConnected(true));
       dispatch(setSocket(sckt));
     });
 
-    // sckt.on("result", (result) => {
-    //   console.log("Received result from server:", result);
-    //   const message = JSON.parse(result.data);
-    //   console.log("Message from server:", message);
-    //   dispatch(addMessage(message));
-    // });
+    sckt.on("result", (result) => {
+      console.log("Received result from server:", result); // Log received result
+      const message = JSON.parse(result.data);
+      console.log("Message from server:", message);
+      dispatch(addMessage(message));
+    });
     sckt.on("close", () => {
       console.log("WebSocket disconnected");
       dispatch(setConnected(false));

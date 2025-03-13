@@ -256,4 +256,4 @@ gigControlRouter.post("/post", checkAuth([UserRole.Manager]), createGig);
 gigControlRouter.get("", checkAuth([]), getAllGigs);
 gigControlRouter.get("/:GigID", checkAuth([]), getGigById);
 gigControlRouter.post("/assign", checkAuth([UserRole.Manager]), assignGig);
-gigControlRouter.post("/my-gigs", checkAuth([]), getMyGigs);
+gigControlRouter.get("/my-gigs", checkAuth([]), getMyGigs);
