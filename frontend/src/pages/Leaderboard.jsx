@@ -118,7 +118,7 @@ const Leaderboard = () => {
       case 1:
         return `${baseStyles} bg-gradient-to-br from-gray-50 to-gray-100 border-gray-400 shadow-gray-200`;
       case 2:
-        return `${baseStyles} bg-gradient-to-br from-amber-50 to-amber-200 border-amber-700 shadow-amber-300`;
+        return `${baseStyles} bg-gradient-to-br from-amber-100 to-amber-300 border-amber-700 shadow-amber-400`;
       default:
         return '';
     }
@@ -161,10 +161,10 @@ const Leaderboard = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 py-8 w-full">
       <div className="text-center mb-12">
-        <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
-          Global Leaderboard
+        <h2 className="text-4xl font-extrabold  mb-4">
+        🏆 <span className='text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600'>Global Leaderboard</span>
         </h2>
         <p className="text-gray-600 text-lg">Celebrating Our Top Performers</p>
       </div>
@@ -323,7 +323,7 @@ const Leaderboard = () => {
         onClose={() => setShowProfileModal(false)}
         size="md"
       >
-        <Modal.Header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <Modal.Header className="bg-blue-200 text-white">
           User Profile
         </Modal.Header>
         <Modal.Body>
@@ -334,7 +334,7 @@ const Leaderboard = () => {
                   img={selectedUser.img || defaultAvatar}
                   size="xl"
                   rounded
-                  className="ring-4 ring-gray-100"
+                  className=""
                 />
                 <h3 className="text-xl font-bold mt-4">{selectedUser.name}</h3>
                 <div className="flex items-center mt-2 text-gray-600">
