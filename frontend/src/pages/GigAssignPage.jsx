@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Calendar,
   Clock,
@@ -15,10 +15,18 @@ import {
   Mail,
   Phone,
   MapPin,
+  MessageSquare,
 } from "lucide-react";
+import api from "../utils/api";
+import Loading from "../components/Loading";
+import { useParams } from "react-router-dom";
+import { formatDate } from "../utils/dateUtils";
+import gigImg from "../assets/gig.jpeg";
 
-// Mock data to demonstrate the UI
-const gig = {
+// Mock data structure for TypeScript types
+
+// Mock data for development
+const mockGig = {
   title: "Full Stack Development Project",
   description:
     "Looking for an experienced developer to build a modern web application with React and Node.js",
@@ -53,7 +61,7 @@ const gig = {
     {
       subject: "Initial Setup",
       description: "Project environment and basic structure setup completed",
-      work_percentage: 25,
+      work_percentage: 10,
       files: [
         {
           name: "setup.md",
@@ -73,27 +81,114 @@ const gig = {
   img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
 };
 
+function ReviewModal({ onClose, onSubmit }) {
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({ rating, review });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-full max-w-lg p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-semibold">Submit Review</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Rating
+            </label>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className="focus:outline-none"
+                >
+                  <Star
+                    className={`w-8 h-8 ${
+                      star <= rating
+                        ? "text-yellow-400 fill-current"
+                        : "text-gray-300"
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <label
+              htmlFor="review"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Review Comments
+            </label>
+            <textarea
+              id="review"
+              rows={4}
+              value={review}
+              onChange={(e) => setReview(e.target.value)}
+              className="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              placeholder="Write your review here..."
+              required
+            />
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            >
+              Submit Review
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+import { FileIcon, Image as ImageIcon } from "lucide-react";
+
 function FilePreviewModal({ file, onClose }) {
-  const isPDF = file.name.endsWith(".pdf");
-  const isMarkdown = file.name.endsWith(".md");
+  const fileType = getFileType(file);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
         <div className="p-4 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <FileText className="w-5 h-5" />
+            {getFileIcon(fileType)}
             {file.name}
           </h3>
           <div className="flex items-center gap-3">
             <a
-              href={file.url}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={file}
+              download={file.name}
               className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
             >
               <ExternalLink className="w-4 h-4" />
-              Open
+              Download
             </a>
             <button
               onClick={onClose}
@@ -104,26 +199,112 @@ function FilePreviewModal({ file, onClose }) {
           </div>
         </div>
         <div className="p-6 overflow-auto max-h-[calc(90vh-80px)]">
-          {isPDF && file.preview && (
-            <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden">
-              <img
-                src={file.preview}
-                alt={`Preview of ${file.name}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-          {isMarkdown && file.content && (
-            <div className="prose max-w-none">
-              <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto">
-                <code>{file.content}</code>
-              </pre>
-            </div>
-          )}
+          <FilePreview file={file} fileType={fileType} />
         </div>
       </div>
     </div>
   );
+}
+
+function FilePreview({ file, fileType }) {
+  const [pdfError, setPdfError] = React.useState(false);
+
+  switch (fileType) {
+    case "image":
+      return (
+        <div className="flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden">
+          <img
+            src={file}
+            alt={`Preview of ${file.name}`}
+            className="max-w-full max-h-[70vh] object-contain"
+            onError={(e) => {
+              e.currentTarget.src =
+                "https://via.placeholder.com/400x300?text=Image+Preview+Failed";
+            }}
+          />
+        </div>
+      );
+
+    case "pdf":
+      if (pdfError) {
+        return (
+          <div className="text-center py-10">
+            <p className="text-gray-500">PDF preview is not available.</p>
+            <a
+              href={file}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 mt-2 inline-block"
+            >
+              Open PDF in new tab
+            </a>
+          </div>
+        );
+      }
+      return (
+        <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden">
+          <iframe
+            src={file}
+            title="PDF Preview"
+            className="w-full h-full"
+            onError={() => setPdfError(true)}
+          />
+        </div>
+      );
+
+    case "markdown":
+      return (
+        <div className="prose max-w-none">
+          <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto">
+            <code>{file.content || "Markdown content not available"}</code>
+          </pre>
+        </div>
+      );
+
+    default:
+      return (
+        <div className="text-center py-10">
+          <FileIcon className="w-16 h-16 mx-auto text-gray-400" />
+          <p className="mt-4 text-gray-500">
+            Preview not available for this file type
+          </p>
+          <a
+            href={file}
+            download={file.name}
+            className="text-blue-600 hover:text-blue-800 mt-2 inline-block"
+          >
+            Download file
+          </a>
+        </div>
+      );
+  }
+}
+
+function getFileType(filename) {
+  const extension = filename.toLowerCase().split(".").pop();
+
+  if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension)) {
+    return "image";
+  }
+  if (extension === "pdf") {
+    return "pdf";
+  }
+  if (extension === "md") {
+    return "markdown";
+  }
+  return "other";
+}
+
+function getFileIcon(fileType) {
+  switch (fileType) {
+    case "image":
+      return <ImageIcon className="w-5 h-5" />;
+    case "pdf":
+    case "markdown":
+      return <FileText className="w-5 h-5" />;
+    default:
+      return <FileIcon className="w-5 h-5" />;
+  }
 }
 
 function ProgressBar({ percentage }) {
@@ -241,10 +422,61 @@ function EmployeeCard({ employee }) {
   );
 }
 
-function GigAssignPage({ GigID }) {
-  const [selectedFile, setSelectedFile] = useState(
-    gig.progressTracking[0]["files"][0]
-  );
+function GigAssignPage() {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [gigData, setGigData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { GigID } = useParams();
+
+  useEffect(() => {
+    const fetchGig = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // For development, use mock data
+        // In production, uncomment the API call
+        const response = await api.get(`api/gigs/${GigID}`, {
+          withCredentials: true,
+        });
+        setGigData(response.data);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "An error occurred while fetching the gig"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (GigID) {
+      fetchGig();
+    }
+  }, [GigID]);
+
+  const handleReviewSubmit = async (reviewData) => {
+    try {
+      // await api.post(`api/gigs/${GigID}/review`, reviewData);
+
+      setGigData((prev) =>
+        prev ? { ...prev, ongoingStatus: "Reviewed" } : null
+      );
+    } catch (err) {
+      console.error("Error submitting review:", err);
+    }
+  };
+
+  if (loading) return <Loading />;
+  if (error) return <div className="text-red-600">Error: {error}</div>;
+  if (!gigData) return <div>No gig data found</div>;
+
+  const totalProgress =
+    gigData.progressTracking[gigData.progressTracking.length - 1]
+      ?.work_percentage || 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -253,7 +485,7 @@ function GigAssignPage({ GigID }) {
           {/* Header Image */}
           <div className="h-48 w-full relative">
             <img
-              src={gig.img}
+              src={gigData.img || gigImg}
               alt="Project cover"
               className="w-full h-full object-cover"
             />
@@ -264,10 +496,12 @@ function GigAssignPage({ GigID }) {
           <div className="px-8 py-6">
             {/* Title and Status */}
             <div className="flex items-start justify-between">
-              <h1 className="text-3xl font-bold text-gray-900">{gig.title}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {gigData.title}
+              </h1>
               <div className="flex gap-2">
-                <StatusBadge status={gig.approvalStatus} type="approval" />
-                <StatusBadge status={gig.ongoingStatus} type="ongoing" />
+                <StatusBadge status={gigData.approvalStatus} type="approval" />
+                <StatusBadge status={gigData.ongoingStatus} type="ongoing" />
               </div>
             </div>
 
@@ -277,14 +511,14 @@ function GigAssignPage({ GigID }) {
                 <DollarSign className="w-5 h-5 text-green-600" />
                 <div>
                   <p className="text-sm text-gray-500">Budget</p>
-                  <p className="font-semibold">${gig.amount}</p>
+                  <p className="font-semibold">${gigData.amount}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Award className="w-5 h-5 text-blue-600" />
                 <div>
                   <p className="text-sm text-gray-500">Reward Points</p>
-                  <p className="font-semibold">{gig.rewardPoints} points</p>
+                  <p className="font-semibold">{gigData.rewardPoints} points</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -292,7 +526,7 @@ function GigAssignPage({ GigID }) {
                 <div>
                   <p className="text-sm text-gray-500">Deadline</p>
                   <p className="font-semibold">
-                    {gig.deadline.toLocaleDateString()}
+                    {formatDate(gigData.deadline)}
                   </p>
                 </div>
               </div>
@@ -301,7 +535,7 @@ function GigAssignPage({ GigID }) {
                 <div>
                   <p className="text-sm text-gray-500">Assigned Date</p>
                   <p className="font-semibold">
-                    {gig.assignedAt.toLocaleDateString()}
+                    {formatDate(gigData.assignedAt)}
                   </p>
                 </div>
               </div>
@@ -313,7 +547,7 @@ function GigAssignPage({ GigID }) {
                 Description
               </h2>
               <p className="mt-2 text-gray-600 leading-relaxed">
-                {gig.description}
+                {gigData.description}
               </p>
             </div>
 
@@ -322,7 +556,7 @@ function GigAssignPage({ GigID }) {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
                 Assigned Employee
               </h2>
-              <EmployeeCard employee={gig.employee} />
+              {/* <EmployeeCard employee={gigData.employee} /> */}
             </div>
 
             {/* Skills */}
@@ -331,7 +565,7 @@ function GigAssignPage({ GigID }) {
                 Required Skills
               </h2>
               <div className="flex flex-wrap gap-2">
-                {gig.skills.map((skill, index) => (
+                {gigData.skills.map((skill, index) => (
                   <SkillBadge
                     key={index}
                     skill={skill.skill}
@@ -343,10 +577,22 @@ function GigAssignPage({ GigID }) {
 
             {/* Progress Tracking */}
             <div className="mt-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Progress
-              </h2>
-              {gig.progressTracking.map((progress, index) => (
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Progress
+                </h2>
+                {totalProgress === 100 &&
+                  gigData.ongoingStatus !== "Reviewed" && (
+                    <button
+                      onClick={() => setShowReviewModal(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <MessageSquare className="w-5 h-5" />
+                      Submit Review
+                    </button>
+                  )}
+              </div>
+              {gigData.progressTracking.map((progress, index) => (
                 <div key={index} className="bg-gray-50 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-medium text-gray-900">
@@ -382,21 +628,21 @@ function GigAssignPage({ GigID }) {
                 <Briefcase className="w-5 h-5 text-gray-600" />
                 <div>
                   <p className="text-sm text-gray-500">Department ID</p>
-                  <p className="font-medium">{gig.DID}</p>
+                  <p className="font-medium">{gigData.DID}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <User className="w-5 h-5 text-gray-600" />
                 <div>
                   <p className="text-sm text-gray-500">Manager ID</p>
-                  <p className="font-medium">{gig.ManagerID}</p>
+                  <p className="font-medium">{gigData.ManagerID}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <User className="w-5 h-5 text-gray-600" />
                 <div>
                   <p className="text-sm text-gray-500">Employee ID</p>
-                  <p className="font-medium">{gig.EID}</p>
+                  <p className="font-medium">{gigData.EID}</p>
                 </div>
               </div>
             </div>
@@ -409,6 +655,14 @@ function GigAssignPage({ GigID }) {
         <FilePreviewModal
           file={selectedFile}
           onClose={() => setSelectedFile(null)}
+        />
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && (
+        <ReviewModal
+          onClose={() => setShowReviewModal(false)}
+          onSubmit={handleReviewSubmit}
         />
       )}
     </div>

@@ -20,7 +20,9 @@ const WebSocketComponent = () => {
   };
 
   useEffect(() => {
-    const sckt = io("http://localhost:3000", {});
+    const sckt = io("http://localhost:3000", {
+      withCredentials: true,
+    });
 
     sckt.on("connect", () => {
       //   console.log("Connected to server with socket ID:", sckt.id);

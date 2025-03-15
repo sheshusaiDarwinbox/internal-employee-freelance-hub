@@ -153,7 +153,7 @@ function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="gig/:id" element={<GigPage />} />
-              <Route path="gig-assign/:id" element={<GigAssignPage />} />
+              <Route path="gig-assign/:GigID" element={<GigAssignPage />} />
               <Route path="users/:userId" element={<UserProfile />} />
             </Route>
 

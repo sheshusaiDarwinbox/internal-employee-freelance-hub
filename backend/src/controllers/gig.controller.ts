@@ -13,6 +13,11 @@ import { z } from "zod";
 import { splitStringByCommas } from "../utils/requestParsing.util";
 import { BidModel } from "../models/bid.model";
 import { Bid } from "../types/bid.types";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { v4 as uuidV4 } from "uuid";
+import { GigSchema } from "../types/gig.types";
+import multer from "multer";
+const upload = multer();
 
 export const gigControlRouter = Router();
 
@@ -92,7 +97,7 @@ export const getAllGigs = sessionHandler(
       ).parse(parsedManagerIDs);
       filter.ManagerID = { $in: parsedManagerIDs };
     }
-    if (search) {
+    if (search && search !== "") {
       z.string().regex(
         /^[a-zA-Z0-9\s.,!?()&]+$/,
         "search must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
@@ -204,6 +209,7 @@ export const assignGig = sessionHandler(async (req: Request, res: Response) => {
         $set: {
           EID: EID,
           ongoingStatus: "Ongoing",
+          assignedAt: Date.now(),
         },
       }
     );
@@ -249,8 +255,88 @@ export const getMyGigs = sessionHandler(async (req: Request, res: Response) => {
   };
 });
 
+const s3Client = new S3Client({
+  region: process.env.S3_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+});
+
+export const updateGigProgress = sessionHandler(
+  async (req: Request, res: Response) => {
+    const { _id } = req.params;
+    const { subject, description, work_percentage } = req.body;
+    const files = req.files as Express.Multer.File[];
+
+    const gig: GigSchema | null = await Gig.findById(_id);
+    if (!gig) {
+      return {
+        status: HttpStatusCodes.BAD_REQUEST,
+        data: {
+          msg: "Gig not found",
+        },
+      };
+    }
+
+    const fileUrls: string[] = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const fileKey = `gigs/${_id}/${uuidV4()}-${file.originalname}`;
+
+        await s3Client.send(
+          new PutObjectCommand({
+            Bucket: process.env.S3_BUCKET!,
+            Key: fileKey,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          })
+        );
+
+        const fileUrl = `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com/${fileKey}`;
+        fileUrls.push(fileUrl);
+      }
+    }
+
+    const progressUpdate = {
+      subject: subject || "Progress Update",
+      description,
+      work_percentage: Number(work_percentage),
+      files: fileUrls,
+    };
+
+    let ongoingStatus = gig.ongoingStatus;
+    if (work_percentage === 100) {
+      ongoingStatus = "Completed";
+    }
+
+    const updatedGig = await Gig.findOneAndUpdate(
+      { _id: _id },
+      {
+        $push: {
+          progressTracking: progressUpdate,
+        },
+        $set: {
+          ongoingStatus: ongoingStatus,
+        },
+      }
+    );
+
+    return {
+      status: HttpStatusCodes.OK,
+      data: updatedGig,
+    };
+  }
+);
+
 gigControlRouter.post("/post", checkAuth([UserRole.Manager]), createGig);
 gigControlRouter.get("", checkAuth([]), getAllGigs);
 gigControlRouter.get("/:GigID", checkAuth([]), getGigById);
 gigControlRouter.post("/assign", checkAuth([UserRole.Manager]), assignGig);
 gigControlRouter.post("/my-gigs", checkAuth([]), getMyGigs);
+gigControlRouter.post(
+  "/:_id/update-progress",
+  checkAuth([]),
+  upload.array("files"),
+  updateGigProgress
+);
