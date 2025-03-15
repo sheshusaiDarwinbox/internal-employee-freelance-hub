@@ -116,7 +116,7 @@ const Leaderboard = () => {
                 className={index % 2 === 0 ? 'bg-gray-100' : 'bg-white'}
               >
                 <Table.Cell className="whitespace-nowrap font-medium text-gray-900 flex items-center">
-                  {user.name} {index % 2 === 0 ? '💼' : '🎖️'}
+                  {user.name + ' 🎖️'} 
                 </Table.Cell>
                 <Table.Cell>{user.gigs || 0}</Table.Cell>
                 <Table.Cell>{user.rating || 'N/A'}</Table.Cell>

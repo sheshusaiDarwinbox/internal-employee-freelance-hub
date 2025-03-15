@@ -1,9 +1,8 @@
-import { useState , useEffect } from "react";
+import { useState , useEffect , useRef} from "react";
 import { TextInput, Button } from "flowbite-react";
 import { HiSearch, HiPaperAirplane } from "react-icons/hi";
 import api from "../utils/api";
 import { useSelector, useDispatch } from "react-redux";
-import { useRef } from "react";
 // import { addMessage as addWebsocketMessage } from "../redux/slices/webSocketSlice";
 import {
   setActiveChat,
@@ -21,7 +20,8 @@ const ChatPage = () => {
   const [contacts , setContacts] = useState([]); // Initialize contacts state
   const { socket, activeChat, messages } = useSelector(
     (state) => state.websocket);
-
+  const [latestMessages, setLatestMessages] = useState({});
+  const readMessages = useRef(new Set());
   const dispatch = useDispatch();
     //for handling the pagination
   const [page, setPage] = useState(1);
@@ -46,7 +46,7 @@ const ChatPage = () => {
     setContacts([]);
     setPage(1);
     setHasMore(true);
-  }, [searchQuery]);
+  }, [page,searchQuery]);
 
 
   useEffect(() => {
@@ -126,33 +126,74 @@ const ChatPage = () => {
 
   useEffect(() => {
     if (socket && userId) {
-      socket.emit("userOnline", userId); // Emit userOnline event
+      socket.emit("userOnline", userId);
 
       socket.on("receiveMessage", (message) => {
-        dispatch(addMessage(message));
+          dispatch(addMessage(message));
+          if (activeChat && activeChat.EID === message.SenderID && message.ReceiverID === userId) {
+              socket.emit("messageRead", message.MsgID); // Mark as read
+          }
       });
-      socket.on("chatHistory", (history) => {
-        dispatch(setMessages(history));
-      });
-      socket.on("updateUserStatus", (data) => {
-        setContacts((prevContacts) =>
-          prevContacts.map((contact) =>
-            contact.EID === data.userID ? { ...contact, online: data.status === "online" } : contact
-          )
-        );
-    })
-    }
-    return () => {
-      if (socket) {
-        socket.off("receiveMessage");
-        socket.off("chatHistory");
-        socket.off("updateUserStatus");
-        if(userId){
-            socket.emit("userOffline", userId);
+
+      socket.on("chatHistory", ({ chatHistory, latestMessage }) => {
+        dispatch(setMessages(chatHistory));
+        if (latestMessage) {
+            setLatestMessages((prev) => ({
+                ...prev,
+                [activeChat?.EID]: latestMessage,
+            }));
         }
-      }
-    };
-  }, [socket, dispatch, userId]);
+        chatHistory.forEach((msg) => {
+          if (msg.SenderID.EID === activeChat?.EID && msg.ReceiverID === userId && msg.Status === "Delivered" && !readMessages.current.has(msg.MsgID)) {
+              socket.emit("messageRead", msg.MsgID);
+              readMessages.current.add(msg.MsgID);
+          }
+      });
+      });
+        socket.on("updateUserStatus", (data) => {
+            console.log("Received updateUserStatus:", data); // Add this log
+            setContacts((prevContacts) =>
+                prevContacts.map((contact) => {
+                    if (contact.EID === data.userID) {
+                        console.log("Updating contact:", contact.EID, "to", data.status); //add this log
+                        return { ...contact, Online: data.status === "Online" };
+                    }
+                    return contact;
+                })
+            );
+        })
+    
+        socket.on("updateMessageStatus", (data) => {
+          setMessages((prevMessages) =>
+              prevMessages.map((msg) =>
+                  msg.MsgID === data.MsgID ? { ...msg, Status: data.Status } : msg
+              )
+          );
+      });
+    }
+      return () => {
+        if (socket) {
+            socket.off("receiveMessage");
+            socket.off("chatHistory");
+            socket.off("updateUserStatus");
+            socket.off("updateMessageStatus");
+            if (userId) {
+                socket.emit("userOffline", userId);
+            }
+        }
+      };
+      }, [socket, dispatch, userId, activeChat]);
+
+      useEffect(() => {
+        if (activeChat && messages.length > 0) {
+            messages.forEach((msg) => {
+                if (msg.SenderID.EID === activeChat?.EID && msg.ReceiverID === userId && msg.Status === "Delivered" && !readMessages.current.has(msg.MsgID)) {
+                    socket.emit("messageRead", msg.MsgID);
+                    readMessages.current.add(msg.MsgID);
+                }
+            });
+        }
+    }, [activeChat, messages, socket, userId]);
 
   useEffect(() => {
     if (activeChat && activeChat.EID && socket && userId) {
@@ -186,9 +227,9 @@ const ChatPage = () => {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                    {contact.fullName.charAt(0)}
+                  {contact.fullName.charAt(0)}
                   </div>
-                  {contact.online && (
+                  {contact.Online && (
                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
                   )}
                 </div>
@@ -198,8 +239,9 @@ const ChatPage = () => {
                       activeChat?.EID === contact._id ? "text-white" : ""
                     }`}
                   >
-                    {contact.fullName}
+                    {contact.fullName} 
                   </h3>
+                  
                   <p
                     className={`text-sm truncate ${
                       activeChat?.EID === contact._id
@@ -230,7 +272,7 @@ const ChatPage = () => {
                 <div>
                   <h2 className="font-medium">{activeChat.fullName}</h2>
                   <p className="text-sm text-gray-500">
-                    {activeChat.online ? "Online" : "Offline"}
+                    {activeChat.Online ? "Online" : "Offline"}
                   </p>
                 </div>
               </div>
@@ -240,10 +282,9 @@ const ChatPage = () => {
               <div className="flex-1 max-h-[calc(100vh-180px)] overflow-y-auto p-4 space-y-4 bg-gray-50 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                 {messages.map((msg) => (
                   <div
-                    key={msg.MsgID}
-                    className={`flex ${
-                      msg.SenderID === userId ? "justify-end" : "justify-start"
-                    }`}
+                  key={msg.MsgID}
+                  className={`flex ${msg.SenderID === userId ? "justify-end" : "justify-start"}`}
+                  title={new Date(msg.Timestamp).toLocaleString()}
                   >
                     <div
                       className={`max-w-[70%] rounded-lg p-3 ${
