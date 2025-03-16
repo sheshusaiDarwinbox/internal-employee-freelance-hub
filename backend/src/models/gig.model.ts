@@ -61,6 +61,7 @@ const gigSchema = new Schema<GigSchema, GigModel>({
   skills: { type: [gigSkillSchema], required: true },
   createdAt: { type: Date, default: Date.now, required: true },
   assignedAt: { type: Date },
+  completedAt: { type: Date },
   rewardPoints: { type: Number, required: true, default: 0 },
   rating: { type: Number },
   amount: { type: Number, required: true, default: 0 },

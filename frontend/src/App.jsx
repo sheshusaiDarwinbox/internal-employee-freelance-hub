@@ -13,7 +13,6 @@ import AllGigs from "./pages/Gigs";
 import Profile from "./pages/Profile";
 import ChatPage from "./pages/ChatPage";
 import ManagePositions from "./pages/ManagePositions";
-import Leaderboard from "./pages/Leaderboard";
 import ManageUsers from "./pages/ManageUsers";
 import GigAssignPage from "./pages/GigAssignPage";
 
@@ -33,6 +32,8 @@ const PublicRoute = lazy(() => import("./components/PublicRoute"));
 const PublicLayout = lazy(() => import("./layouts/PublicLayout"));
 const UserProfile = lazy(() => import("../src/pages/UserProfile"));
 const UpdateUser = lazy(() => import("../src/pages/UpdateUsers"));
+const MyHistory = lazy(() => import("../src/pages/MyHistory"));
+const Leaderboard = lazy(() => import("../src/pages/LeaderBoard"));
 
 const styles = `
   body {
@@ -107,7 +108,7 @@ function App() {
               <Route path="rewards" element={<Rewards />} />
               <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="all-gigs" element={<AllGigs />} />
-              <Route path="work-history" element={<MyGigs />} />
+              <Route path="work-history" element={<MyHistory />} />
               <Route path="my-activity" element={<MyActivity />} />
               <Route path="profile" element={<Profile />} />
               <Route path="my-account" element={<MyAccount />} />
@@ -132,6 +133,7 @@ function App() {
               <Route path="chat" element={<ChatPage />} />
               <Route path="users" element={<ManageUsers />} />
               <Route path="positions" element={<ManagePositions />} />
+              <Route path="users/:userId" element={<UserProfile />} />
             </Route>
 
             <Route

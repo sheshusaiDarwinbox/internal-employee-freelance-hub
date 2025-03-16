@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button, TextInput, Select, Modal, Label, Table } from "flowbite-react";
 import { Spinner } from "flowbite-react";
+import { useNavigate } from "react-router-dom";
 import {
   HiSearch,
   HiPlus,
@@ -42,6 +43,7 @@ const ManageUsers = () => {
   const fileInputRef = useRef(null);
   const debouncedSearchQuery = useDebounce(searchQuery);
   const [pageSize] = useState(10);
+  const navigate = useNavigate();
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -326,7 +328,12 @@ const ManageUsers = () => {
                 >
                   <Table.Cell className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="font-medium text-gray-900">
+                      <span //className="font-medium text-gray-900"
+                        className="hover:underline hover:cursor-pointer font-extrabold text-base text-slate-500"
+                        onClick={() => {
+                          navigate(`/admin/users/${user.EID}`);
+                        }}
+                      >
                         {user.fullName}
                       </span>
                       <span className="text-sm text-gray-500">

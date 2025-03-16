@@ -5,6 +5,8 @@ export interface Notification {
   EID: string;
   description: string;
   From: string;
+  createdAt: Date;
+  read: boolean;
 }
 
 export type NotificationModelType = Model<Notification>;

@@ -47,9 +47,8 @@ const MyActivity = () => {
   const [subject, setSubject] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
-  const authState = useSelector((state) => state.auth);
-  const EID = authState?.user?.EID;
   const user = useSelector((state) => state.auth.user);
+  const EID = user?.EID;
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -62,6 +61,7 @@ const MyActivity = () => {
           }
         );
         setTasks(response.data.docs);
+        console.log(user);
       } catch (error) {
         console.error("Error fetching tasks:", error);
       }
@@ -70,7 +70,7 @@ const MyActivity = () => {
     const fetchRewards = async () => {
       if (EID) {
         try {
-          setRewards(50); // Replace with actual API call when available
+          setRewards(user.freelanceRewardPoints || 0); // Replace with actual API call when available
         } catch (error) {
           console.error("Error fetching rewards:", error);
         }
@@ -259,11 +259,7 @@ const MyActivity = () => {
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Completed Tasks</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {
-                    tasks.filter(
-                      (t) => t.progressTracking.work_percentage === 100
-                    ).length
-                  }
+                  {user.gigsCompleted || 0}
                 </p>
               </div>
             </div>

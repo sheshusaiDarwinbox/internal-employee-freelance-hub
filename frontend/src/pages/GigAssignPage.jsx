@@ -83,11 +83,11 @@ const mockGig = {
 
 function ReviewModal({ onClose, onSubmit }) {
   const [rating, setRating] = useState(0);
-  const [review, setReview] = useState("");
+  const [feedback, setFeedback] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ rating, review });
+    onSubmit({ rating, feedback });
     onClose();
   };
 
@@ -95,7 +95,7 @@ function ReviewModal({ onClose, onSubmit }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-lg p-6">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold">Submit Review</h3>
+          <h3 className="text-xl font-semibold">Submit Feedback</h3>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -131,18 +131,18 @@ function ReviewModal({ onClose, onSubmit }) {
 
           <div className="mb-6">
             <label
-              htmlFor="review"
+              htmlFor="feedback"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Review Comments
+              Feedback
             </label>
             <textarea
-              id="review"
+              id="feedback"
               rows={4}
-              value={review}
-              onChange={(e) => setReview(e.target.value)}
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
               className="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              placeholder="Write your review here..."
+              placeholder="Write your feedback here..."
               required
             />
           </div>
@@ -159,7 +159,7 @@ function ReviewModal({ onClose, onSubmit }) {
               type="submit"
               className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
             >
-              Submit Review
+              Submit Feedback
             </button>
           </div>
         </form>
@@ -346,14 +346,14 @@ function StatusBadge({ status, type }) {
   );
 }
 
-function SkillBadge({ skill, weight }) {
+function SkillBadge({ skill }) {
   return (
     <div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
       <Code className="w-4 h-4" />
-      <span className="font-medium">{skill}</span>
-      {weight !== undefined && (
+      <span className="font-medium">{skill.skill}</span>
+      {skill.score !== undefined && (
         <span className="text-sm text-gray-500">
-          {(weight * 100).toFixed(0)}%
+          {(skill.score * 100).toFixed(0)}%
         </span>
       )}
     </div>
@@ -365,15 +365,15 @@ function EmployeeCard({ employee }) {
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-start gap-4">
         <img
-          src={employee.avatar}
-          alt={employee.name}
+          src={employee.img}
+          alt={employee.fullName}
           className="w-16 h-16 rounded-full object-cover"
         />
         <div className="flex-1">
           <h3 className="text-xl font-semibold text-gray-900">
-            {employee.name}
+            {employee.fullName}
           </h3>
-          <p className="text-gray-600">{employee.department}</p>
+          <p className="text-gray-600">{employee?.department}</p>
 
           <div className="mt-4 space-y-2">
             <div className="flex items-center gap-2 text-gray-600">
@@ -391,7 +391,7 @@ function EmployeeCard({ employee }) {
             </div>
             <div className="flex items-center gap-2 text-gray-600">
               <MapPin className="w-4 h-4" />
-              <span>{employee.location}</span>
+              <span>{employee.city}</span>
             </div>
           </div>
 
@@ -399,11 +399,11 @@ function EmployeeCard({ employee }) {
             <div className="flex items-center gap-4 text-sm text-gray-600">
               <div className="flex items-center gap-1">
                 <Briefcase className="w-4 h-4" />
-                <span>{employee.completedGigs} gigs completed</span>
+                <span>{employee?.completedGigs} gigs completed</span>
               </div>
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 text-yellow-400" />
-                <span>{employee.averageRating} average rating</span>
+                <span>{employee.freelanceRating || "NA"} average rating</span>
               </div>
             </div>
           </div>
@@ -428,6 +428,7 @@ function GigAssignPage() {
   const [gigData, setGigData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [employee, setEmployee] = useState(null);
   const { GigID } = useParams();
 
   useEffect(() => {
@@ -442,6 +443,13 @@ function GigAssignPage() {
           withCredentials: true,
         });
         setGigData(response.data);
+        const employeeData = await api.get(
+          `api/users/get-user/${response.data.EID}`,
+          {
+            withCredentials: true,
+          }
+        );
+        setEmployee(employeeData.data);
       } catch (err) {
         setError(
           err instanceof Error
@@ -458,13 +466,17 @@ function GigAssignPage() {
     }
   }, [GigID]);
 
-  const handleReviewSubmit = async (reviewData) => {
+  const handleFeedbackSubmit = async (reviewData) => {
     try {
-      // await api.post(`api/gigs/${GigID}/review`, reviewData);
+      const response = await api.post(`api/gigs/${GigID}/review`, reviewData, {
+        withCredentials: true,
+      });
 
-      setGigData((prev) =>
-        prev ? { ...prev, ongoingStatus: "Reviewed" } : null
-      );
+      if (response.status === 200) {
+        setGigData((prev) =>
+          prev ? { ...prev, ongoingStatus: "Reviewed" } : null
+        );
+      }
     } catch (err) {
       console.error("Error submitting review:", err);
     }
@@ -556,7 +568,7 @@ function GigAssignPage() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
                 Assigned Employee
               </h2>
-              {/* <EmployeeCard employee={gigData.employee} /> */}
+              <EmployeeCard employee={employee} />
             </div>
 
             {/* Skills */}
@@ -566,11 +578,7 @@ function GigAssignPage() {
               </h2>
               <div className="flex flex-wrap gap-2">
                 {gigData.skills.map((skill, index) => (
-                  <SkillBadge
-                    key={index}
-                    skill={skill.skill}
-                    weight={skill.weight}
-                  />
+                  <SkillBadge key={index} skill={skill} />
                 ))}
               </div>
             </div>
@@ -588,7 +596,7 @@ function GigAssignPage() {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       <MessageSquare className="w-5 h-5" />
-                      Submit Review
+                      Submit Feedback
                     </button>
                   )}
               </div>
@@ -662,7 +670,7 @@ function GigAssignPage() {
       {showReviewModal && (
         <ReviewModal
           onClose={() => setShowReviewModal(false)}
-          onSubmit={handleReviewSubmit}
+          onSubmit={handleFeedbackSubmit}
         />
       )}
     </div>

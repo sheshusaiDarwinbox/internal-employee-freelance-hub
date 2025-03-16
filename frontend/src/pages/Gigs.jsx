@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Search,
-  Filter,
   X,
   Star,
-  DollarSign,
   Clock,
-  Briefcase,
   User,
   Mail,
   Send,
@@ -14,7 +11,6 @@ import {
   Code2,
   AlertCircle,
   ChevronDown,
-  Check,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -401,8 +397,8 @@ function App() {
                         <span className="font-medium">{gig.rewardPoints}</span>
                       </div>
                       <div className="flex items-center text-green-600">
-                        <DollarSign size={20} className="mr-1" />
-                        <span className="font-medium">{gig.amount}</span>
+                        <span className="text-2xl">₹ </span>
+                        <span className="text-2xl">{gig.amount}</span>
                       </div>
                     </div>
                     <div className="flex items-center text-gray-500">

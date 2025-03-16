@@ -4,46 +4,15 @@ import { HiSearch, HiPaperAirplane } from "react-icons/hi";
 import api from "../utils/api";
 
 const ChatPage = () => {
-  const [contacts, setContacts] = useState([
-    // { id: 1, name: "John Doe", lastMessage: "Hello!", online: true },
-    // { id: 2, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 3, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 4, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 5, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 6, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 7, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 8, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 9, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 10, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 11, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 12, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 13, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 14, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 15, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 16, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 17, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 18, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 19, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 21, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 22, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 23, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 24, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 25, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 26, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 27, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 28, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 29, name: "Jane Smith", lastMessage: "How are you?", online: false },
-    // { id: 30, name: "Jane Smith", lastMessage: "How are you?", online: false },
-  ]);
+  const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await api.get(`api/users`, {
+        const response = await api.get(`api/users/users-details`, {
           withCredentials: true,
         });
         setContacts(response.data.docs);
-        console.log(response.data.docs);
       } catch (err) {
         console.error("Error fetching users:", err);
       }
@@ -101,7 +70,14 @@ const ChatPage = () => {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                    {contact.fullName.charAt(0)}
+                    {contact?.img && (
+                      <img
+                        src={contact.img}
+                        className="rounded-full object-cover w-10 h-10"
+                        alt=""
+                      />
+                    )}
+                    {!contact?.img && contact.fullName.charAt(0)}
                   </div>
                   {contact.online && (
                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
@@ -138,7 +114,14 @@ const ChatPage = () => {
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                  {activeChat.fullName.charAt(0)}
+                  {activeChat?.img && (
+                    <img
+                      src={activeChat.img}
+                      className="rounded-full object-cover w-10 h-10"
+                      alt=""
+                    />
+                  )}
+                  {!activeChat?.img && activeChat.fullName.charAt(0)}
                 </div>
                 <div>
                   <h2 className="font-medium">{activeChat.fullName}</h2>

@@ -7,6 +7,7 @@ import {
   CreditCard,
   User2,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 
 function MyAccount() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -18,6 +19,7 @@ function MyAccount() {
     accountNo: "XXXX-XXXX-1234",
     ifsc: "HDFC12345",
   });
+  const user = useSelector((state) => state.auth.user);
 
   const paymentHistory = [
     {
@@ -82,7 +84,9 @@ function MyAccount() {
                 <Wallet className="w-8 h-8 text-stone-300" />
               </div>
               <div className="text-stone-100">
-                <p className="text-4xl font-bold">₹850</p>
+                <p className="text-4xl font-bold">
+                  ₹{user.accountBalance || 0}
+                </p>
                 <p className="text-sm text-stone-300 mt-1">
                   Available for withdrawal
                 </p>

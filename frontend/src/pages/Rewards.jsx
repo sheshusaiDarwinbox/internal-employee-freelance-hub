@@ -1,41 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { Trophy, Coins, Gift, Star, Award, TrendingUp } from "lucide-react";
-
-const user = {
-  freelanceRewardPoints: 1250,
-  freelanceRating: 4.8,
-};
-
-const mockGigs = [
-  {
-    title: "Website Redesign Project",
-    rewardPoints: 150,
-    status: "Completed",
-    date: "2024-03-15",
-  },
-  {
-    title: "E-commerce Development",
-    rewardPoints: 300,
-    status: "Completed",
-    date: "2024-03-10",
-  },
-  {
-    title: "Mobile App UI Design",
-    rewardPoints: 200,
-    status: "Completed",
-    date: "2024-03-05",
-  },
-  {
-    title: "API Integration",
-    rewardPoints: 175,
-    status: "Completed",
-    date: "2024-03-01",
-  },
-];
+import { useSelector } from "react-redux";
+import api from "../utils/api";
+import { formatDate } from "../utils/dateUtils";
 
 function App() {
-  const [gigs, setGigs] = useState(mockGigs);
+  const [gigs, setGigs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const user = useSelector((state) => state.auth.user);
+  const EID = user?.EID;
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await api.post(
+          "api/gigs/my-gigs?type=Completed,Reviewed",
+          {},
+          {
+            withCredentials: true,
+          }
+        );
+        setGigs(response.data.docs);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    fetchTasks();
+  }, [EID]);
 
   const getStatusColor = (status) => {
     return status === "Completed"
@@ -100,16 +93,18 @@ function App() {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">{gig.title}</h3>
-                    <p className="text-sm text-gray-500">{gig.date}</p>
+                    <p className="text-sm text-gray-500">
+                      {formatDate(gig.completedAt)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                      gig.status
+                      gig.ongoingStatus
                     )}`}
                   >
-                    {gig.status}
+                    {gig.ongoingStatus}
                   </span>
                   <div className="flex items-center space-x-1">
                     <Coins className="h-5 w-5 text-yellow-500" />
@@ -120,35 +115,6 @@ function App() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Next Milestone
-          </h2>
-          <div className="relative pt-1">
-            <div className="flex mb-2 items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">
-                  Progress
-                </span>
-              </div>
-              <div className="text-right">
-                <span className="text-xs font-semibold inline-block text-indigo-600">
-                  75%
-                </span>
-              </div>
-            </div>
-            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200">
-              <div
-                style={{ width: "75%" }}
-                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"
-              ></div>
-            </div>
-            <p className="text-sm text-gray-600">
-              225 more points until you reach Expert level
-            </p>
           </div>
         </div>
       </div>

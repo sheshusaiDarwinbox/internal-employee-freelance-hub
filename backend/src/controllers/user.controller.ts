@@ -38,7 +38,6 @@ export const createUser = sessionHandler(
       _id?: string;
     }[] = [];
 
-    // console.log(users);
     const updatedUsers = await Promise.all(
       users.map(async (user) => {
         const { skills, ...data } = user;
@@ -93,8 +92,6 @@ export const createUser = sessionHandler(
         };
       })
     );
-
-    // console.log(updatedUsers);
 
     const insertedUsers = await User.create(updatedUsers, { session });
 
@@ -157,6 +154,45 @@ export const getAllUsers = sessionHandler(
       offset: pageNum * 6,
       limit: 6,
     });
+    return {
+      status: HttpStatusCodes.OK,
+      data: users,
+    };
+  }
+);
+
+export const getAllUsersDetails = sessionHandler(
+  async (req: Request, res: Response) => {
+    const { types, page = 1, search = "" } = req.query;
+    const filter: any = {};
+    const pageNum = Number(page) - 1;
+    if (types) {
+      const typesArray = (types as string).split(",");
+      UsersArraySchema.parse(typesArray);
+      filter.role = { $in: typesArray };
+    }
+
+    if (search !== "") filter.$text = { $search: search };
+
+    const users = await User.paginate(filter, {
+      offset: pageNum * 6,
+      limit: 6,
+      select: {
+        EID: 1,
+        email: 1,
+        fullName: 1,
+        role: 1,
+        phone: 1,
+        gender: 1,
+        workmode: 1,
+        img: 1,
+        freelanceRating: 1,
+        freelanceRewardPoints: 1,
+        gigsCompleted: 1,
+        DID: 1,
+      },
+    });
+
     return {
       status: HttpStatusCodes.OK,
       data: users,
@@ -396,12 +432,37 @@ export const resendVerifyMail = sessionHandler(
   }
 );
 
+export const getEmployeesUnderManager = sessionHandler(
+  async (req: Request, res: Response) => {
+    const EID = req.user?.EID;
+    const { page = 1 } = req.query;
+
+    const pageNum = Number(page) - 1;
+    const users = await User.paginate(
+      { ManagerID: EID },
+      { offset: pageNum * 6, limit: 6 }
+    );
+
+    if (!users) {
+      return {
+        status: HttpStatusCodes.BAD_REQUEST,
+        message: "No users found",
+      };
+    }
+
+    return {
+      status: HttpStatusCodes.OK,
+      data: users,
+    };
+  }
+);
+
 export const userControlRouter = Router();
 
 userControlRouter.post("/create", checkAuth([UserRole.Admin]), createUser);
 userControlRouter.get(
   "",
-  checkAuth([UserRole.Admin, UserRole.Manager, UserRole.Employee]),
+  checkAuth([UserRole.Admin, UserRole.Manager]),
   getAllUsers
 );
 userControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteUserByID);
@@ -416,3 +477,9 @@ userControlRouter.post(
   updateUserSkills
 );
 userControlRouter.post("/resend-verify-mail", resendVerifyMail);
+userControlRouter.get("/users-details", checkAuth([]), getAllUsersDetails);
+userControlRouter.get(
+  "/users-under-manager",
+  checkAuth([UserRole.Manager]),
+  getEmployeesUnderManager
+);

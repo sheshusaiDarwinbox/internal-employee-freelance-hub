@@ -30,6 +30,7 @@ declare global {
       skills?: string[];
       AccountBalance?: number;
       img?: string;
+      gigsCompleted?: number;
     }
   }
 }

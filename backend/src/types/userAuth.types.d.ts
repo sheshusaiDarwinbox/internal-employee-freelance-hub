@@ -31,6 +31,7 @@ export interface UserAuth {
   accountBalance?: number;
   img?: string;
   fullName?: string;
+  gigsCompleted?: number;
 }
 
 export type UserAuthModel = Model<UserAuth>;

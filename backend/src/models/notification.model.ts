@@ -10,6 +10,8 @@ const notificationSchema = new Schema<Notification, NotificationModelType>({
   EID: { type: String, required: true },
   description: { type: String, required: true },
   From: { type: String, required: true },
+  read: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
 });
 
 notificationSchema.plugin(paginate);

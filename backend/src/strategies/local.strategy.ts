@@ -63,6 +63,7 @@ passport.use(
           workmode: user.get("workmode"),
           maritalStatus: user.get("maritalStatus"),
           fullName: user.get("fullName"),
+          gigsCompleted: user.get("gigsCompleted"),
         };
 
         done(null, sessionUser);

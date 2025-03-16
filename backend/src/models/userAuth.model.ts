@@ -63,6 +63,7 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   accountBalance: { type: Number },
   img: { type: String },
   skills: { type: [skillSchema] },
+  gigsCompleted: { type: Number, default: 0 },
 });
 
 userAuthSchema.plugin(paginate);
