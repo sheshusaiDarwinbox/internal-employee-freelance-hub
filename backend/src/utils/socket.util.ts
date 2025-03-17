@@ -4,7 +4,7 @@ import { User } from "../models/userAuth.model";
 import { userSockets } from "../server";
 import { BidModel } from "../models/bid.model";
 import { client } from "../database/connection";
-import { registerEvents } from "./eventHandler.util";
+import { connectedUsers, registerEvents } from "./eventHandler.util";
 
 async function processJob(job: string) {
   console.log("Processing job:", job);
@@ -103,8 +103,10 @@ export const establishSocketConnection = async (
     console.log("User connected");
 
     userSockets[socket.id] = socket;
-    registerEvents(socket);
+    registerEvents(socket, io);
     socket.on("disconnect", () => {
+      connectedUsers.delete(socket.request.user.EID);
+      io.emit("users_list", Array.from(connectedUsers.keys()));
       console.log("User disconnected");
       delete userSockets[socket.id];
     });

@@ -1,9 +1,12 @@
-import { Socket } from "socket.io";
+import { RemoteSocket, Server, Socket } from "socket.io";
 import { createSessionStore } from "../app";
 import { client } from "../database/connection";
 import { Gig } from "../models/gig.model";
 import { BidModel } from "../models/bid.model";
 import { GigSchema } from "../types/gig.types";
+import { MessageModel } from "../models/message.model";
+
+export const connectedUsers = new Map();
 
 export const handleEvent = (
   socket: Socket,
@@ -33,7 +36,7 @@ export const handleEvent = (
   });
 };
 
-export const registerEvents = (socket: Socket) => {
+export const registerEvents = (socket: Socket, io: Server) => {
   handleEvent(socket, "user_input", async (data: any) => {
     console.log("Received input:", data);
 
@@ -60,8 +63,33 @@ export const registerEvents = (socket: Socket) => {
     }
   });
 
-  //   handleEvent(socket, "anotherEvent", (data: any) => {
-  //     console.log("Handling anotherEvent:", data);
-  //     // Handle the event as usual
-  //   });
+  handleEvent(socket, "register_user", async () => {
+    connectedUsers.set(socket.request.user.EID, socket.id);
+
+    io.emit("users_list", Array.from(connectedUsers.keys()));
+  });
+
+  handleEvent(socket, "send_message", async (data: any) => {
+    const message = await MessageModel.create({
+      SenderID: data.SenderID,
+      ReceiverID: data.ReceiverID,
+      Content: data.Content,
+      Timestamp: Date.now(),
+    });
+
+    const receiverSocketId = connectedUsers.get(data.ReceiverID);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("receive_message", {
+        SenderID: data.SenderID,
+        Content: data.Content,
+        Timestamp: message.Timestamp,
+      });
+    }
+
+    socket.emit("receive_message", {
+      SenderID: data.SenderID,
+      Content: data.Content,
+      Timestamp: message.Timestamp,
+    });
+  });
 };

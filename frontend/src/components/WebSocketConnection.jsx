@@ -6,6 +6,7 @@ import { io } from "socket.io-client";
 const WebSocketComponent = () => {
   const dispatch = useDispatch();
   const { connected } = useSelector((state) => state.websocket);
+  const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
     const sckt = io("http://localhost:3000", {
@@ -21,6 +22,8 @@ const WebSocketComponent = () => {
       console.log("WebSocket disconnected");
       dispatch(setConnected(false));
     });
+
+    sckt.emit("register_user", user.EID);
 
     const handleSendMessage = (message) => {
       if (sckt && message) {

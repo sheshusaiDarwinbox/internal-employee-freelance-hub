@@ -129,6 +129,7 @@ function App() {
               <Route index element={<AllGigs />} />
               <Route path="all-gigs" index element={<AllGigs />} />
               <Route path="departments" element={<DepartmentManagement />} />
+              <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="profile" element={<Profile />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="users" element={<ManageUsers />} />
@@ -151,6 +152,7 @@ function App() {
               <Route path="my-gigs" element={<MyGigs />} />
               <Route path="all-gigs" element={<AllGigs />} />
               <Route path="post-gigs" element={<PostGigs />} />
+              <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="users" element={<UpdateUser />} />
               <Route path="profile" element={<Profile />} />
               <Route path="chat" element={<ChatPage />} />

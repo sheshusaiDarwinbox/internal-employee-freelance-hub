@@ -11,5 +11,6 @@ declare module "http" {
     };
     user: any;
     sessionID: string;
+    EID: any;
   }
 }
