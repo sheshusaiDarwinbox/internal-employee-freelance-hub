@@ -8,7 +8,7 @@ import {
   UsersArraySchema,
 } from "../utils/zod.util";
 import { Router } from "express";
-import { User, UserRole , UserStatus } from "../models/userAuth.model";
+import { User, UserRole } from "../models/userAuth.model";
 import { generateId } from "../utils/counterManager.util";
 import { DepartmentModel } from "../models/department.model";
 import { generateRandomPassword, hashPassword } from "../utils/password.util";
@@ -20,11 +20,9 @@ import { parseFile } from "../utils/fileParser.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
 import { generatePresignedUrl } from "../utils/fileParser.util";
 import { Gig } from "../models/gig.model";
-import { GigSchema } from "../types/gig.types"; 
 import z, { date } from "zod";
 import { UserAuth } from "../types/userAuth.types";
 import { client } from "../database/connection";
-import { AccountDetailsModel } from "../models/accountDetails.model"; 
 
 interface UserWithRole extends Document {
   role: UserRole;
@@ -33,7 +31,6 @@ interface UserWithRole extends Document {
 export const createUser = sessionHandler(
   async (req: Request, res: Response, session) => {
     const users = CreateUserSchema.parse(req.body);
-    let id; // Initialize id here
     let usersEmailData: {
       EID: string;
       password: string;
@@ -68,14 +65,7 @@ export const createUser = sessionHandler(
           { session, new: true }
         );
         if (!result) throw new Error("Department not updated");
-        let id = ""; // Initialize id with a default value
-      if(data.role === "Other"){
-        id = await generateId(IDs.OID, session);
-      }
-      else{
-        id = await generateId(IDs.EID, session);
-      }
-
+        const id = await generateId(IDs.EID, session);
         const password = generateRandomPassword();
         const hashedPassword = await hashPassword(password);
 
@@ -105,41 +95,19 @@ export const createUser = sessionHandler(
 
     const insertedUsers = await User.create(updatedUsers, { session });
 
-    let accountDetails;
-    const { role } = users[0]; // Extract role from the first user
-    if (role === "Employee" || role === "Other") {
-      const existingAccount = await AccountDetailsModel.findOne({ EID: id });
-      if (!existingAccount) {
-        accountDetails = await AccountDetailsModel.create(
-          [
-            {
-              EID: id,
-              bankName: "",
-              accountNo: "",
-              IFSCNo: "",
-              totalBalance: 0,
-            },
-          ],
-          { session }
-        );
-      } else {
-        accountDetails = existingAccount; // Use the existing account
-      }
-    } else {
-      accountDetails = null; // Skip account creation for other roles
-    }
+    console.log(usersEmailData);
 
     insertedUsers.forEach((user, idx) => {
       sendVerificationEmail({ ...usersEmailData[idx], _id: user._id });
     });
+
     return {
       status: HttpStatusCodes.CREATED,
-      data: insertedUsers,
-      accountDetails
-    }
-    // return res.status(HttpStatusCodes.CREATED).send( { user: insertedUsers as any, accountDetails, resultStatus: HttpStatusCodes.CREATED } ); // Ensure it returns an object with a data property
+      data: updatedUsers,
+    };
   }
 );
+
 export const updateUserSkills = sessionHandler(
   async (req: Request, res: Response) => {
     const { EID } = req.params;
@@ -203,6 +171,40 @@ export const getAllUsersDetails = sessionHandler(
       UsersArraySchema.parse(typesArray);
       filter.role = { $in: typesArray };
     }
+
+    if (search !== "") filter.$text = { $search: search };
+
+    const users = await User.paginate(filter, {
+      offset: pageNum * 9,
+      limit: 9,
+      select: {
+        EID: 1,
+        email: 1,
+        fullName: 1,
+        role: 1,
+        phone: 1,
+        gender: 1,
+        workmode: 1,
+        img: 1,
+        freelanceRating: 1,
+        freelanceRewardPoints: 1,
+        gigsCompleted: 1,
+        DID: 1,
+      },
+    });
+
+    return {
+      status: HttpStatusCodes.OK,
+      data: users,
+    };
+  }
+);
+
+export const getAllEmpDetails = sessionHandler(
+  async (req: Request, res: Response) => {
+    const { page = 1, search = "" } = req.query;
+    const filter: any = { role: "Employee" }; // Filter for role="Employee"
+    const pageNum = Number(page) - 1;
 
     if (search !== "") filter.$text = { $search: search };
 
@@ -498,7 +500,6 @@ userControlRouter.get(
   getAllUsers
 );
 userControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteUserByID);
-userControlRouter.get("/emp", checkAuth([]), getAllEmployees);
 userControlRouter.get("/get-user/:ID", checkAuth([]), getUserById);
 userControlRouter.get("/my-gigs", checkAuth([]), getGigsByUser);
 userControlRouter.post("/upload-img", checkAuth([]), uploadProfileImg);
@@ -511,6 +512,7 @@ userControlRouter.post(
 );
 userControlRouter.post("/resend-verify-mail", resendVerifyMail);
 userControlRouter.get("/users-details", checkAuth([]), getAllUsersDetails);
+userControlRouter.get("/emp-details", checkAuth([]), getAllEmpDetails);
 userControlRouter.get(
   "/users-under-manager",
   checkAuth([UserRole.Manager]),

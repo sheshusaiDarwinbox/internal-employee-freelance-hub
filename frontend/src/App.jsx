@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import GigPage from "./pages/GigPage";
@@ -9,7 +10,7 @@ import {
   userSidebarNavLinks,
 } from "./utils/sidebarUtils";
 import AllGigs from "./pages/Gigs";
-import Leaderboard from "./pages/Leaderboard";
+
 import Profile from "./pages/Profile";
 import ChatPage from "./pages/ChatPage";
 import ManagePositions from "./pages/ManagePositions";
@@ -159,7 +160,6 @@ function App() {
               <Route path="gig/:id" element={<GigPage />} />
               <Route path="gig-assign/:GigID" element={<GigAssignPage />} />
               <Route path="users/:userId" element={<UserProfile />} />
-              <Route path="requests" element={<Requests />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

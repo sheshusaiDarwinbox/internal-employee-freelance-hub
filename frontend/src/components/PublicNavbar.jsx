@@ -10,7 +10,7 @@ const Navbar = () => {
           to="/"
           className="flex items-center space-x-3 rtl:space-x-reverse"
         >
-          <img src={logo} className="h-16" alt="Flowbite Logo" />
+          <img src={logo} className="h-16" alt=" Logo" />
           <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
             Talent Hive
           </span>

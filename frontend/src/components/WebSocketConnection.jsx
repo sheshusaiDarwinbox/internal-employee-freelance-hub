@@ -41,7 +41,7 @@ const WebSocketComponent = () => {
 
   return (
     <div>
-      <h2>
+      <h2 className="hidden">
         WebSocket Connection Status: {connected ? "Connected" : "Disconnected"}
       </h2>
     </div>
