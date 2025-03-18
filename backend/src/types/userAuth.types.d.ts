@@ -32,14 +32,7 @@ export interface UserAuth {
   accountBalance?: number;
   img?: string;
   fullName?: string;
-  lastMessages: {
-    [userId: string]: {
-      message: string;
-      timestamp: Date;
-      unread: boolean;
-    };
-  };
-  
+  gigsCompleted?: number;
 }
 
 export type UserAuthModel = Model<UserAuth>;

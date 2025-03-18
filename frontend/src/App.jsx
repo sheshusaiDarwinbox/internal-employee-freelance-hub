@@ -32,7 +32,8 @@ const PublicRoute = lazy(() => import("./components/PublicRoute"));
 const PublicLayout = lazy(() => import("./layouts/PublicLayout"));
 const UserProfile = lazy(() => import("../src/pages/UserProfile"));
 const UpdateUser = lazy(() => import("../src/pages/UpdateUsers"));
-const Requests = lazy(() => import("../src/pages/requests"));
+const MyHistory = lazy(() => import("../src/pages/MyHistory"));
+const Leaderboard = lazy(() => import("../src/pages/LeaderBoard"));
 
 const styles = `
   body {
@@ -107,7 +108,7 @@ function App() {
               <Route path="rewards" element={<Rewards />} />
               <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="all-gigs" element={<AllGigs />} />
-              <Route path="work-history" element={<MyGigs />} />
+              <Route path="work-history" element={<MyHistory />} />
               <Route path="my-activity" element={<MyActivity />} />
               <Route path="profile" element={<Profile />} />
               <Route path="my-account" element={<MyAccount />} />
@@ -128,11 +129,12 @@ function App() {
               <Route index element={<AllGigs />} />
               <Route path="all-gigs" index element={<AllGigs />} />
               <Route path="departments" element={<DepartmentManagement />} />
+              <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="profile" element={<Profile />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="users" element={<ManageUsers />} />
               <Route path="positions" element={<ManagePositions />} />
-              <Route path="requests" element={<Requests />} />
+              <Route path="users/:userId" element={<UserProfile />} />
             </Route>
 
             <Route
@@ -150,11 +152,12 @@ function App() {
               <Route path="my-gigs" element={<MyGigs />} />
               <Route path="all-gigs" element={<AllGigs />} />
               <Route path="post-gigs" element={<PostGigs />} />
+              <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="users" element={<UpdateUser />} />
               <Route path="profile" element={<Profile />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="gig/:id" element={<GigPage />} />
-              <Route path="gig-assign/:id" element={<GigAssignPage />} />
+              <Route path="gig-assign/:GigID" element={<GigAssignPage />} />
               <Route path="users/:userId" element={<UserProfile />} />
               <Route path="requests" element={<Requests />} />
             </Route>

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { TextInput, Button, Table, Modal } from "flowbite-react";
 import { HiSearch, HiPencil } from "react-icons/hi";
-import Paginate from "../components/Paginate"; // Custom Pagination Component (you can implement this)
+import Paginate from "../components/Paginate";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
@@ -53,7 +52,7 @@ const UsersPage = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await api.get("api/users", {
+        const response = await api.get("api/users/users-under-manager", {
           withCredentials: true,
         });
         setUsers(response.data.docs);

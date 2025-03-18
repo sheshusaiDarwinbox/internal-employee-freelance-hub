@@ -1,479 +1,675 @@
-import { useState, useEffect } from "react";
-import { Textarea } from "flowbite-react"; // Import Textarea component
+import React, { useState, useEffect, useRef } from "react";
 import {
-  Button,
-  Modal,
-  Dropdown,
-  TextInput,
-  Card,
-  Pagination,
-} from "flowbite-react";
-import { HiSearch } from "react-icons/hi";
-import api from "../utils/api";
-import defaultGig from "../assets/gig.jpeg";
+  Search,
+  X,
+  Star,
+  Clock,
+  User,
+  Mail,
+  Send,
+  Building2,
+  Code2,
+  AlertCircle,
+  ChevronDown,
+} from "lucide-react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import api from "../utils/api";
+import { debounce } from "lodash";
+import SearchableSelect from "../components/SearchableSelect";
 
-const AllGigs = () => {
+function App() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [selectedDepartments, setSelectedDepartments] = useState([]);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [openModal, setOpenModal] = useState(false);
-  const [openBidModal, setOpenBidModal] = useState(false); // For bid modal
-  const [openReferModal, setOpenReferModal] = useState(false); // For refer modal
+  const [openBidModal, setOpenBidModal] = useState(false);
+  const [openReferModal, setOpenReferModal] = useState(false);
   const [selectedGig, setSelectedGig] = useState(null);
   const [gigs, setGigs] = useState([]);
-  const [totalGigs, setTotalGigs] = useState(0); // total gigs count
+  const [totalGigs, setTotalGigs] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(6); // Items per page
+  const [pageSize] = useState(6);
+  const [bidDescription, setBidDescription] = useState("");
+  const [referName, setReferName] = useState("");
+  const [referEmail, setReferEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [approvalStatus, setApprovalStatus] = useState("APPROVED");
+  const [isDepartmentDropdownOpen, setIsDepartmentDropdownOpen] =
+    useState(false);
+  const departmentDropdownRef = useRef(null);
+
   const user = useSelector((state) => state.auth.user);
-  
-  const fetchGigs = async (page = 1) => {
+  const navigate = useNavigate();
+
+  const debouncedSearch = debounce(async (query) => {
     try {
       const response = await api.get("api/gigs", {
-        params: { page, limit: pageSize },
+        params: {
+          page: currentPage,
+          search: query,
+          DIDs: selectedDepartments.map((dept) => dept.DID),
+          approvalStatus,
+        },
         withCredentials: true,
       });
       setGigs(response.data.docs);
       setTotalGigs(response.data.totalDocs);
     } catch (error) {
+      setError("Failed to fetch gigs");
       console.error("Error fetching gigs:", error);
     }
-  };
+  }, 300);
 
-  const handleOpenModal = (gig) => {
-    setSelectedGig(gig);
-    setOpenModal(true);
+  const fetchGigs = async (page = 1) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.get("api/gigs", {
+        params: {
+          page,
+          search: searchQuery,
+          DIDs: selectedDepartments.map((dept) => dept.DID),
+          approvalStatus,
+        },
+        withCredentials: true,
+      });
+      setGigs(response.data.docs);
+      setTotalGigs(response.data.totalDocs);
+    } catch (error) {
+      setError("Failed to fetch gigs");
+      console.error("Error fetching gigs:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchGigs(currentPage);
-  }, [currentPage]);
+  }, [currentPage, selectedDepartments, approvalStatus]);
 
-  const departments = [...new Set(gigs.map((gig) => gig.DID))];
-  const allSkills = [
-    ...new Set(gigs.flatMap((gig) => gig.skills.map((skill) => skill.skill))),
-  ];
+  useEffect(() => {
+    debouncedSearch(searchQuery);
+    return () => debouncedSearch.cancel();
+  }, [searchQuery]);
 
-  const filteredGigs = gigs.filter((gig) => {
-    const matchesSearch =
-      gig.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      gig.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDepartment =
-      !selectedDepartment || gig.DID === selectedDepartment;
-    const matchesSkills =
-      selectedSkills.length === 0 ||
-      selectedSkills.some((skill) =>
-        gig.skills.some((gSkill) => gSkill.name === skill)
-      );
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        departmentDropdownRef.current &&
+        !departmentDropdownRef.current.contains(event.target)
+      ) {
+        setIsDepartmentDropdownOpen(false);
+      }
+    }
 
-    return matchesSearch && matchesDepartment && matchesSkills;
-  });
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  const [bidDescription, setBidDescription] = useState("");
-  const [referName, setReferName] = useState("");
-  const [referEmail, setReferEmail] = useState("");
-  const [tags, setTags] = useState(""); // State for tags
-
-  const submitReferral = async () => {
-    const gigID = selectedGig.GigID; // Assuming selectedGig is defined
-    const EID = user.EID; // Assuming user is available
-    const email = referEmail; // Use email from input
-    const name = referName; // Use name from input
-    const skillset = tags.split(",").map(tag => tag.trim()); // Convert tags to array
-
+  const handleBidSubmit = async () => {
     try {
-      await api.post(`http://localhost:3000/api/requests/create/${gigID}`, {
-        GigID: gigID,
-        EID: EID,
-        email: email,
-        name: name,
-        skillset: skillset,
-      });
-      // Handle success (e.g., show a success message)
+      await api.post(
+        "api/bids/post",
+        {
+          GigID: selectedGig.GigID,
+          EID: user.EID,
+          description: bidDescription,
+        },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+      setOpenBidModal(false);
+      setBidDescription("");
+      fetchGigs(currentPage);
     } catch (error) {
-      console.error("Error creating referral:", error);
-      // Handle error (e.g., show an error message)
+      setError("Failed to submit bid");
+      console.error("Error submitting bid:", error);
     }
   };
 
-  return (
-    <div className="p-6 bg-gray-50">
-      {/* Search and Filter Section */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <TextInput
-            icon={HiSearch}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search gigs..."
-            className="py-2 px-4 text-lg rounded-full bg-gray-100 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 placeholder-gray-500 transition-all duration-200 ease-in-out transform hover:scale-105 w-full md:w-64"
-          />
+  const handleReferSubmit = async () => {
+    try {
+      await api.post(
+        "api/referrals/post",
+        {
+          GigID: selectedGig.GigID,
+          referrerEID: user.EID,
+          name: referName,
+          email: referEmail,
+        },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+      setOpenReferModal(false);
+      setReferName("");
+      setReferEmail("");
+    } catch (error) {
+      setError("Failed to submit referral");
+      console.error("Error submitting referral:", error);
+    }
+  };
+
+  const fetchDepartments = async (search) => {
+    const response = await api.get(`api/departments/?search=${search}`, {
+      withCredentials: true,
+    });
+    return response.data.docs;
+  };
+
+  const handleDepartmentSelect = (department) => {
+    if (!selectedDepartments.find((dept) => dept.DID === department.DID)) {
+      setSelectedDepartments([...selectedDepartments, department]);
+    }
+    setIsDepartmentDropdownOpen(false);
+  };
+
+  const handleRemoveDepartment = (departmentId) => {
+    setSelectedDepartments(
+      selectedDepartments.filter((dept) => dept.DID !== departmentId)
+    );
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2">
+          <AlertCircle size={24} />
+          <span>{error}</span>
         </div>
+      </div>
+    );
+  }
 
-        {/* Filter Section */}
-        <div className="flex gap-6 items-center mt-4 md:mt-0">
-          {/* Department Dropdown */}
-          <Dropdown
-            label={selectedDepartment || "Select Department"}
-            className="w-64"
-          >
-            <Dropdown.Item
-              onClick={() => setSelectedDepartment("")}
-              className="flex items-center gap-2 text-sm py-2 px-4 hover:bg-indigo-100 rounded-lg transition-all duration-200"
-            >
-              <span className="text-gray-700">All Departments</span>
-            </Dropdown.Item>
-            {departments.map((dept) => (
-              <Dropdown.Item
-                key={dept}
-                onClick={() => setSelectedDepartment(dept)}
-                className="flex items-center gap-2 text-sm py-2 px-4 hover:bg-indigo-100 rounded-lg transition-all duration-200"
-              >
-                <span className="text-gray-700">{dept}</span>
-              </Dropdown.Item>
-            ))}
-          </Dropdown>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="bg-white rounded-2xl shadow-lg p-6 space-y-6">
+          <div className="flex flex-col md:flex-row gap-4 items-start">
+            <div className="relative flex-1">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search gigs..."
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
 
-          {/* Skills Dropdown */}
-          <Dropdown label="Select Skills" className="w-64">
-            {allSkills.map((skill, idx) => (
-              <Dropdown.Item
-                key={idx}
-                onClick={() => {
-                  setSelectedSkills((prev) =>
-                    prev.includes(skill)
-                      ? prev.filter((s) => s !== skill)
-                      : [...prev, skill]
-                  );
-                }}
-                className="flex items-center gap-2 text-sm py-2 px-4 hover:bg-indigo-100 rounded-lg transition-all duration-200"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedSkills.includes(skill)}
-                  readOnly
-                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                />
-                <span className="text-gray-700">{skill}</span>
-              </Dropdown.Item>
-            ))}
-          </Dropdown>
+            <div className="flex flex-wrap gap-4">
+              <div className="relative" ref={departmentDropdownRef}>
+                <button
+                  onClick={() =>
+                    setIsDepartmentDropdownOpen(!isDepartmentDropdownOpen)
+                  }
+                  className={`px-4 py-3 rounded-xl border ${
+                    isDepartmentDropdownOpen || selectedDepartments.length > 0
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-blue-500"
+                  } flex items-center gap-2 min-w-[160px]`}
+                >
+                  <Building2
+                    size={20}
+                    className={`${
+                      selectedDepartments.length > 0
+                        ? "text-blue-500"
+                        : "text-gray-500"
+                    }`}
+                  />
+                  <span className="flex-1 text-left truncate">
+                    {selectedDepartments.length > 0
+                      ? `${selectedDepartments.length} Department${
+                          selectedDepartments.length > 1 ? "s" : ""
+                        }`
+                      : "Department"}
+                  </span>
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform ${
+                      isDepartmentDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-          {/* Clear Filters Button */}
-          {(selectedDepartment || selectedSkills.length > 0) && (
-            <Button
-              color="gray"
-              onClick={() => {
-                setSelectedDepartment("");
-                setSelectedSkills([]);
-              }}
-              className="py-2 px-6 bg-gray-600 text-white rounded-lg text-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-200 ease-in-out transform hover:scale-105"
-            >
-              Clear Filters
-            </Button>
-          )}
+                {isDepartmentDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 z-10 py-2">
+                    <div className="px-3 py-2">
+                      <SearchableSelect
+                        onChange={(department) =>
+                          handleDepartmentSelect(department)
+                        }
+                        fetchOptions={fetchDepartments}
+                        labelKey="name"
+                        valueKey="DID"
+                        placeholder="Search departments..."
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {selectedDepartments.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedDepartments.map((dept) => (
+                    <div
+                      key={dept.DID}
+                      className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg"
+                    >
+                      <Building2 size={16} />
+                      <span className="text-sm font-medium">{dept.name}</span>
+                      <button
+                        onClick={() => handleRemoveDepartment(dept.DID)}
+                        className="p-1 hover:bg-blue-100 rounded-full"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setSelectedDepartments([])}
+                    className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+                  >
+                    <X size={16} />
+                    Clear all
+                  </button>
+                </div>
+              )}
+
+              <div className="relative group">
+                <button
+                  onClick={() =>
+                    document
+                      .getElementById("skillsDropdown")
+                      .classList.toggle("hidden")
+                  }
+                  className="px-4 py-3 rounded-xl border border-gray-200 hover:border-blue-500 flex items-center gap-2"
+                >
+                  <Code2 size={20} className="text-gray-500" />
+                  <span>Skills ({selectedSkills.length})</span>
+                </button>
+                <div
+                  id="skillsDropdown"
+                  className="hidden absolute top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-10 max-h-64 overflow-y-auto"
+                >
+                  {skills.map((skill) => (
+                    <label
+                      key={skill}
+                      className="flex items-center px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSkills.includes(skill)}
+                        onChange={() => {
+                          setSelectedSkills((prev) =>
+                            prev.includes(skill)
+                              ? prev.filter((s) => s !== skill)
+                              : [...prev, skill]
+                          );
+                        }}
+                        className="mr-2"
+                      />
+                      {skill}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Gigs List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredGigs.map((gig, index) => (
-          <Card
-            key={index}
-            onClick={() => handleOpenModal(gig)}
-            className="bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.99] cursor-pointer border border-gray-200 rounded-xl overflow-hidden"
-          >
-            <div className="flex flex-col md:flex-row gap-6 p-6">
-              <div className="md:w-1/3">
-                <div className="relative group">
+      {isLoading ? (
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <>
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {gigs.map((gig) => (
+              <div
+                key={gig.GigID}
+                onClick={() => {
+                  setSelectedGig(gig);
+                  setOpenModal(true);
+                }}
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] cursor-pointer overflow-hidden group"
+              >
+                <div className="relative h-48">
                   <img
-                    src={gig.img || defaultGig}
+                    src={
+                      gig.img ||
+                      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=60"
+                    }
                     alt={gig.title}
-                    className="w-full h-56 object-cover rounded-lg shadow-md group-hover:shadow-lg transition-all duration-300"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                    <p className="text-white font-medium">
-                      Posted by: {gig.userauth[0].fullName}
-                    </p>
-                    <p className="text-gray-200 text-sm">
-                      {gig.department.name}
-                    </p>
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
-              </div>
 
-              <div className="md:w-2/3 flex flex-col justify-between">
-                <div>
+                <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-2xl font-bold text-gray-800 hover:text-blue-600 transition-colors">
+                    <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
                       {gig.title}
-                    </h2>
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                      {gig.ongoingStatus || "Active"}
+                    </h3>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        gig.ongoingStatus === "UnAssigned"
+                          ? "bg-blue-100 text-blue-800"
+                          : gig.ongoingStatus === "Ongoing"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {gig.ongoingStatus}
                     </span>
                   </div>
 
-                  <p className="text-gray-600 mb-4 line-clamp-3 text-base leading-relaxed">
+                  <p className="text-gray-600 mb-4 line-clamp-2">
                     {gig.description}
                   </p>
 
-                  <div className="flex flex-wrap gap-2 mb-6">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {gig.skills.map((skill, i) => (
                       <span
                         key={i}
-                        className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-100 transition-colors"
+                        className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm font-medium"
                       >
-                        {skill.name}
+                        {skill.skill}
                       </span>
                     ))}
                   </div>
-                </div>
 
-                <div className="flex flex-wrap justify-between items-center pt-4 border-t border-gray-100">
-                  <div className="flex gap-6">
-                    <div className="flex items-center">
-                      <div className="h-8 w-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex gap-4">
+                      <div className="flex items-center text-amber-500">
+                        <Star size={20} className="mr-1" />
+                        <span className="font-medium">{gig.rewardPoints}</span>
+                      </div>
+                      <div className="flex items-center text-green-600">
+                        <span className="text-2xl">₹ </span>
+                        <span className="text-2xl">{gig.amount}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center text-gray-500">
+                      <Clock size={16} className="mr-2" />
+                      <span className="text-sm">
+                        {new Date(gig.deadline).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="max-w-7xl mx-auto mt-8 flex justify-center">
+            <div className="flex gap-2">
+              {Array.from({ length: Math.ceil(totalGigs / pageSize) }).map(
+                (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                      currentPage === i + 1
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {openModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {selectedGig?.title}
+                </h2>
+                <button
+                  onClick={() => setOpenModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <img
+                  src={
+                    selectedGig?.img ||
+                    "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=60"
+                  }
+                  alt={selectedGig?.title}
+                  className="w-full h-64 object-cover rounded-xl"
+                />
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Description
+                    </h3>
+                    <p className="text-gray-600">{selectedGig?.description}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Skills Required
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedGig?.skills.map((skill, i) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm font-medium"
                         >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      </div>
-                      <span className="ml-2 font-semibold text-gray-700">
-                        {gig.rewardPoints} Points
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="h-8 w-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-                        ₹
-                      </div>
-                      <span className="ml-2 font-semibold text-gray-700">
-                        {gig.amount}
-                      </span>
+                          {skill.skill}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="flex items-center text-gray-500">
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium">
-                      Deadline: {new Date(gig.deadline).toLocaleDateString()}
-                    </span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-xl">
+                      <div className="text-sm text-gray-500">Department</div>
+                      <div className="font-medium text-gray-900">
+                        {selectedGig?.department.name}
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-xl">
+                      <div className="text-sm text-gray-500">Posted By</div>
+                      <div className="font-medium text-gray-900">
+                        {selectedGig?.userauth[0].fullName}
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-xl">
+                      <div className="text-sm text-gray-500">Reward Points</div>
+                      <div className="font-medium text-gray-900">
+                        {selectedGig?.rewardPoints}
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-xl">
+                      <div className="text-sm text-gray-500">Amount</div>
+                      <div className="font-medium text-gray-900">
+                        ${selectedGig?.amount}
+                      </div>
+                    </div>
                   </div>
+                </div>
+
+                <div className="flex justify-end gap-4 pt-6 border-t">
+                  <button
+                    onClick={() => setOpenModal(false)}
+                    className="px-6 py-2 rounded-xl border border-gray-200 hover:bg-gray-50"
+                  >
+                    Close
+                  </button>
+                  {user?.role === "Employee" &&
+                    selectedGig.ongoingStatus === "UnAssigned" && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setOpenModal(false);
+                            setOpenBidModal(true);
+                          }}
+                          className="px-6 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                        >
+                          Place Bid
+                        </button>
+                        <button
+                          onClick={() => {
+                            setOpenModal(false);
+                            setOpenReferModal(true);
+                          }}
+                          className="px-6 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700"
+                        >
+                          Refer
+                        </button>
+                      </>
+                    )}
                 </div>
               </div>
             </div>
-          </Card>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center mt-6">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(totalGigs / pageSize)}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
-      </div>
-
-      {/* Gig Detail Modal */}
-      <Modal show={openModal} onClose={() => setOpenModal(false)} size="xl">
-        <Modal.Header>
-          <div className="text-xl font-semibold text-gray-900">
-            {selectedGig?.title}
           </div>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="space-y-6">
-            <div className="flex gap-6">
-              <img
-                src={selectedGig?.img || defaultGig}
-                alt="Gig"
-                className="w-1/3 rounded-lg shadow-md object-cover"
+        </div>
+      )}
+
+      {openBidModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Place Your Bid
+                </h2>
+                <button
+                  onClick={() => setOpenBidModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <textarea
+                value={bidDescription}
+                onChange={(e) => setBidDescription(e.target.value)}
+                placeholder="Describe why you're the best fit for this gig..."
+                className="w-full h-32 p-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
-              <div className="w-2/3 space-y-4">
-                <div>
-                  <h4 className="font-semibold text-gray-900">Description</h4>
-                  <p className="text-gray-700 mt-1">
-                    {selectedGig?.description}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Technologies</h4>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedGig?.skills.map((tag, i) => (
-                      <span
-                        key={i}
-                        className="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full text-sm font-medium"
-                      >
-                        {tag.skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Department</h4>
-                    <p className="text-gray-700 mt-1">
-                      {selectedGig?.department.name}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Posted By</h4>
-                    <p className="text-gray-700 mt-1">
-                      {selectedGig?.userauth[0].fullName}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">
-                      Reward Points
-                    </h4>
-                    <p className="text-gray-700 mt-1">
-                      {selectedGig?.rewardPoints}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Amount</h4>
-                    <p className="text-gray-700 mt-1">{selectedGig?.amount}</p>
-                  </div>
-                </div>
+
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  onClick={() => setOpenBidModal(false)}
+                  className="px-6 py-2 rounded-xl border border-gray-200 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBidSubmit}
+                  className="px-6 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <Send size={20} />
+                  Submit Bid
+                </button>
               </div>
             </div>
           </div>
-        </Modal.Body>
-        <Modal.Footer className="flex justify-between w-full">
-          <Button
-            onClick={() => setOpenModal(false)}
-            className="bg-gray-300 text-gray-800 hover:bg-gray-400"
-          >
-            Close
-          </Button>
+        </div>
+      )}
 
-          {user.role === "Employee" && (
-            <div className="flex gap-4 ml-auto">
-              <Button
-                onClick={() => setOpenBidModal(true)} // Open bid modal
-                className="bg-blue-600 text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 rounded-lg"
-              >
-                Bid
-              </Button>
+      {openReferModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Refer Someone
+                </h2>
+                <button
+                  onClick={() => setOpenReferModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X size={24} />
+                </button>
+              </div>
 
-              <Button
-                onClick={() => setOpenReferModal(true)} // Open refer modal
-                className="bg-green-600 text-white hover:bg-green-700 focus:ring-4 focus:ring-green-200 rounded-lg"
-              >
-                Refer
-              </Button>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Name
+                  </label>
+                  <div className="relative">
+                    <User
+                      size={20}
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                      type="text"
+                      value={referName}
+                      onChange={(e) => setReferName(e.target.value)}
+                      placeholder="Enter name"
+                      className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail
+                      size={20}
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                      type="email"
+                      value={referEmail}
+                      onChange={(e) => setReferEmail(e.target.value)}
+                      placeholder="Enter email"
+                      className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  onClick={() => setOpenReferModal(false)}
+                  className="px-6 py-2 rounded-xl border border-gray-200 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleReferSubmit}
+                  className="px-6 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 flex items-center gap-2"
+                >
+                  <Send size={20} />
+                  Submit Referral
+                </button>
+              </div>
             </div>
-          )}
-        </Modal.Footer>
-      </Modal>
-
-      {/* Bid Modal */}
-      <Modal show={openBidModal} onClose={() => setOpenBidModal(false)}>
-        <Modal.Header>Submit Your Bid</Modal.Header>
-        <Modal.Body>
-          <div className="space-y-4">
-            <TextInput
-              value={bidDescription}
-              onChange={(e) => setBidDescription(e.target.value)}
-              placeholder="Enter a short description for your bid"
-              className="w-full"
-            />
           </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            color="gray"
-            onClick={() => setOpenBidModal(false)}
-            className="bg-gray-300 text-gray-800 hover:bg-gray-400"
-          >
-            Close
-          </Button>
-          <Button
-            onClick={async () => {
-              // handle bid submission logic here
-              console.log("Bid Description:", bidDescription);
-
-              const response = await api.post(
-                "api/bids/post",
-                {
-                  GigID: selectedGig.GigID,
-                  EID: user.EID,
-                  description: bidDescription,
-                },
-                {
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  withCredentials: true,
-                }
-              );
-
-              console.log(response);
-              setOpenBidModal(false);
-            }}
-            className="bg-blue-600 text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 rounded-lg"
-          >
-            Submit Bid
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Refer Modal */}
-      <Modal show={openReferModal} onClose={() => setOpenReferModal(false)}>
-        <Modal.Header>Submit a Referral</Modal.Header>
-        <Modal.Body>
-          <div className="space-y-4">
-            <TextInput
-              value={referName}
-              onChange={(e) => setReferName(e.target.value)}
-              placeholder="Enter Name"
-              className="w-full"
-            />
-            <TextInput
-              value={referEmail}
-              onChange={(e) => setReferEmail(e.target.value)}
-              placeholder="Enter Email"
-              className="w-full"
-            />
-            <Textarea
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="Enter tags separated by commas"
-            />
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            color="gray"
-            onClick={() => setOpenReferModal(false)}
-            className="bg-gray-300 text-gray-800 hover:bg-gray-400"
-          >
-            Close
-          </Button>
-          <Button
-            onClick={submitReferral}
-            className="bg-green-600 text-white hover:bg-green-700 focus:ring-4 focus:ring-green-200 rounded-lg"
-          >
-            Submit Referral
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        </div>
+      )}
     </div>
   );
-};
+}
 
-export default AllGigs;
+export default App;

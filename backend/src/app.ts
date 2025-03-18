@@ -8,8 +8,24 @@ import "./strategies/local.strategy";
 import { indexRouter } from "./routes/index.routes";
 import cors from "cors";
 
+export const createSessionStore = () => {
+  return MongoStore.create({
+    client: mongoose.connection.getClient(),
+    collectionName: "sessions", // optional, default is 'sessions'
+  });
+};
+
 export const createApp = () => {
   const app = express();
+  const sessionMiddleware = session({
+    secret: "secret",
+    saveUninitialized: false,
+    resave: false,
+    cookie: {
+      maxAge: 60000 * 60,
+    },
+    store: createSessionStore(),
+  });
   app.use(
     cors({
       origin: "http://localhost:5173",
@@ -21,23 +37,11 @@ export const createApp = () => {
   app.use(express.static("./public"));
   app.use(express.json());
   app.use(cookieParser());
-  app.use(
-    session({
-      secret: "secret",
-      saveUninitialized: false,
-      resave: false,
-      cookie: {
-        maxAge: 60000 * 60,
-      },
-      store: MongoStore.create({
-        client: mongoose.connection.getClient(),
-      }),
-    })
-  );
+  app.use(sessionMiddleware);
   app.use(passport.initialize());
   app.use(passport.session());
   app.use("/api", indexRouter);
     
 
-  return app;
+  return { app, sessionMiddleware };
 };

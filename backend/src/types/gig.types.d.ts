@@ -33,6 +33,7 @@ export interface GigSchema extends Document {
   amount?: number;
   feedback?: string;
   img?: string;
+  completedAt?: Date;
 }
 
 export type GigModel = Model<GigSchema>;

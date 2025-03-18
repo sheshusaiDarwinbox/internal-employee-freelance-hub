@@ -124,7 +124,7 @@ export default function PostGigs() {
       } else {
         console.error("Error uploading file");
       }
-      console.log(response.data.key);
+      console.log(response.data);
       setFormData({
         ...formData,
         img: response.data.key,
@@ -384,7 +384,7 @@ export default function PostGigs() {
                             setImagePreview("");
                             imageInputRef.current.value = "";
                           }}
-                          className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 
+                          className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1
                   opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         >
                           <svg
@@ -436,11 +436,11 @@ export default function PostGigs() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-50 
-    rounded-md border border-gray-200 
+                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-gray-50
+    rounded-md border border-gray-200
     hover:bg-gray-100 hover:border-gray-300
-    active:scale-95 
-    focus:outline-none focus:ring-2 focus:ring-gray-200 
+    active:scale-95
+    focus:outline-none focus:ring-2 focus:ring-gray-200
     transition-all duration-200 ease-in-out"
               >
                 Reset
@@ -448,7 +448,7 @@ export default function PostGigs() {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2.5 text-sm font-medium text-white 
+                className="px-6 py-2.5 text-sm font-medium text-white
     bg-gradient-to-r from-slate-700 to-slate-800
     rounded-md shadow-sm
     hover:from-slate-800 hover:to-slate-900
