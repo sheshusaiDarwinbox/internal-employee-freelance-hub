@@ -21,7 +21,7 @@ export const userVerifyController = Router();
 
 userVerifyController.get(
   "/verify/:ID/:verifyString",
-  sessionHandler(async (req, res) => {
+  sessionHandler(async (req) => {
     const { ID, verifyString } = req.params;
     const verifyInfo: UserVerificationType | null =
       await UserVerification.findOne({ _id: ID });
@@ -42,7 +42,11 @@ userVerifyController.get(
     await UserVerification.deleteOne({ _id: ID });
     const filePath = join(__dirname, "../public/accountVerified.html");
     const htmlContent = await readFile(filePath, "utf-8");
-    res.status(HttpStatusCodes.OK).send(htmlContent);
+    // res.status(HttpStatusCodes.OK).send(htmlContent);
+    return {
+      status: HttpStatusCodes.OK,
+      data: htmlContent,
+    };
   })
 );
 

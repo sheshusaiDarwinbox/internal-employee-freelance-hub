@@ -58,6 +58,7 @@ const ManageUsers = () => {
       setShowDeleteModal(false);
       setSelectedUser(null);
     } catch (error) {
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -138,7 +139,7 @@ const ManageUsers = () => {
 
       setLoading(true);
 
-      const user = await api.post(`api/users/create`, [validatedData], {
+      await api.post(`api/users/create`, [validatedData], {
         headers: {
           "Content-Type": "application/json",
         },
@@ -215,6 +216,7 @@ const ManageUsers = () => {
           setUploadError("Invalid format. Required fields missing");
         }
       } catch (error) {
+        console.error(error);
         setUploadError("Error processing file");
       } finally {
         if (fileInputRef.current) {
@@ -232,8 +234,8 @@ const ManageUsers = () => {
       setLoading(true);
       await api.post("/api/users/bulk", { users: previewData });
       fetchUsers();
-      cancelPreview();
     } catch (error) {
+      console.error(error);
       setError("Failed to create users");
     } finally {
       setLoading(false);

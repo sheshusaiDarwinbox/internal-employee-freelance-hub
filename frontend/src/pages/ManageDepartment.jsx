@@ -33,7 +33,7 @@ const DepartmentManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize] = useState(6);
-  const [excelData, setExcelData] = useState(null);
+  const [setExcelData] = useState(null);
   const [previewData, setPreviewData] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -69,6 +69,7 @@ const DepartmentManagement = () => {
         }
       } catch (error) {
         setUploadError("Error processing file. Please check the format.");
+        console.error("Error processing file:", error);
       } finally {
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
@@ -105,25 +106,26 @@ const DepartmentManagement = () => {
       cancelPreview();
     } catch (error) {
       setError("Failed to create departments");
+      console.error("Error creating departments:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreate = (e) => {
-    e.preventDefault();
-    const newDepartment = {
-      ...formData,
-      id: Date.now(),
-    };
-    setDepartments([...departments, newDepartment]);
-    setFormData({
-      name: "",
-      description: "",
-      function: "Engineering",
-    });
-    setView("list");
-  };
+  // const handleCreate = (e) => {
+  //   e.preventDefault();
+  //   const newDepartment = {
+  //     ...formData,
+  //     id: Date.now(),
+  //   };
+  //   setDepartments([...departments, newDepartment]);
+  //   setFormData({
+  //     name: "",
+  //     description: "",
+  //     function: "Engineering",
+  //   });
+  //   setView("list");
+  // };
 
   const cancelPreview = () => {
     setExcelData(null);
@@ -150,6 +152,7 @@ const DepartmentManagement = () => {
         setError(null);
       } catch (err) {
         setError("Failed to fetch departments");
+        console.error("Error fetching departments:", err);
       } finally {
         setLoading(false);
       }
@@ -166,14 +169,14 @@ const DepartmentManagement = () => {
     setView(newView);
   }, []);
 
-  const handleUpdate = (department) => {
-    setFormData(department);
-    setView("form");
-  };
+  // const handleUpdate = (department) => {
+  //   setFormData(department);
+  //   setView("form");
+  // };
 
-  const handleDelete = (id) => {
-    setDepartments(departments.filter((dept) => dept._id !== id));
-  };
+  // const handleDelete = (id) => {
+  //   setDepartments(departments.filter((dept) => dept._id !== id));
+  // };
 
   const handleSearchChange = useCallback((e) => {
     setSearchQuery(e.target.value);
@@ -381,6 +384,7 @@ const DepartmentManagement = () => {
                     handleViewChange("list");
                   } catch (error) {
                     setError("Failed to create department");
+                    console.error("Error creating department:", error);
                   }
                 }}
               />

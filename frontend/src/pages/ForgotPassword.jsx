@@ -26,11 +26,11 @@ const ForgotPassword = () => {
           },
         }
       )
-      .then((data) => {
+      .then(() => {
         setLoading(false);
         setSuccessMeassage("Forgot Mail sent sucessfully");
       })
-      .catch((err) => {
+      .catch(() => {
         setLoading(false);
         setError("failed to send Mail");
       });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Search,
   X,
@@ -13,7 +13,6 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import { debounce } from "lodash";
 import SearchableSelect from "../components/SearchableSelect";
@@ -35,15 +34,13 @@ function App() {
   const [referEmail, setReferEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [departments, setDepartments] = useState([]);
-  const [skills, setSkills] = useState([]);
-  const [approvalStatus, setApprovalStatus] = useState("APPROVED");
+  const [skills] = useState([]);
+  const [approvalStatus] = useState("APPROVED");
   const [isDepartmentDropdownOpen, setIsDepartmentDropdownOpen] =
     useState(false);
   const departmentDropdownRef = useRef(null);
 
   const user = useSelector((state) => state.auth.user);
-  const navigate = useNavigate();
 
   const debouncedSearch = debounce(async (query) => {
     try {

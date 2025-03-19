@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Bell, MessageCircle, UserCircle, ChevronDown, X } from "lucide-react";
 import { useSelector } from "react-redux";
@@ -11,7 +11,7 @@ const Navbar = ({ linkName }) => {
   const { user } = useSelector((state) => state.auth);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
 
   const fetchNotifications = async () => {
     try {

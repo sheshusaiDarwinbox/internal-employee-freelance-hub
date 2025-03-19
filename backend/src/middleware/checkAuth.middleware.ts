@@ -10,7 +10,7 @@ export const checkAuth = (roles: Array<keyof typeof UserRole> | undefined) => {
         .json({ message: "Unauthorized" });
     }
     if (roles === undefined || roles?.length === 0) return next();
-    for (let role of roles) {
+    for (const role of roles) {
       if (req.user?.role === role) return next();
     }
 

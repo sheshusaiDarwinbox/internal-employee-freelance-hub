@@ -1,4 +1,4 @@
-import { Request, Response, Router } from "express";
+import { Router } from "express";
 import { sessionHandler } from "../utils/session.util";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
 import { extendedTechSkills } from "../utils/insertSkills.util";
@@ -18,26 +18,23 @@ const allowedMimeTypes = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ] as const;
 
-export const getSkillsList = sessionHandler(
-  async (req: Request, res: Response) => {
-    return {
-      status: HttpStatusCodes.OK,
-      data: extendedTechSkills,
-    };
-  }
-);
-
-const s3Client = new S3Client({
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-  region: process.env.S3_REGION,
+export const getSkillsList = sessionHandler(async () => {
+  return {
+    status: HttpStatusCodes.OK,
+    data: extendedTechSkills,
+  };
 });
 
-export const generatePresignedUrl = sessionHandler(async (req, res) => {
-  const { fileName } = req.body;
-  console.log(req.body);
+export const generatePresignedUrl = sessionHandler(async (req) => {
+  const s3Client = new S3Client({
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+    region: process.env.S3_REGION,
+  });
+
+  const { fileName } = req?.body;
 
   const extension = path.extname(fileName);
   const contentType = mime.lookup(fileName) || "application/octet-stream";

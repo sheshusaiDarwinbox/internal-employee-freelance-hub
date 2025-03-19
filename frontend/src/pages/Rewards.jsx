@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { Trophy, Coins, Gift, Star, Award, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Trophy, Coins, Gift, Star, TrendingUp } from "lucide-react";
 import { useSelector } from "react-redux";
 import api from "../utils/api";
 import { formatDate } from "../utils/dateUtils";
 
 function App() {
   const [gigs, setGigs] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   const user = useSelector((state) => state.auth.user);
   const EID = user?.EID;

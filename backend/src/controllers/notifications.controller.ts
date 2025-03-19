@@ -6,7 +6,7 @@ import { Notification } from "../types/notification.types";
 
 export const notificationControllRouter = Router();
 
-export const getNotifications = sessionHandler(async (req, res) => {
+export const getNotifications = sessionHandler(async (req) => {
   const EID = req?.user?.EID;
   const { page = 1 } = req.query;
 
@@ -34,7 +34,7 @@ export const getNotifications = sessionHandler(async (req, res) => {
   };
 });
 
-export const markAsRead = sessionHandler(async (req, res) => {
+export const markAsRead = sessionHandler(async (req) => {
   const { NID } = req.body;
   const notification: Notification | null = await NotificationModel.findOne({
     NID: NID,

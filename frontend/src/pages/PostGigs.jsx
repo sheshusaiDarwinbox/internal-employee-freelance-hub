@@ -4,20 +4,20 @@ import { extendedTechSkills } from "../utils/constants.util";
 import api from "../utils/api";
 import { useSelector } from "react-redux";
 
-const CreateGigZodSchema = z.object({
-  ManagerID: z.string().regex(/^[a-zA-Z0-9]+$/),
-  title: z.string().regex(/^[a-zA-Z0-9\s.,!?()&]+$/),
-  skills: z.array(
-    z.object({
-      skill: z.enum(extendedTechSkills),
-      weight: z.number().min(0).max(1),
-    })
-  ),
-  amount: z.number().int().gte(0),
-  deadline: z.string().refine((val) => !isNaN(Date.parse(val))),
-  description: z.string().regex(/^[a-zA-Z0-9\s.,!?()&]+$/),
-  img: z.string(),
-});
+// const CreateGigZodSchema = z.object({
+//   ManagerID: z.string().regex(/^[a-zA-Z0-9]+$/),
+//   title: z.string().regex(/^[a-zA-Z0-9\s.,!?()&]+$/),
+//   skills: z.array(
+//     z.object({
+//       skill: z.enum(extendedTechSkills),
+//       weight: z.number().min(0).max(1),
+//     })
+//   ),
+//   amount: z.number().int().gte(0),
+//   deadline: z.string().refine((val) => !isNaN(Date.parse(val))),
+//   description: z.string().regex(/^[a-zA-Z0-9\s.,!?()&]+$/),
+//   img: z.string(),
+// });
 
 export default function PostGigs() {
   const [formData, setFormData] = useState({
@@ -37,7 +37,6 @@ export default function PostGigs() {
   const [newSkill, setNewSkill] = useState("");
   const [weight, setWeight] = useState("");
   const [errors, setErrors] = useState({});
-  const user = useSelector((state) => state.auth.user);
   const imageInputRef = useRef(null);
   const initialFormState = {
     title: "",
@@ -124,14 +123,20 @@ export default function PostGigs() {
       } else {
         console.error("Error uploading file");
       }
-      console.log(response.data);
-      setFormData({
-        ...formData,
+      setFormData((prev) => ({
+        ...prev,
         img: response.data.key,
-      });
-      console.log(formData);
+      }));
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors(error.formErrors.fieldErrors);
+      }
+    }
+  };
 
-      const responseData = await api.post("api/gigs/post", formData, {
+  useEffect(() => {
+    const postGig = async () => {
+      await api.post("api/gigs/post", formData, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -146,14 +151,10 @@ export default function PostGigs() {
         amount: 0,
         deadline: "",
       });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        setErrors(error.formErrors.fieldErrors);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    if (formData.img && formData.img !== "") postGig();
+    setLoading(false);
+  }, [formData]);
 
   return (
     <div className="bg-gradient-to-br from-slate-50 to-gray-100 py-12 px-4">

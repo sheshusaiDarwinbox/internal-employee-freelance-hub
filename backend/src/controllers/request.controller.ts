@@ -29,33 +29,37 @@ export const createRequest = sessionHandler(
   }
 );
 
-export const getReceivedRequests = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { page = 0 } = req.params;
-    const requests = await RequestModel.paginate(
-      { To: req.user?.EID },
-      {
-        offset: Number(page) * 10,
-        limit: 10,
-      }
-    );
-    res.status(HttpStatusCodes.OK).send(requests);
-  }
-);
+export const getReceivedRequests = sessionHandler(async (req: Request) => {
+  const { page = 0 } = req.params;
+  const requests = await RequestModel.paginate(
+    { To: req.user?.EID },
+    {
+      offset: Number(page) * 10,
+      limit: 10,
+    }
+  );
+  // res.status(HttpStatusCodes.OK).send(requests);
+  return {
+    status: HttpStatusCodes.OK,
+    data: requests,
+  };
+});
 
-export const getSentRequests = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { page = 0 } = req.params;
-    const requests = await RequestModel.paginate(
-      { From: req.user?.EID },
-      {
-        offset: Number(page) * 10,
-        limit: 10,
-      }
-    );
-    res.status(HttpStatusCodes.OK).send(requests);
-  }
-);
+export const getSentRequests = sessionHandler(async (req: Request) => {
+  const { page = 0 } = req.params;
+  const requests = await RequestModel.paginate(
+    { From: req.user?.EID },
+    {
+      offset: Number(page) * 10,
+      limit: 10,
+    }
+  );
+  // res.status(HttpStatusCodes.OK).send(requests);
+  return {
+    status: HttpStatusCodes.OK,
+    data: requests,
+  };
+});
 
 requestControlRouter.post(
   "/create",

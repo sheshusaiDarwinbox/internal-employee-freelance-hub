@@ -15,15 +15,16 @@ import { BidModel } from "../models/bid.model";
 import { Bid } from "../types/bid.types";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidV4 } from "uuid";
-import { GigSchema } from "../types/gig.types";
+import { GigModel, GigSchema } from "../types/gig.types";
 import multer from "multer";
 import { NotificationModel } from "../models/notification.model";
+import { FilterQuery } from "mongoose";
 const upload = multer();
 
 export const gigControlRouter = Router();
 
 export const createGig = sessionHandler(
-  async (req: Request, res: Response, session) => {
+  async (req: Request, _res: Response, session) => {
     console.log(req.body);
     req.body.ManagerID = req.user?.EID;
     req.body.rewardPoints = parseInt(req.body.rewardPoints);
@@ -70,133 +71,125 @@ export const createGig = sessionHandler(
   }
 );
 
-export const getAllGigs = sessionHandler(
-  async (req: Request, res: Response) => {
-    const {
-      DIDs,
-      ManagerIDs,
-      search,
-      page = 1,
-      approvalStatus = "APPROVED",
-    } = req.query;
+export const getAllGigs = sessionHandler(async (req: Request) => {
+  const {
+    DIDs,
+    ManagerIDs,
+    search,
+    page = 1,
+    approvalStatus = "APPROVED",
+  } = req.query;
 
-    const parsedManagerIDs = splitStringByCommas(ManagerIDs as string);
-    let filter: any = {};
-    if (DIDs) {
-      z.array(
-        z
-          .string()
-          .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
-      ).parse(DIDs);
-      filter.DID = { $in: DIDs };
-    }
-    if (parsedManagerIDs) {
-      z.array(
-        z
-          .string()
-          .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
-      ).parse(parsedManagerIDs);
-      filter.ManagerID = { $in: parsedManagerIDs };
-    }
-    if (search && search !== "") {
-      z.string().regex(
-        /^[a-zA-Z0-9\s.,!?()&]+$/,
-        "search must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
-      );
-      filter = {
-        ...filter,
-        $text: { $search: search },
-      };
-    }
-    filter.approvalStatus = approvalStatus;
+  const parsedManagerIDs = splitStringByCommas(ManagerIDs as string);
+  let filter: FilterQuery<GigModel> = {};
+  if (DIDs) {
+    z.array(
+      z.string().regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
+    ).parse(DIDs);
+    filter.DID = { $in: DIDs };
+  }
+  if (parsedManagerIDs) {
+    z.array(
+      z.string().regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
+    ).parse(parsedManagerIDs);
+    filter.ManagerID = { $in: parsedManagerIDs };
+  }
+  if (search && search !== "") {
+    z.string().regex(
+      /^[a-zA-Z0-9\s.,!?()&]+$/,
+      "search must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
+    );
+    filter = {
+      ...filter,
+      $text: { $search: search as string },
+    };
+  }
+  filter.approvalStatus = approvalStatus;
 
-    const gigs = await Gig.aggregate([
-      { $match: filter },
-      { $skip: (Number(page) - 1) * 6 },
-      { $limit: 6 },
-      {
-        $lookup: {
-          from: "departments",
-          localField: "DID",
-          foreignField: "DID",
-          as: "department",
-        },
+  const gigs = await Gig.aggregate([
+    { $match: filter },
+    { $skip: (Number(page) - 1) * 6 },
+    { $limit: 6 },
+    {
+      $lookup: {
+        from: "departments",
+        localField: "DID",
+        foreignField: "DID",
+        as: "department",
       },
-      {
-        $lookup: {
-          from: "userauths",
-          localField: "ManagerID",
-          foreignField: "EID",
-          as: "userauth",
-        },
+    },
+    {
+      $lookup: {
+        from: "userauths",
+        localField: "ManagerID",
+        foreignField: "EID",
+        as: "userauth",
       },
-      {
-        $unwind: {
-          path: "$department",
-          preserveNullAndEmptyArrays: true,
-        },
+    },
+    {
+      $unwind: {
+        path: "$department",
+        preserveNullAndEmptyArrays: true,
       },
-      {
-        $project: {
-          GigID: 1,
-          DID: 1,
-          ManagerID: 1,
-          title: 1,
-          description: 1,
-          deadline: 1,
-          approvalStatus: 1,
-          ongoingStatus: 1,
-          skills: 1,
-          createdAt: 1,
-          rewardPoints: 1,
-          amount: 1,
-          img: 1,
-          "department.name": 1,
-          "userauth.fullName": 1,
-        },
+    },
+    {
+      $project: {
+        GigID: 1,
+        DID: 1,
+        ManagerID: 1,
+        title: 1,
+        description: 1,
+        deadline: 1,
+        approvalStatus: 1,
+        ongoingStatus: 1,
+        skills: 1,
+        createdAt: 1,
+        rewardPoints: 1,
+        amount: 1,
+        img: 1,
+        "department.name": 1,
+        "userauth.fullName": 1,
       },
-    ]);
+    },
+  ]);
 
-    const total = await Gig.countDocuments(filter);
+  const total = await Gig.countDocuments(filter);
 
-    const pageNum = Number(page) - 1;
+  const pageNum = Number(page) - 1;
+  return {
+    status: HttpStatusCodes.OK,
+    data: {
+      docs: gigs,
+      totalDocs: total,
+      limit: 6,
+      page: pageNum + 1,
+      totalPages: Math.ceil(total / 6),
+      hasNextPage: (pageNum + 1) * 6 < total,
+      nextPage: (pageNum + 1) * 6 < total ? pageNum + 2 : null,
+      hasPrevPage: pageNum > 0,
+      prevPage: pageNum > 0 ? pageNum : null,
+    },
+  };
+});
+
+export const getGigById = sessionHandler(async (req: Request) => {
+  const { GigID } = req.params;
+  const gig = await Gig.findOne({ GigID: GigID });
+  if (!gig)
     return {
-      status: HttpStatusCodes.OK,
+      status: HttpStatusCodes.BAD_REQUEST,
       data: {
-        docs: gigs,
-        totalDocs: total,
-        limit: 6,
-        page: pageNum + 1,
-        totalPages: Math.ceil(total / 6),
-        hasNextPage: (pageNum + 1) * 6 < total,
-        nextPage: (pageNum + 1) * 6 < total ? pageNum + 2 : null,
-        hasPrevPage: pageNum > 0,
-        prevPage: pageNum > 0 ? pageNum : null,
+        msg: "Gig not found",
       },
     };
-  }
-);
-
-export const getGigById = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { GigID } = req.params;
-    const gig = await Gig.findOne({ GigID: GigID });
-    if (!gig)
-      return {
-        status: HttpStatusCodes.BAD_REQUEST,
-        data: {
-          msg: "Gig not found",
-        },
-      };
-    return {
-      status: HttpStatusCodes.OK,
-      data: gig,
-    };
-  }
-);
+  return {
+    status: HttpStatusCodes.OK,
+    data: gig,
+  };
+});
 
 export const assignGig = sessionHandler(
-  async (req: Request, res: Response, session) => {
+  async (req: Request, _res: Response, session) => {
     const { GigID, BidID, EID } = req.body;
     console.log(req.body);
 
@@ -214,7 +207,7 @@ export const assignGig = sessionHandler(
         }
       );
 
-      const [notification] = await NotificationModel.create(
+      await NotificationModel.create(
         [
           {
             NID: await generateId(IDs.NID, session),
@@ -242,11 +235,11 @@ export const assignGig = sessionHandler(
   }
 );
 
-export const getMyGigs = sessionHandler(async (req: Request, res: Response) => {
+export const getMyGigs = sessionHandler(async (req: Request) => {
   const { page = 1, type = "Ongoing", search = "" } = req.query;
   const pageNum = Number(page);
 
-  let filter: any = {};
+  let filter: FilterQuery<GigModel> = {};
   filter.EID = req.user?.EID;
   const parsedTypes = splitStringByCommas(type as string);
   filter.ongoingStatus = { $in: parsedTypes };
@@ -257,7 +250,7 @@ export const getMyGigs = sessionHandler(async (req: Request, res: Response) => {
     );
     filter = {
       ...filter,
-      $text: { $search: search },
+      $text: { $search: search as string },
     };
   }
   const gigs = await Gig.paginate(filter, {
@@ -281,7 +274,7 @@ export const getMyGigs = sessionHandler(async (req: Request, res: Response) => {
 });
 
 export const updateGigProgress = sessionHandler(
-  async (req: Request, res: Response, session) => {
+  async (req: Request, _res: Response, session) => {
     const s3Client = new S3Client({
       region: process.env.S3_REGION,
       credentials: {
@@ -352,7 +345,7 @@ export const updateGigProgress = sessionHandler(
 
     const GigID = gig.GigID;
 
-    const [notification] = await NotificationModel.create(
+    await NotificationModel.create(
       [
         {
           NID: await generateId(IDs.NID, session),
@@ -373,7 +366,7 @@ export const updateGigProgress = sessionHandler(
 );
 
 export const updateGigReview = sessionHandler(
-  async (req: Request, res: Response, session) => {
+  async (req: Request, _res: Response, session) => {
     const { GigID } = req.params;
     const { feedback, rating } = req.body;
 
@@ -406,7 +399,7 @@ export const updateGigReview = sessionHandler(
 
     const user: UserAuth | null = await User.findOne({ EID: gig.EID });
     if (user) {
-      const updatedUser = await User.findOneAndUpdate(
+      await User.findOneAndUpdate(
         { EID: gig.EID },
         {
           $set: {
@@ -423,7 +416,7 @@ export const updateGigReview = sessionHandler(
       );
     }
 
-    const [notification] = await NotificationModel.create(
+    await NotificationModel.create(
       [
         {
           NID: await generateId(IDs.NID, session),

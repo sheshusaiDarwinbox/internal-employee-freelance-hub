@@ -7,7 +7,6 @@ import {
   Star,
   User,
   Briefcase,
-  CheckCircle2,
   FileText,
   Code,
   X,
@@ -22,64 +21,6 @@ import Loading from "../components/Loading";
 import { useParams } from "react-router-dom";
 import { formatDate } from "../utils/dateUtils";
 import gigImg from "../assets/gig.jpeg";
-
-// Mock data structure for TypeScript types
-
-// Mock data for development
-const mockGig = {
-  title: "Full Stack Development Project",
-  description:
-    "Looking for an experienced developer to build a modern web application with React and Node.js",
-  DID: "D123456",
-  ManagerID: "M789012",
-  EID: "E789012",
-  deadline: new Date("2024-04-30"),
-  approvalStatus: "APPROVED",
-  ongoingStatus: "Ongoing",
-  rewardPoints: 500,
-  amount: 2500,
-  rating: 4.5,
-  assignedAt: new Date("2024-03-15"),
-  employee: {
-    name: "Sarah Johnson",
-    email: "sarah.johnson@example.com",
-    phone: "+1 (555) 123-4567",
-    department: "Engineering",
-    location: "San Francisco, CA",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
-    completedGigs: 15,
-    averageRating: 4.8,
-    skills: ["React", "Node.js", "TypeScript", "Python", "AWS"],
-  },
-  skills: [
-    { skill: "React", weight: 0.8 },
-    { skill: "Node.js", weight: 0.7 },
-    { skill: "TypeScript", weight: 0.6 },
-  ],
-  progressTracking: [
-    {
-      subject: "Initial Setup",
-      description: "Project environment and basic structure setup completed",
-      work_percentage: 10,
-      files: [
-        {
-          name: "setup.md",
-          url: "https://gist.githubusercontent.com/example/setup.md",
-          content:
-            "# Project Setup\n\n## Environment Configuration\n1. Install dependencies\n2. Configure environment variables\n3. Setup database\n\n## Getting Started\nFollow these steps to get the project running locally...",
-        },
-        {
-          name: "architecture.pdf",
-          url: "https://example.com/docs/architecture.pdf",
-          preview:
-            "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80",
-        },
-      ],
-    },
-  ],
-  img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
-};
 
 function ReviewModal({ onClose, onSubmit }) {
   const [rating, setRating] = useState(0);

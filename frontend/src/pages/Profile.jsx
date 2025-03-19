@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Pencil,
   Key,
@@ -64,6 +64,7 @@ function App() {
       setUploadLoading(true);
       await dispatch(updateProfileImage({ formData: formData })).unwrap();
     } catch (error) {
+      console.error(error);
       console.error("Failed to upload image");
     } finally {
       setUploadLoading(false);

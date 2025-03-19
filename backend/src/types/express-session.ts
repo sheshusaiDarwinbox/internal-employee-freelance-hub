@@ -1,16 +1,24 @@
 // express-session.d.ts
-import { IncomingMessage } from "http";
-import { Session } from "express-session";
+
+import { UserAuth } from "./userAuth.types";
 
 declare module "http" {
   interface IncomingMessage {
     session?: {
       passport?: {
-        user?: any; // You can replace 'any' with your user type
+        user?: UserAuth;
       };
     };
-    user: any;
+    user: UserAuth;
     sessionID: string;
-    EID: any;
+    EID: string;
+  }
+}
+
+declare module "express-session" {
+  interface SessionData {
+    passport?: {
+      user?: UserAuth;
+    };
   }
 }

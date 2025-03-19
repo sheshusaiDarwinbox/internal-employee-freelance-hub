@@ -11,4 +11,4 @@ export interface Position {
   DID: string;
 }
 
-export type PositonModelType = Model<Position>;
+export type PositionModelType = Model<Position>;

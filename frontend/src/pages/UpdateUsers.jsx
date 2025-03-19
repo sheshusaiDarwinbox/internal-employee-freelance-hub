@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { TextInput, Button, Table, Modal } from "flowbite-react";
 import { HiSearch, HiPencil } from "react-icons/hi";
 import Paginate from "../components/Paginate";

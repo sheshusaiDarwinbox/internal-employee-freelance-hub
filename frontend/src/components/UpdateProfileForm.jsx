@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button, Label, TextInput, Select } from "flowbite-react";
 import { useSelector, useDispatch } from "react-redux";
 import { updateProfile } from "../redux/slices/authSlice";

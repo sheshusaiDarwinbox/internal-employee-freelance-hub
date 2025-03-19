@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { Table, Button, Dropdown, TextInput, Pagination } from "flowbite-react";
+import { useState, useEffect } from "react";
+import { Button, Dropdown, Pagination } from "flowbite-react";
 import {
   Search,
   X,
   Filter,
   ChevronRight,
   Calendar,
-  Users,
   Briefcase,
 } from "lucide-react";
 import api from "../utils/api";

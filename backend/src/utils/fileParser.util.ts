@@ -1,5 +1,5 @@
 import { Upload } from "@aws-sdk/lib-storage";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import formidable from "formidable";
 import { Request } from "express";
 import { v4 as uuidV4 } from "uuid";
@@ -42,6 +42,14 @@ const uploadToS3 = async (
 ): Promise<string> => {
   const extension = path.extname(fileName);
   const contentType = mime.lookup(fileName) || "application/octet-stream";
+
+  const s3Client = new S3Client({
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+    region: process.env.S3_REGION,
+  });
 
   const upload = new Upload({
     client: s3Client,
@@ -116,6 +124,12 @@ export const generatePresignedUrl = async (
   bucketName: string,
   objectKey: string
 ) => {
+  const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    region: process.env.S3_REGION,
+  });
+
   const params = {
     Bucket: bucketName,
     Key: objectKey,

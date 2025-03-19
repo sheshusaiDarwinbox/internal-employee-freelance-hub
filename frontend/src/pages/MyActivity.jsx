@@ -4,7 +4,6 @@ import {
   CheckCircle,
   Search,
   Upload,
-  ChevronRight,
   Star,
   Clock,
   ArrowUpRight,
@@ -160,7 +159,7 @@ const MyActivity = () => {
 
       // Append all files from the fileUploads array for this task
       if (fileUploads[taskId] && fileUploads[taskId].length > 0) {
-        fileUploads[taskId].forEach((fileObj, index) => {
+        fileUploads[taskId].forEach((fileObj) => {
           formData.append(`files`, fileObj.file);
         });
       }

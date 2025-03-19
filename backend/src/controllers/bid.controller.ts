@@ -9,11 +9,10 @@ import { checkAuth } from "../middleware/checkAuth.middleware";
 import { UserRole } from "../models/userAuth.model";
 import { z } from "zod";
 import { Gig } from "../models/gig.model";
-import { client } from "../database/connection";
 export const bidControlRouter = Router();
 
 export const createBid = sessionHandler(
-  async (req: Request, res: Response, session) => {
+  async (req: Request, _res: Response, session) => {
     const data = BidZodSchema.parse(req.body);
     const findBid = await BidModel.findOne({
       EID: req.user?.EID,
@@ -44,72 +43,70 @@ export const createBid = sessionHandler(
   }
 );
 
-export const getBidsByGig = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { GigID } = req.params;
-    const { page = 1 } = req.query;
-    const pageNum = Number(page) - 1;
-    z.string()
-      .regex(/^[a-zA-Z0-9]+$/, { message: "GigID must be alphanumeric" })
-      .parse(GigID);
+export const getBidsByGig = sessionHandler(async (req: Request) => {
+  const { GigID } = req.params;
+  const { page = 1 } = req.query;
+  const pageNum = Number(page) - 1;
+  z.string()
+    .regex(/^[a-zA-Z0-9]+$/, { message: "GigID must be alphanumeric" })
+    .parse(GigID);
 
-    const gig = await Gig.findOne({ GigID: GigID });
-    if (!gig)
-      return {
-        status: HttpStatusCodes.BAD_REQUEST,
-        data: {
-          msg: "Gig does not exist",
-        },
-      };
-
-    const bids = await BidModel.aggregate([
-      { $match: { GigID: GigID } },
-      { $skip: pageNum * 6 },
-      { $limit: 6 },
-      {
-        $lookup: {
-          from: "userauths",
-          localField: "EID",
-          foreignField: "EID",
-          as: "userauth",
-        },
-      },
-      {
-        $project: {
-          GigID: 1,
-          BidID: 1,
-          description: 1,
-          "userauth.fullName": 1,
-          "userauth.EID": 1,
-        },
-      },
-    ]);
-
-    if (!bids)
-      return {
-        status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        data: {
-          msg: "Failed to retreive bids",
-        },
-      };
-
-    const total = await BidModel.countDocuments({ GigID: GigID });
+  const gig = await Gig.findOne({ GigID: GigID });
+  if (!gig)
     return {
-      status: HttpStatusCodes.OK,
+      status: HttpStatusCodes.BAD_REQUEST,
       data: {
-        docs: bids,
-        totalDocs: total,
-        limit: 6,
-        page: pageNum + 1,
-        totalPages: Math.ceil(total / 6),
-        hasNextPage: (pageNum + 1) * 6 < total,
-        nextPage: (pageNum + 1) * 6 < total ? pageNum + 2 : null,
-        hasPrevPage: pageNum > 0,
-        prevPage: pageNum > 0 ? pageNum : null,
+        msg: "Gig does not exist",
       },
     };
-  }
-);
+
+  const bids = await BidModel.aggregate([
+    { $match: { GigID: GigID } },
+    { $skip: pageNum * 6 },
+    { $limit: 6 },
+    {
+      $lookup: {
+        from: "userauths",
+        localField: "EID",
+        foreignField: "EID",
+        as: "userauth",
+      },
+    },
+    {
+      $project: {
+        GigID: 1,
+        BidID: 1,
+        description: 1,
+        "userauth.fullName": 1,
+        "userauth.EID": 1,
+      },
+    },
+  ]);
+
+  if (!bids)
+    return {
+      status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+      data: {
+        msg: "Failed to retreive bids",
+      },
+    };
+
+  const total = await BidModel.countDocuments({ GigID: GigID });
+  return {
+    status: HttpStatusCodes.OK,
+    data: {
+      docs: bids,
+      totalDocs: total,
+      limit: 6,
+      page: pageNum + 1,
+      totalPages: Math.ceil(total / 6),
+      hasNextPage: (pageNum + 1) * 6 < total,
+      nextPage: (pageNum + 1) * 6 < total ? pageNum + 2 : null,
+      hasPrevPage: pageNum > 0,
+      prevPage: pageNum > 0 ? pageNum : null,
+    },
+  };
+});
 
 bidControlRouter.post("/post", checkAuth([UserRole.Employee]), createBid);
 bidControlRouter.get("/:GigID", checkAuth([UserRole.Manager]), getBidsByGig);

@@ -1,13 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Button, TextInput, Select, Label } from "flowbite-react";
-import {
-  HiViewList,
-  HiPlus,
-  HiUpload,
-  HiX,
-  HiCheck,
-  HiSearch,
-} from "react-icons/hi";
+import { Button, TextInput, Select } from "flowbite-react";
+import { HiPlus, HiUpload, HiSearch } from "react-icons/hi";
 import * as XLSX from "xlsx";
 import api from "../utils/api";
 
@@ -19,7 +12,6 @@ const JobTypeEnum = {
 };
 
 const JobsManagement = () => {
-  // States for main functionality
   const [jobs, setJobs] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,7 +19,6 @@ const JobsManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // States for search and filters
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     type: "",
@@ -36,24 +27,14 @@ const JobsManagement = () => {
     maxSalary: "",
   });
 
-  // States for form
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    type: "FullTime",
-    salary: "",
-    DID: "",
-  });
   const [isEditing, setIsEditing] = useState(false);
 
-  // States for excel upload
   const [excelData, setExcelData] = useState(null);
   const [previewData, setPreviewData] = useState(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Fetch jobs with pagination and filters
   const fetchJobs = useCallback(async () => {
     try {
       setLoading(true);
@@ -73,7 +54,6 @@ const JobsManagement = () => {
     }
   }, [currentPage, searchQuery, filters]);
 
-  // Fetch departments for dropdown
   const fetchDepartments = async () => {
     try {
       const response = await api.get("/departments");
@@ -83,7 +63,6 @@ const JobsManagement = () => {
     }
   };
 
-  // Excel upload handler
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -279,11 +258,8 @@ const JobsManagement = () => {
         </div>
       )}
 
-      {/* Pagination */}
       {!isPreviewMode && totalPages > 1 && (
-        <div className="flex justify-center mt-4">
-          {/* Add pagination buttons */}
-        </div>
+        <div className="flex justify-center mt-4"></div>
       )}
     </div>
   );

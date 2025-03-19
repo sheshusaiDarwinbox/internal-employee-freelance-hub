@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { HiPhone, HiMail, HiUser, HiLocationMarker } from "react-icons/hi";
 import { useParams } from "react-router-dom";
 import api from "../utils/api";
@@ -18,6 +18,7 @@ const UserDetails = () => {
         setUser(response.data);
         setLoading(false);
       } catch (err) {
+        console.error("Error fetching user details:", err);
         setError("Failed to load user data. Please try again later.");
         setLoading(false);
       }

@@ -52,6 +52,7 @@ const ManagePositions = () => {
       setPositions(response.data.docs);
       setTotalPages(response.data.totalPages);
     } catch (err) {
+      console.error(err);
       setError("Failed to fetch positions");
     } finally {
       setLoading(false);
@@ -72,6 +73,7 @@ const ManagePositions = () => {
       setShowForm(false);
       resetForm();
     } catch (err) {
+      console.error(err);
       setError("Failed to save position");
     }
   };
@@ -84,6 +86,7 @@ const ManagePositions = () => {
       fetchPositions();
       setShowDeleteModal(false);
     } catch (err) {
+      console.error(err);
       setError("Failed to delete position");
     }
   };

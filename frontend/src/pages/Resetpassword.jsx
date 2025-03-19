@@ -34,11 +34,12 @@ const ResetPassword = () => {
           },
         }
       )
-      .then((data) => {
+      .then(() => {
         setLoading(false);
         setSuccessMeassage("Password Reset sucessfull");
       })
       .catch((err) => {
+        console.error(err);
         setLoading(false);
         setError("failed to reset password");
       });

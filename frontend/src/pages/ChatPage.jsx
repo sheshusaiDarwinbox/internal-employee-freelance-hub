@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TextInput, Button } from "flowbite-react";
 import { HiSearch, HiPaperAirplane } from "react-icons/hi";
-import { io, Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 import api from "../utils/api";
 import { useSelector } from "react-redux";
 
@@ -14,7 +14,7 @@ const ChatPage = () => {
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const user = useSelector((state) => state.auth.user);
-  const [currentUser, setCurrentUser] = useState(user);
+  const [currentUser] = useState(user);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

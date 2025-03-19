@@ -6,7 +6,7 @@ export const sessionHandler = (
     req: Request,
     res: Response,
     session: mongoose.ClientSession
-  ) => Promise<any>
+  ) => Promise<{ status?: number; data?: any } | void>
 ) => {
   return async (req: Request, res: Response): Promise<void> => {
     let session: mongoose.ClientSession | null = null;

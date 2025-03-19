@@ -73,7 +73,6 @@ export const establishSocketConnection = async (
   io: Server,
   sessionMiddleware: RequestHandler
 ) => {
-  const multi = client.multi();
   io.use((socket, next) => {
     sessionMiddleware(
       socket.request as Request,

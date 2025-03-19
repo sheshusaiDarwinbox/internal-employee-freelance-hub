@@ -1,5 +1,5 @@
 import { Schema, model, type PaginateModel } from "mongoose";
-import { type Position, type PositonModelType } from "../types/position.types";
+import { type Position, type PositionModelType } from "../types/position.types";
 import paginate from "mongoose-paginate-v2";
 
 export enum PositionTypeEnum {
@@ -12,7 +12,7 @@ export enum PositionTypeEnum {
   Other = "Other",
 }
 
-export const positionSchema = new Schema<Position, PositonModelType>({
+export const positionSchema = new Schema<Position, PositionModelType>({
   PID: { type: String, required: true, index: true, unique: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
@@ -28,7 +28,7 @@ export const positionSchema = new Schema<Position, PositonModelType>({
 positionSchema.index({ title: "text" });
 positionSchema.plugin(paginate);
 
-export const PositionModel = model<Position, PaginateModel<PositonModelType>>(
+export const PositionModel = model<Position, PaginateModel<PositionModelType>>(
   "Position",
   positionSchema
 );

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSocket, setConnected } from "../redux/slices/webSocketSlice";
 import { io } from "socket.io-client";
@@ -37,7 +37,7 @@ const WebSocketComponent = () => {
     return () => {
       sckt.close();
     };
-  }, [dispatch]);
+  }, [dispatch, user.EID]);
 
   return (
     <div>

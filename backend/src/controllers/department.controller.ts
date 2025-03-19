@@ -9,15 +9,16 @@ import {
 } from "../utils/zod.util";
 import { Router } from "express";
 import { generateId } from "../utils/counterManager.util";
-import { Department } from "../types/department.types";
+import { Department, DepartmentModelType } from "../types/department.types";
 import { IDs } from "../models/idCounter.model";
 import { User, UserRole } from "../models/userAuth.model";
 import { UserAuth } from "../types/userAuth.types";
 import { sessionHandler } from "../utils/session.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
+import { FilterQuery } from "mongoose";
 
 export const createDepartment = sessionHandler(
-  async (req: Request, res: Response, session) => {
+  async (req: Request, _res: Response, session) => {
     console.log(req.body);
     req.body.teamSize = parseInt(req.body.teamSize);
     const data = CreateDepartmentSchema.parse(req.body);
@@ -32,61 +33,55 @@ export const createDepartment = sessionHandler(
   }
 );
 
-export const getAllDepartments = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { functions, page = 1, search = "" } = req.query;
-    const filter: any = {};
-    const pageNum = Number(page) - 1;
-    if (functions) {
-      const functionsArray = (functions as string).split(",");
-      DepartmentArraySchema.parse(functionsArray);
-      filter.type = { $in: functionsArray };
-    }
-
-    if (search !== "") {
-      filter.$text = { $search: search };
-    }
-
-    const departments = await DepartmentModel.paginate(filter, {
-      offset: pageNum * 6,
-      limit: 6,
-    });
-    return { status: HttpStatusCodes.OK, data: departments };
+export const getAllDepartments = sessionHandler(async (req: Request) => {
+  const { functions, page = 1, search = "" } = req.query;
+  const filter: FilterQuery<DepartmentModelType> = {};
+  const pageNum = Number(page) - 1;
+  if (functions) {
+    const functionsArray = (functions as string).split(",");
+    DepartmentArraySchema.parse(functionsArray);
+    filter.type = { $in: functionsArray };
   }
-);
 
-export const deleteDepartmentByID = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { ID } = req.params;
-    GetDepartmentSchema.parse({ DID: ID });
-    const department = await DepartmentModel.findOne({
-      DID: ID,
-    });
-    if (!department) throw new Error("Bad Request");
-    const result = await DepartmentModel.deleteOne({ DID: ID });
-    if (result.deletedCount === 0) throw new Error("Department not deleted");
-    return {
-      status: HttpStatusCodes.OK,
-      data: department,
-    };
+  if (search !== "") {
+    filter.$text = { $search: search as string };
   }
-);
 
-export const getDepartmentByID = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { ID } = req.params;
-    GetDepartmentSchema.parse({ DID: ID });
-    const department = await DepartmentModel.findOne({ DID: ID });
-    if (!department) throw new Error("Bad Request");
-    return {
-      status: HttpStatusCodes.OK,
-      data: department,
-    };
-  }
-);
+  const departments = await DepartmentModel.paginate(filter, {
+    offset: pageNum * 6,
+    limit: 6,
+  });
+  return { status: HttpStatusCodes.OK, data: departments };
+});
+
+export const deleteDepartmentByID = sessionHandler(async (req: Request) => {
+  const { ID } = req.params;
+  GetDepartmentSchema.parse({ DID: ID });
+  const department = await DepartmentModel.findOne({
+    DID: ID,
+  });
+  if (!department) throw new Error("Bad Request");
+  const result = await DepartmentModel.deleteOne({ DID: ID });
+  if (result.deletedCount === 0) throw new Error("Department not deleted");
+  return {
+    status: HttpStatusCodes.OK,
+    data: department,
+  };
+});
+
+export const getDepartmentByID = sessionHandler(async (req: Request) => {
+  const { ID } = req.params;
+  GetDepartmentSchema.parse({ DID: ID });
+  const department = await DepartmentModel.findOne({ DID: ID });
+  if (!department) throw new Error("Bad Request");
+  return {
+    status: HttpStatusCodes.OK,
+    data: department,
+  };
+});
 
 export const assignManagerToDepartment = sessionHandler(
-  async (req: Request, res: Response) => {
+  async (req: Request) => {
     const data = AssignManagerZodSchema.parse(req.body);
     const user: UserAuth | null = await User.findOne({ EID: data.EID });
     const department: Department | null = await DepartmentModel.findOne({

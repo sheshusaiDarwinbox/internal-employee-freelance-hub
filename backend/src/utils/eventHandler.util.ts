@@ -1,4 +1,4 @@
-import { RemoteSocket, Server, Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { createSessionStore } from "../app";
 import { client } from "../database/connection";
 import { Gig } from "../models/gig.model";

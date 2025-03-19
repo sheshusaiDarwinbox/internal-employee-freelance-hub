@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
-import { Types } from "mongoose";
+import { FilterQuery, Types } from "mongoose";
 import {
   CreateUserSchema,
   GetUserSchema,
@@ -20,8 +20,8 @@ import { parseFile } from "../utils/fileParser.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
 import { generatePresignedUrl } from "../utils/fileParser.util";
 import { Gig } from "../models/gig.model";
-import z, { date } from "zod";
-import { UserAuth } from "../types/userAuth.types";
+import z from "zod";
+import { UserAuth, UserAuthModel } from "../types/userAuth.types";
 import { client } from "../database/connection";
 
 interface UserWithRole extends Document {
@@ -31,7 +31,7 @@ interface UserWithRole extends Document {
 export const createUser = sessionHandler(
   async (req: Request, res: Response, session) => {
     const users = CreateUserSchema.parse(req.body);
-    let usersEmailData: {
+    const usersEmailData: {
       EID: string;
       password: string;
       email: string;
@@ -108,123 +108,116 @@ export const createUser = sessionHandler(
   }
 );
 
-export const updateUserSkills = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { EID } = req.params;
-    const user: UserAuth | null = await User.findOne({ EID: EID });
-    if (!user) throw new Error("Bad Request");
-    const { skills } = UpdateUserSkills.parse({ skills: req.body.skills });
-    if (skills) {
-      skills.forEach(async ({ skill, score }) => {
-        const hashKey = `skills:${skill}`;
-        if (score && score === -1) await client.hDel(hashKey, EID);
-        else if (score && score !== 0) await client.hSet(hashKey, EID, score);
-      });
-    }
-    const updatedUser = await User.findOneAndUpdate(
-      { EID: EID },
-      {
-        $push: {
-          skills: { $each: skills },
-        },
-      },
-      { new: true, upsert: true }
-    );
-    return {
-      status: HttpStatusCodes.OK,
-      data: updatedUser,
-    };
-  }
-);
-
-export const getAllUsers = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { types, page = 1, search = "" } = req.query;
-    const filter: any = {};
-    const pageNum = Number(page) - 1;
-    if (types) {
-      const typesArray = (types as string).split(",");
-      UsersArraySchema.parse(typesArray);
-      filter.role = { $in: typesArray };
-    }
-
-    if (search !== "") filter.$text = { $search: search };
-
-    const users = await User.paginate(filter, {
-      offset: pageNum * 6,
-      limit: 6,
+export const updateUserSkills = sessionHandler(async (req: Request) => {
+  const { EID } = req.params;
+  const user: UserAuth | null = await User.findOne({ EID: EID });
+  if (!user) throw new Error("Bad Request");
+  const { skills } = UpdateUserSkills.parse({ skills: req.body.skills });
+  if (skills) {
+    skills.forEach(async ({ skill, score }) => {
+      const hashKey = `skills:${skill}`;
+      if (score && score === -1) await client.hDel(hashKey, EID);
+      else if (score && score !== 0) await client.hSet(hashKey, EID, score);
     });
-    return {
-      status: HttpStatusCodes.OK,
-      data: users,
-    };
   }
-);
-
-export const getAllUsersDetails = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { types, page = 1, search = "" } = req.query;
-    const filter: any = {};
-    const pageNum = Number(page) - 1;
-    if (types) {
-      const typesArray = (types as string).split(",");
-      UsersArraySchema.parse(typesArray);
-      filter.role = { $in: typesArray };
-    }
-
-    if (search !== "") filter.$text = { $search: search };
-
-    const users = await User.paginate(filter, {
-      offset: pageNum * 6,
-      limit: 6,
-      select: {
-        EID: 1,
-        email: 1,
-        fullName: 1,
-        role: 1,
-        phone: 1,
-        gender: 1,
-        workmode: 1,
-        img: 1,
-        freelanceRating: 1,
-        freelanceRewardPoints: 1,
-        gigsCompleted: 1,
-        DID: 1,
+  const updatedUser = await User.findOneAndUpdate(
+    { EID: EID },
+    {
+      $push: {
+        skills: { $each: skills },
       },
-    });
+    },
+    { new: true, upsert: true }
+  );
+  return {
+    status: HttpStatusCodes.OK,
+    data: updatedUser,
+  };
+});
 
-    return {
-      status: HttpStatusCodes.OK,
-      data: users,
-    };
+export const getAllUsers = sessionHandler(async (req: Request) => {
+  const { types, page = 1, search = "" } = req.query;
+  const filter: FilterQuery<UserAuthModel> = {};
+  const pageNum = Number(page) - 1;
+  if (types) {
+    const typesArray = (types as string).split(",");
+    UsersArraySchema.parse(typesArray);
+    filter.role = { $in: typesArray };
   }
-);
 
-export const deleteUserByID = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { ID } = req.params;
-    GetUserSchema.parse({ EID: ID });
-    const user = await User.findOne({ EID: ID });
-    if (!user) throw new Error("Bad Request");
-    const result = await User.deleteOne({ EID: ID });
-    if (result.acknowledged === false) throw new Error("User Not Deleted");
-    return user;
+  if (search !== "") filter.$text = { $search: search as string };
+
+  const users = await User.paginate(filter, {
+    offset: pageNum * 6,
+    limit: 6,
+  });
+  return {
+    status: HttpStatusCodes.OK,
+    data: users,
+  };
+});
+
+export const getAllUsersDetails = sessionHandler(async (req: Request) => {
+  const { types, page = 1, search = "" } = req.query;
+  const filter: FilterQuery<UserAuthModel> = {};
+  const pageNum = Number(page) - 1;
+  if (types) {
+    const typesArray = (types as string).split(",");
+    UsersArraySchema.parse(typesArray);
+    filter.role = { $in: typesArray };
   }
-);
 
-export const getUserById = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { ID } = req.params;
+  if (search !== "") filter.$text = { $search: search as string };
 
-    GetUserSchema.parse({ EID: ID });
-    const user = (await User.findOne({ EID: ID })) as UserWithRole;
-    if (!user) throw new Error("Bad Request");
-    return {
-      status: HttpStatusCodes.OK,
-      data: user,
-    };
-  }
-);
+  const users = await User.paginate(filter, {
+    offset: pageNum * 6,
+    limit: 6,
+    select: {
+      EID: 1,
+      email: 1,
+      fullName: 1,
+      role: 1,
+      phone: 1,
+      gender: 1,
+      workmode: 1,
+      img: 1,
+      freelanceRating: 1,
+      freelanceRewardPoints: 1,
+      gigsCompleted: 1,
+      DID: 1,
+    },
+  });
+
+  return {
+    status: HttpStatusCodes.OK,
+    data: users,
+  };
+});
+
+export const deleteUserByID = sessionHandler(async (req: Request) => {
+  const { ID } = req.params;
+  GetUserSchema.parse({ EID: ID });
+  const user = await User.findOne({ EID: ID });
+  if (!user) throw new Error("Bad Request");
+  const result = await User.deleteOne({ EID: ID });
+  if (result.acknowledged === false) throw new Error("User Not Deleted");
+  return {
+    status: HttpStatusCodes.OK,
+    data: user,
+  };
+});
+
+export const getUserById = sessionHandler(async (req: Request) => {
+  const { ID } = req.params;
+
+  GetUserSchema.parse({ EID: ID });
+  const user = (await User.findOne({ EID: ID })) as UserWithRole;
+  if (!user) throw new Error("Bad Request");
+  return {
+    status: HttpStatusCodes.OK,
+    data: user,
+  };
+});
 
 export const uploadProfileImg = sessionHandler(
   async (req: Request, res: Response, session) => {
@@ -254,208 +247,198 @@ export const uploadProfileImg = sessionHandler(
   }
 );
 
-export const getProfile = sessionHandler(
-  async (req: Request, res: Response) => {
-    const EID = req.user?.EID;
-    const user = (await User.findOne({ EID: EID })) as UserWithRole;
-    if (!user) throw new Error("User not found");
-    return user;
-  }
-);
+export const getProfile = sessionHandler(async (req: Request) => {
+  const EID = req.user?.EID;
+  const user = await User.findOne({ EID: EID });
+  if (!user) throw new Error("User not found");
+  return {
+    status: HttpStatusCodes.OK,
+    data: user,
+  };
+});
 
-export const updateProfile = sessionHandler(
-  async (req: Request, res: Response) => {
-    const EID = req.user?.EID;
-    const user: UserAuth | null = await User.findOne({ EID: EID });
-    if (!user) throw new Error("User not found");
-    const {
-      gender = user.gender,
-      phone = user.phone,
-      dob = user.dob,
-      maritalStatus = user.maritalStatus,
-      nationality = user.nationality,
-      bloodGroup = user.bloodGroup,
-      workmode = user.workmode,
-      address = user.address,
-      city = user.city,
-      state = user.state,
-      country = user.country,
-      pincode = user.pincode,
-      emergencyContactNumber = user.emergencyContactNumber,
-      fullName = user.fullName,
-    } = req.body;
+export const updateProfile = sessionHandler(async (req: Request) => {
+  const EID = req.user?.EID;
+  const user: UserAuth | null = await User.findOne({ EID: EID });
+  if (!user) throw new Error("User not found");
+  const {
+    gender = user.gender,
+    phone = user.phone,
+    dob = user.dob,
+    maritalStatus = user.maritalStatus,
+    nationality = user.nationality,
+    bloodGroup = user.bloodGroup,
+    workmode = user.workmode,
+    address = user.address,
+    city = user.city,
+    state = user.state,
+    country = user.country,
+    pincode = user.pincode,
+    emergencyContactNumber = user.emergencyContactNumber,
+    fullName = user.fullName,
+  } = req.body;
 
-    const updatedUser = await User.findOneAndUpdate(
-      { EID: req.user?.EID },
-      {
-        $set: {
-          phone: phone || user.phone,
-          gender: gender || user.gender,
-          dob: dob || user.dob,
-          maritalStatus: maritalStatus || user.maritalStatus,
-          nationality: nationality || user.nationality,
-          bloodGroup: bloodGroup || user.bloodGroup,
-          workmode: workmode || user.workmode,
-          address: address || user.address,
-          city: city || user.city,
-          state: state || user.state,
-          country: country || user.country,
-          pincode: pincode || user.pincode,
-          emergencyContactNumber:
-            emergencyContactNumber || user.emergencyContactNumber,
-          fullName: fullName || user.fullName,
-        },
+  const updatedUser = await User.findOneAndUpdate(
+    { EID: req.user?.EID },
+    {
+      $set: {
+        phone: phone || user.phone,
+        gender: gender || user.gender,
+        dob: dob || user.dob,
+        maritalStatus: maritalStatus || user.maritalStatus,
+        nationality: nationality || user.nationality,
+        bloodGroup: bloodGroup || user.bloodGroup,
+        workmode: workmode || user.workmode,
+        address: address || user.address,
+        city: city || user.city,
+        state: state || user.state,
+        country: country || user.country,
+        pincode: pincode || user.pincode,
+        emergencyContactNumber:
+          emergencyContactNumber || user.emergencyContactNumber,
+        fullName: fullName || user.fullName,
       },
-      { upsert: true }
-    );
-    if (!updatedUser) throw new Error("user update failed");
+    },
+    { upsert: true }
+  );
+  if (!updatedUser) throw new Error("user update failed");
+  return {
+    data: updatedUser,
+  };
+});
+
+export const getGigsByUser = sessionHandler(async (req: Request) => {
+  const { page = 1, search = "", DIDs, ManagerIDs } = req.query;
+  const pageNum = Number(page) - 1;
+  const EID = req.user?.EID;
+  let filter: FilterQuery<UserAuthModel> = {};
+
+  const user = (await User.findOne({ EID: EID })) as UserWithRole;
+  if (!user) {
     return {
-      data: updatedUser,
+      status: HttpStatusCodes.BAD_REQUEST,
+      message: "userNotfound",
     };
   }
-);
 
-export const getGigsByUser = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { page = 1, search = "", DIDs, ManagerIDs } = req.query;
-    const pageNum = Number(page) - 1;
-    const EID = req.user?.EID;
-    let filter: any = {};
-
-    const user = (await User.findOne({ EID: EID })) as UserWithRole;
-    if (!user) {
-      return {
-        status: HttpStatusCodes.BAD_REQUEST,
-        message: "userNotfound",
-      };
-    }
-
-    if (DIDs) {
-      z.array(
-        z
-          .string()
-          .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
-      ).parse(DIDs);
-      filter.DID = { $in: DIDs };
-    }
-    if (ManagerIDs) {
-      z.array(
-        z
-          .string()
-          .regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
-      ).parse(DIDs);
-      filter.ManagerID = { $in: ManagerIDs };
-    }
-    if (search) {
-      z.string().regex(
-        /^[a-zA-Z0-9\s.,!?()&]+$/,
-        "search must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
-      );
-      filter = {
-        ...filter,
-        $text: { $search: search },
-      };
-    }
-
-    let gigs;
-
-    if (user.role === UserRole.Manager) {
-      filter.ManagerID = EID;
-      gigs = await Gig.paginate(filter, {
-        offset: pageNum * 6,
-        limit: 6,
-      });
-    } else if (user.role === UserRole.Employee || UserRole.Other) {
-      filter.EID = EID;
-      gigs = await Gig.paginate(filter, {
-        offset: pageNum * 6,
-        limit: 6,
-      });
-    } else {
-      return {
-        status: HttpStatusCodes.OK,
-        message: "Invalid User role",
-      };
-    }
-
-    return {
-      status: HttpStatusCodes.OK,
-      data: gigs,
+  if (DIDs) {
+    z.array(
+      z.string().regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
+    ).parse(DIDs);
+    filter.DID = { $in: DIDs };
+  }
+  if (ManagerIDs) {
+    z.array(
+      z.string().regex(/^[a-zA-Z0-9]+$/, { message: "Id must be alphanumeric" })
+    ).parse(DIDs);
+    filter.ManagerID = { $in: ManagerIDs };
+  }
+  if (search) {
+    z.string().regex(
+      /^[a-zA-Z0-9\s.,!?()&]+$/,
+      "search must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
+    );
+    filter = {
+      ...filter,
+      $text: { $search: search as string },
     };
   }
-);
 
-export const resendVerifyMail = sessionHandler(
-  async (req: Request, res: Response) => {
-    const { email } = req.body;
-    z.string().email({ message: "Invalid email" }).parse(email);
+  let gigs;
 
-    const user: (UserAuth & { _id: Types.ObjectId }) | null =
-      await User.findOne({ email: email });
-    if (!user)
-      return {
-        status: HttpStatusCodes.BAD_REQUEST,
-        data: {
-          message: "User not found",
-        },
-      };
-
-    if (user.verified)
-      return {
-        status: HttpStatusCodes.BAD_REQUEST,
-        data: {
-          message: "User already verified",
-        },
-      };
-
-    const password = generateRandomPassword();
-    const hashedPassword = hashPassword(password);
-    const updatedUser = User.findOneAndUpdate(
-      { email: user.email },
-      {
-        $set: {
-          password: hashedPassword,
-        },
-      }
-    );
-    sendVerificationEmail({
-      EID: user.EID,
-      email: user.email,
-      password,
-      _id: user._id,
+  if (user.role === UserRole.Manager) {
+    filter.ManagerID = EID;
+    gigs = await Gig.paginate(filter, {
+      offset: pageNum * 6,
+      limit: 6,
     });
-
+  } else if (user.role === UserRole.Employee || UserRole.Other) {
+    filter.EID = EID;
+    gigs = await Gig.paginate(filter, {
+      offset: pageNum * 6,
+      limit: 6,
+    });
+  } else {
     return {
       status: HttpStatusCodes.OK,
-      data: updatedUser,
+      message: "Invalid User role",
     };
   }
-);
 
-export const getEmployeesUnderManager = sessionHandler(
-  async (req: Request, res: Response) => {
-    const EID = req.user?.EID;
-    const { page = 1 } = req.query;
+  return {
+    status: HttpStatusCodes.OK,
+    data: gigs,
+  };
+});
 
-    const pageNum = Number(page) - 1;
-    const users = await User.paginate(
-      { ManagerID: EID },
-      { offset: pageNum * 6, limit: 6 }
-    );
+export const resendVerifyMail = sessionHandler(async (req: Request) => {
+  const { email } = req.body;
+  z.string().email({ message: "Invalid email" }).parse(email);
 
-    if (!users) {
-      return {
-        status: HttpStatusCodes.BAD_REQUEST,
-        message: "No users found",
-      };
+  const user: (UserAuth & { _id: Types.ObjectId }) | null = await User.findOne({
+    email: email,
+  });
+  if (!user)
+    return {
+      status: HttpStatusCodes.BAD_REQUEST,
+      data: {
+        message: "User not found",
+      },
+    };
+
+  if (user.verified)
+    return {
+      status: HttpStatusCodes.BAD_REQUEST,
+      data: {
+        message: "User already verified",
+      },
+    };
+
+  const password = generateRandomPassword();
+  const hashedPassword = hashPassword(password);
+  const updatedUser = User.findOneAndUpdate(
+    { email: user.email },
+    {
+      $set: {
+        password: hashedPassword,
+      },
     }
+  );
+  sendVerificationEmail({
+    EID: user.EID,
+    email: user.email,
+    password,
+    _id: user._id,
+  });
 
+  return {
+    status: HttpStatusCodes.OK,
+    data: updatedUser,
+  };
+});
+
+export const getEmployeesUnderManager = sessionHandler(async (req: Request) => {
+  const EID = req.user?.EID;
+  const { page = 1 } = req.query;
+
+  const pageNum = Number(page) - 1;
+  const users = await User.paginate(
+    { ManagerID: EID },
+    { offset: pageNum * 6, limit: 6 }
+  );
+
+  if (!users) {
     return {
-      status: HttpStatusCodes.OK,
-      data: users,
+      status: HttpStatusCodes.BAD_REQUEST,
+      message: "No users found",
     };
   }
-);
+
+  return {
+    status: HttpStatusCodes.OK,
+    data: users,
+  };
+});
 
 export const userControlRouter = Router();
 

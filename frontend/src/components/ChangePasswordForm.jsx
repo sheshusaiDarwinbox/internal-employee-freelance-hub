@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button, Label, TextInput } from "flowbite-react";
-import { useDispatch } from "react-redux";
 // import { changePassword } from "../redux/slices/authSlice";
 
 const ChangePasswordForm = ({ onClose }) => {
-  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
