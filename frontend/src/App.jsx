@@ -111,7 +111,7 @@ function App() {
               <Route path="work-history" element={<MyHistory />} />
               <Route path="my-activity" element={<MyActivity />} />
               <Route path="profile" element={<Profile />} />
-              <Route path="my-account" element={<MyAccount />} />
+              <Route path="my-account" element={<MyAccount />} /> 
               <Route path="chat" element={<ChatPage />} />
             </Route>
 

@@ -1,56 +1,80 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Wallet,
   Edit2,
   CheckCircle2,
   Building2,
   CreditCard,
-  User2,
 } from "lucide-react";
 import { useSelector } from "react-redux";
+import api from "../utils/api"; // Assuming you have your API setup
 
 function MyAccount() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [accountDetails, setAccountDetails] = useState({
-    name: "John Doe",
-    bank: "HDFC Bank",
-    accountNo: "XXXX-XXXX-1234",
-    ifsc: "HDFC12345",
+    name: "",
+    bankName: "",
+    accountNo: "",
+    IFSCNo: "",
+    totalBalance: 0,
   });
   const user = useSelector((state) => state.auth.user);
+  const [paymentHistory, setPaymentHistory] = useState([]); // Add state for payment history
 
-  const paymentHistory = [
-    {
-      task: "Build a Portfolio",
-      amount: "₹200",
-      date: "2024-02-15",
-      status: "Completed",
-    },
-    {
-      task: "Fix UI Bugs",
-      amount: "₹150",
-      date: "2024-02-18",
-      status: "Completed",
-    },
-    {
-      task: "Create Dashboard",
-      amount: "₹300",
-      date: "2024-02-20",
-      status: "Completed",
-    },
-  ];
+  useEffect(() => {
+    const fetchAccountDetails = async () => {
+      try {
+        const response = await api.get(`/api/accounts/${user.EID}`, {
+          withCredentials: true,
+        });
+        setAccountDetails(response.data);
+      } catch (error) {
+        console.error("Error fetching account details:", error);
+      }
+    };
 
-  const handleWithdrawSubmit = (e) => {
+    const fetchPaymentHistory = async () => {
+      try {
+        // Assuming you have an API endpoint to fetch payment history
+        const response = await api.get(`/api/payments/${user.EID}`, {
+          withCredentials: true,
+        });
+        setPaymentHistory(response.data);
+      } catch (error) {
+        console.error("Error fetching payment history:", error);
+      }
+    };
+
+    if (user && user.EID) {
+      fetchAccountDetails();
+      fetchPaymentHistory();
+    }
+  }, [user]);
+
+  const handleWithdrawSubmit = async (e) => {
     e.preventDefault();
-    setShowWithdrawModal(false);
-    setWithdrawAmount("");
+    try {
+      // Implement your withdrawal logic here, e.g., make an API call
+      console.log("Withdrawal amount:", withdrawAmount);
+      setShowWithdrawModal(false);
+      setWithdrawAmount("");
+    } catch (error) {
+      console.error("Error during withdrawal:", error);
+    }
   };
 
-  const handleUpdateAccount = (e) => {
+  const handleUpdateAccount = async (e) => {
     e.preventDefault();
-    setShowEditModal(false);
+    try {
+      await api.put(`/api/accounts/${user.EID}`, accountDetails, {
+        withCredentials: true,
+      });
+      setShowEditModal(false);
+    } catch (error) {
+      console.error("Error updating account details:", error);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -68,7 +92,7 @@ function MyAccount() {
           <h1 className="text-4xl font-bold text-stone-800">My Account</h1>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-stone-500">
-              Welcome back, {accountDetails.name}
+              Welcome back, {accountDetails.name || user.fullName}
             </span>
           </div>
         </div>
@@ -117,21 +141,13 @@ function MyAccount() {
               </button>
             </div>
             <div className="space-y-4">
-              <div className="flex items-center space-x-3 p-3 bg-stone-100 rounded-lg">
-                <User2 className="w-5 h-5 text-stone-500" />
-                <div>
-                  <p className="text-sm text-stone-500">Account Holder</p>
-                  <p className="font-medium text-stone-800">
-                    {accountDetails.name}
-                  </p>
-                </div>
-              </div>
+              
               <div className="flex items-center space-x-3 p-3 bg-stone-100 rounded-lg">
                 <Building2 className="w-5 h-5 text-stone-500" />
                 <div>
                   <p className="text-sm text-stone-500">Bank Name</p>
                   <p className="font-medium text-stone-800">
-                    {accountDetails.bank}
+                    {accountDetails.bankName}
                   </p>
                 </div>
               </div>
@@ -141,6 +157,15 @@ function MyAccount() {
                   <p className="text-sm text-stone-500">Account Number</p>
                   <p className="font-medium text-stone-800">
                     {accountDetails.accountNo}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-3 bg-stone-100 rounded-lg">
+                <CreditCard className="w-5 h-5 text-stone-500" />
+                <div>
+                  <p className="text-sm text-stone-500">IFSC Code</p>
+                  <p className="font-medium text-stone-800">
+                    {accountDetails.IFSCNo}
                   </p>
                 </div>
               </div>
@@ -233,27 +258,15 @@ function MyAccount() {
                 Edit Account Details
               </h3>
               <form onSubmit={handleUpdateAccount} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    Account Holder Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={accountDetails.name}
-                    onChange={handleInputChange}
-                    className="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
-                    required
-                  />
-                </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-2">
                     Bank Name
                   </label>
                   <input
                     type="text"
-                    name="bank"
-                    value={accountDetails.bank}
+                    name="bankName"
+                    value={accountDetails.bankName}
                     onChange={handleInputChange}
                     className="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
                     required
@@ -278,8 +291,8 @@ function MyAccount() {
                   </label>
                   <input
                     type="text"
-                    name="ifsc"
-                    value={accountDetails.ifsc}
+                    name="IFSCNo"
+                    value={accountDetails.IFSCNo}
                     onChange={handleInputChange}
                     className="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
                     required

@@ -10,6 +10,7 @@ import { utilRouter } from "./util.router";
 import { bidRouter } from "./bid.router";
 import { notificationRouter } from "./notification.router";
 import { messageRouter } from "./message.router";
+import { accountDetailsRouter } from "./accountDetails.router"
 
 export const indexRouter = Router();
 
@@ -23,3 +24,4 @@ indexRouter.use(utilRouter);
 indexRouter.use(bidRouter);
 indexRouter.use(notificationRouter);
 indexRouter.use(messageRouter);
+indexRouter.use(accountDetailsRouter);

@@ -23,6 +23,8 @@ import { Gig } from "../models/gig.model";
 import z from "zod";
 import { UserAuth, UserAuthModel } from "../types/userAuth.types";
 import { client } from "../database/connection";
+import { AccountDetailsModel } from "../models/accountDetails.model"; 
+
 
 interface UserWithRole extends Document {
   role: UserRole;
@@ -65,7 +67,9 @@ export const createUser = sessionHandler(
           { session, new: true }
         );
         if (!result) throw new Error("Department not updated");
+        const ids: string[] = []; // Array to hold generated IDs
         const id = await generateId(IDs.EID, session);
+        ids.push(id); // Store the generated ID in the array
         const password = generateRandomPassword();
         const hashedPassword = await hashPassword(password);
 
@@ -97,6 +101,30 @@ export const createUser = sessionHandler(
 
     console.log(usersEmailData);
 
+    let accountDetails;
+    const { role } = users[0]; // Extract role from the first user
+    if (role === "Employee" || role === "Other") {
+      const existingAccount = await AccountDetailsModel.findOne({ EID: usersEmailData[0].EID });
+      if (!existingAccount) {
+        accountDetails = await AccountDetailsModel.create(
+          [
+            {
+              EID: usersEmailData[0].EID,
+              bankName: "",
+              accountNo: "",
+              IFSCNo: "",
+              totalBalance: 0,
+            },
+          ],
+          { session }
+        );
+      } else {
+        accountDetails = existingAccount; // Use the existing account
+      }
+    } else {
+      accountDetails = null; // Skip account creation for other roles
+    }
+
     insertedUsers.forEach((user, idx) => {
       sendVerificationEmail({ ...usersEmailData[idx], _id: user._id });
     });
@@ -104,6 +132,7 @@ export const createUser = sessionHandler(
     return {
       status: HttpStatusCodes.CREATED,
       data: updatedUsers,
+      accountDetails
     };
   }
 );
