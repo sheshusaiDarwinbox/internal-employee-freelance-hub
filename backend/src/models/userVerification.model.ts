@@ -13,7 +13,7 @@ export const userVerificationSchema = new Schema<
   createdAt: { type: Date, required: true, default: Date.now, expires: "6h" },
 });
 
-userVerificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 21600 });
+// userVerificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 21600 });
 
 export const UserVerification = model<
   UserVerificationType,

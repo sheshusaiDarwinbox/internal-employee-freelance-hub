@@ -1,17 +1,37 @@
 import { Schema, model, type PaginateModel } from "mongoose";
 import { type UserAuth, type UserAuthModel } from "../types/userAuth.types";
 import paginate from "mongoose-paginate-v2";
+import { extendedTechSkills } from "../utils/insertSkills.util";
 
 export enum UserRole {
   Employee = "Employee",
   Other = "Other",
   Admin = "Admin",
-  ProjectManager = "ProjectManager",
+  Manager = "Manager",
 }
+
+export const skillSchema = new Schema(
+  {
+    skill: {
+      type: String,
+      enum: extendedTechSkills,
+      required: true,
+    },
+    score: {
+      type: Number,
+      min: 0,
+      max: 1,
+      required: false,
+    },
+  },
+  { _id: false }
+);
+
 export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   EID: { type: String, index: true, unique: true, required: true },
   password: { type: String, required: true },
   email: { type: String, unique: true, required: true },
+  fullName: { type: String },
   role: {
     type: String,
     enum: UserRole,
@@ -21,7 +41,7 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
     type: Boolean,
     required: true,
   },
-  JID: { type: Schema.Types.String, ref: "Job", required: true },
+  PID: { type: Schema.Types.String, ref: "Position", required: true },
   DID: { type: Schema.Types.String, ref: "Department", required: true },
   ManagerID: { type: Schema.Types.String, ref: "UserAuth", required: true },
   phone: { type: String },
@@ -40,12 +60,14 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   emergencyContactNumber: { type: Number },
   freelanceRewardPoints: { type: Number },
   freelanceRating: { type: Number },
-  skills: { type: [String] },
   accountBalance: { type: Number },
   img: { type: String },
+  skills: { type: [skillSchema] },
+  gigsCompleted: { type: Number, default: 0 },
 });
 
 userAuthSchema.plugin(paginate);
+userAuthSchema.index({ fullName: "text" });
 
 export const User = model<UserAuth, PaginateModel<UserAuthModel>>(
   "UserAuth",

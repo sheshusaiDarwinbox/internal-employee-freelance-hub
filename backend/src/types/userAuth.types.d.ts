@@ -8,7 +8,7 @@ export interface UserAuth {
   role: keyof typeof UserRole;
   email: string;
   verified: boolean;
-  JID: string;
+  PID: string;
   DID: string;
   ManagerID: string;
   gender?: string;
@@ -30,6 +30,8 @@ export interface UserAuth {
   skills?: string[];
   accountBalance?: number;
   img?: string;
+  fullName?: string;
+  gigsCompleted?: number;
 }
 
 export type UserAuthModel = Model<UserAuth>;

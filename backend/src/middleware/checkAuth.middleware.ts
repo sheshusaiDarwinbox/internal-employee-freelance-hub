@@ -9,11 +9,13 @@ export const checkAuth = (roles: Array<keyof typeof UserRole> | undefined) => {
         .status(HttpStatusCodes.UNAUTHORIZED)
         .json({ message: "Unauthorized" });
     }
-    if (roles === undefined) return next();
-    for (let role of roles) {
-      if (req.user?.role !== role)
-        res.status(HttpStatusCodes.FORBIDDEN).json({ message: "Forbidden" });
+    if (roles === undefined || roles?.length === 0) return next();
+    for (const role of roles) {
+      if (req.user?.role === role) return next();
     }
-    next();
+
+    res.status(HttpStatusCodes.FORBIDDEN).json({
+      message: "Forbidden",
+    });
   };
 };

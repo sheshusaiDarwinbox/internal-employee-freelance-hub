@@ -1,0 +1,64 @@
+services:
+  mongo1:
+    container_name: mongo1
+    image: mongo:7.0
+    command: --replSet rs0 --bind_ip_all
+    ports:
+      - 27018:27017
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: echo "try { rs.status() } catch (err) {rs.initiate({_id:'rs0',members:[{_id:0,host:'host.docker.internal:27018',priority:1},{_id:1,host:'host.docker.internal:27019',priority:0.5},{_id:2,host:'host.docker.internal:27020',priority:0.5}]})}" | mongosh --port 27017 --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 0s
+      retries: 30
+    volumes:
+      - mongo_data1:/data/db
+    networks:
+      - mongo_network
+
+  mongo2:
+    container_name: mongo2
+    image: mongo:7.0
+    command: --replSet rs0 --bind_ip_all
+    ports:
+      - 27019:27017
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - mongo_data2:/data/db
+    networks:
+      - mongo_network
+
+  mongo3:
+    container_name: mongo3
+    image: mongo:7.0
+    command: --replSet rs0 --bind_ip_all
+    ports:
+      - 27020:27017
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - mongo_data3:/data/db
+    networks:
+      - mongo_network
+
+  redis:
+    image: redis:6.2.0
+    container_name: redis-container
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+    restart: always
+
+volumes:
+  mongo_data1:
+  mongo_data2:
+  mongo_data3:
+  redis-data:
+
+networks:
+  mongo_network:
+    driver: bridge

@@ -7,11 +7,14 @@ loginControlRouter.post(
   "/login",
   passport.authenticate("local"),
   (req, res) => {
-    res.send(req.user);
+    res.json({ 
+      message: "Login successful",
+      user: req.user 
+    });
   }
 );
 
-loginControlRouter.post("/logout", (req, res) => {
+loginControlRouter.get("/logout", (req, res) => {
   req.logout((err) => {
     if (err) return res.sendStatus(400);
     res.sendStatus(200);
