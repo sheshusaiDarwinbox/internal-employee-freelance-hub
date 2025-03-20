@@ -6,6 +6,7 @@ import authReducer from "./slices/authSlice";
 import forgotPasswordReducer from "./slices/forgotPasswordSlice";
 // import gigsReducer from "./slices/gigsSlice";
 import websocketReducer from "./slices/webSocketSlice";
+import chatReducer from "./slices/chatSlice";
 
 const persistConfig = {
   key: "root",
@@ -17,6 +18,7 @@ const rootReducer = combineReducers({
   forgotPassword: forgotPasswordReducer,
   // gigs: gigsReducer,
   websocket: websocketReducer,
+  chat: chatReducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

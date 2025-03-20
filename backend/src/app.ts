@@ -5,7 +5,7 @@ import passport from "passport";
 import MongoStore from "connect-mongo";
 import mongoose from "mongoose";
 import "./strategies/local.strategy";
-import { indexRouter } from "./routes/index.router";
+import { indexRouter } from "./routes/index.routes";
 import cors from "cors";
 
 export const createSessionStore = () => {
@@ -41,6 +41,7 @@ export const createApp = () => {
   app.use(passport.initialize());
   app.use(passport.session());
   app.use("/api", indexRouter);
+    
 
   return { app, sessionMiddleware };
 };

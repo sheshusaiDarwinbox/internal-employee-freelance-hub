@@ -10,6 +10,13 @@ export enum UserRole {
   Manager = "Manager",
 }
 
+
+export enum UserStatus {
+  Online = "Online",
+  Offline = "Offline",
+}
+
+
 export const skillSchema = new Schema(
   {
     skill: {
@@ -40,6 +47,11 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   verified: {
     type: Boolean,
     required: true,
+  },
+  status: {
+    type: String,
+    enum: Object.values(UserStatus),
+    default: UserStatus.Offline, // Default users are offline
   },
   PID: { type: Schema.Types.String, ref: "Position", required: true },
   DID: { type: Schema.Types.String, ref: "Department", required: true },

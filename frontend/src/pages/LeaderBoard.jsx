@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import defaultAvatar from "../assets/profile-avatar.png";
 import {
   Trophy,
   Search,
@@ -34,7 +35,7 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await api.get("api/users/users-details", {
+        const response = await api.get("api/users/emp-details", {
           withCredentials: true,
         });
         const usersWithGigs = response.data.docs.map((user) => ({
@@ -75,10 +76,26 @@ const Leaderboard = () => {
   }, [selectedUser]);
 
   const calculateScore = (user, allUsers) => {
-    const maxRating = Math.max(...allUsers.map((u) => u.rating || 0));
-    const maxPoints = Math.max(...allUsers.map((u) => u.points || 0));
-    const ratingScore = (user.rating || 0) / maxRating;
-    const pointsScore = (user.points || 0) / maxPoints;
+    const ratings = allUsers.map((u) => u.rating || 0);
+    const points = allUsers.map((u) => u.points || 0);
+
+    const maxRating = Math.max(...ratings);
+    const maxPoints = Math.max(...points);
+
+    const userRating = user.rating || 0;
+    const userPoints = user.points || 0;
+
+    let ratingScore = 0;
+    let pointsScore = 0;
+
+    if (maxRating > 0) {
+      ratingScore = userRating / maxRating;
+    }
+
+    if (maxPoints > 0) {
+      pointsScore = userPoints / maxPoints;
+    }
+
     return ratingScore * 0.5 + pointsScore * 0.5;
   };
 
@@ -148,19 +165,16 @@ const Leaderboard = () => {
 
         {/* Top 3 Podium */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 relative">
-          {[...topThree].map((user, index) => {
-            const order = [1, 0, 2]; // [2nd, 1st, 3rd]
-            const displayIndex = order.indexOf(index);
-            const position = index + 1;
-
+          {topThree.map((user, index) => {
+            const position = index + 1; // 1, 2, 3
             return (
               <motion.div
                 key={user.id}
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: displayIndex * 0.2 }}
+                transition={{ delay: index * 0.2 }}
                 className={`relative ${index === 0 ? "md:-mt-8" : ""}`}
-                style={{ order: displayIndex }}
+                style={{ order: position === 2 ? 0 : position === 1 ? 1 : 2 }} // Correct order
               >
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -179,7 +193,8 @@ const Leaderboard = () => {
                       <img
                         src={
                           user.img ||
-                          `https://source.unsplash.com/random/150x150?face=${index}`
+                          // `https://source.unsplash.com/random/150x150?face=${index}`
+                          defaultAvatar
                         }
                         alt={user.name}
                         className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
@@ -287,7 +302,8 @@ const Leaderboard = () => {
                         <img
                           src={
                             user.img ||
-                            `https://source.unsplash.com/random/40x40?face=${user.rank}`
+                            // `https://source.unsplash.com/random/40x40?face=${user.rank}`
+                            defaultAvatar
                           }
                           alt={user.name}
                           className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
@@ -394,7 +410,8 @@ const Leaderboard = () => {
                     <img
                       src={
                         selectedUser.img ||
-                        `https://source.unsplash.com/random/120x120?face=${selectedUser.rank}`
+                        // `https://source.unsplash.com/random/120x120?face=${selectedUser.rank}`
+                        defaultAvatar
                       }
                       alt={selectedUser.name}
                       className="w-24 h-24 rounded-full object-cover border-4 border-gray-100 shadow-md"
@@ -444,6 +461,7 @@ const Leaderboard = () => {
                     <div className="flex items-center gap-3 text-gray-600">
                       <Code className="w-5 h-5 text-blue-500" />
                       <span>{department?.name || "N/A"}</span>
+                     
                     </div>
                   </div>
 

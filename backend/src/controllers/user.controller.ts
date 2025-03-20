@@ -223,6 +223,40 @@ export const getAllUsersDetails = sessionHandler(async (req: Request) => {
   };
 });
 
+export const getAllEmpDetails = sessionHandler(
+  async (req: Request) => {
+    const { page = 1, search = "" } = req.query;
+    const filter: any = { role: "Employee" }; // Filter for role="Employee"
+    const pageNum = Number(page) - 1;
+
+    if (search !== "") filter.$text = { $search: search };
+
+    const users = await User.paginate(filter, {
+      offset: pageNum * 6,
+      limit: 6,
+      select: {
+        EID: 1,
+        email: 1,
+        fullName: 1,
+        role: 1,
+        phone: 1,
+        gender: 1,
+        workmode: 1,
+        img: 1,
+        freelanceRating: 1,
+        freelanceRewardPoints: 1,
+        gigsCompleted: 1,
+        DID: 1,
+      },
+    });
+
+    return {
+      status: HttpStatusCodes.OK,
+      data: users,
+    };
+  });
+
+
 export const deleteUserByID = sessionHandler(async (req: Request) => {
   const { ID } = req.params;
   GetUserSchema.parse({ EID: ID });
@@ -490,6 +524,7 @@ userControlRouter.post(
 );
 userControlRouter.post("/resend-verify-mail", resendVerifyMail);
 userControlRouter.get("/users-details", checkAuth([]), getAllUsersDetails);
+userControlRouter.get("/emp-details", checkAuth([]), getAllEmpDetails);
 userControlRouter.get(
   "/users-under-manager",
   checkAuth([UserRole.Manager]),

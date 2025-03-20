@@ -44,6 +44,7 @@ const MyGigs = () => {
     fetchGigs(currentPage);
   }, [currentPage]);
 
+ 
   const departments = [...new Set(gigs.map((gig) => gig.DID))];
   const allSkills = [
     ...new Set(gigs.flatMap((gig) => gig.skills.map((skill) => skill.skill))),

@@ -53,7 +53,7 @@ const Sidebar = ({ navlinks }) => {
   };
 
   return (
-    <aside className="fixed w-72 h-screen bg-white border-r border-gray-100 shadow-lg">
+    <aside className="fixed w-80 h-screen bg-white border-r border-gray-100 shadow-lg">
       <div className="flex flex-col h-full">
         {/* Profile Section */}
         <div className="p-6 text-center border-b border-gray-100">
@@ -83,12 +83,12 @@ const Sidebar = ({ navlinks }) => {
 
         {/* Navigation Links */}
         <nav className="flex-1 p-4 overflow-y-auto">
-          <ul className="space-y-2">
+          <ul className="space-y-2 ml-5">
             {navlinks.map((item, index) => (
               <li key={index}>
                 <Link
                   to={item.link}
-                  className={`relative flex items-center w-full px-4 py-3 rounded-lg transition-all duration-200
+                  className={`relative flex items-center  w-full px-4 py-3 rounded-lg transition-all duration-200
                     ${
                       location.pathname === item.link
                         ? "bg-blue-500 text-white shadow-md"

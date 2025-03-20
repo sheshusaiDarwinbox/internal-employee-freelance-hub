@@ -8,7 +8,10 @@ const referSchema = new Schema<Refer, ReferModelType>({
   EID: { type: String, required: true },
   email: { type: String, required: true },
   name: { type: String, required: true },
+  description: { type: String },
+  skillset: { type: [String], required: false } // Added skillset field as an array of strings
 });
+
 
 referSchema.plugin(paginate);
 

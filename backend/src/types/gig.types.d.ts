@@ -14,7 +14,7 @@ export type OngoingStatusType =
   | "Completed"
   | "Reviewed";
 
-export interface GigSchema {
+export interface GigSchema extends Document {
   GigID: string;
   DID: string;
   ManagerID: string;

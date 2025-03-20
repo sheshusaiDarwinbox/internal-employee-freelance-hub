@@ -23,7 +23,8 @@ const requestSchema = new Schema<Request, RequestModelType>({
     enum: Object.values(RequestTypeEnum),
   },
   description: { type: String },
-  status: { type: String, required: true, enum: Object.values(ReqStatus) },
+  reqStatus: { type: String, required: true, enum: Object.values(ReqStatus)},
+  GID: { type: String } // Add GID field
 });
 
 requestSchema.plugin(paginate);

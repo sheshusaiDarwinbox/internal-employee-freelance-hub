@@ -6,6 +6,7 @@ const websocketSlice = createSlice({
     socket: null,
     connected: false,
     messages: [],
+    activeChat: null,
   },
   reducers: {
     setSocket: (state, action) => {
@@ -17,8 +18,21 @@ const websocketSlice = createSlice({
     addMessage: (state, action) => {
       state.messages.push(action.payload);
     },
+    setActiveChat: (state, action) => {
+      state.activeChat = action.payload;
+      state.messages = []; // Clear messages when switching chats
+    },
+    setMessages: (state, action) => {
+      state.messages = action.payload;
+    },
   },
 });
 
-export const { setSocket, setConnected, addMessage } = websocketSlice.actions;
+export const {
+  setSocket,
+  setConnected,
+  addMessage,
+  setActiveChat,
+  setMessages,
+} = websocketSlice.actions;
 export default websocketSlice.reducer;
