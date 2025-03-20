@@ -223,38 +223,46 @@ export const getAllUsersDetails = sessionHandler(async (req: Request) => {
   };
 });
 
-export const getAllEmpDetails = sessionHandler(
-  async (req: Request) => {
-    const { page = 1, search = "" } = req.query;
-    const filter: any = { role: "Employee" }; // Filter for role="Employee"
-    const pageNum = Number(page) - 1;
+export const getAllEmpDetails = sessionHandler(async (req: Request) => {
+  const { types, page = 1, search = "" } = req.query;
+  const filter: FilterQuery<UserAuthModel> = {};
+  const pageNum = Number(page) - 1;
 
-    if (search !== "") filter.$text = { $search: search };
+  // Filter for role="Employee" or other specified roles
+  if (types) {
+    const typesArray = (types as string).split(",");
+    UsersArraySchema.parse(typesArray);
+    filter.role = { $in: typesArray };
+  } else {
+    filter.role = "Employee"; // Default to "Employee" if no types are provided
+  }
 
-    const users = await User.paginate(filter, {
-      offset: pageNum * 6,
-      limit: 6,
-      select: {
-        EID: 1,
-        email: 1,
-        fullName: 1,
-        role: 1,
-        phone: 1,
-        gender: 1,
-        workmode: 1,
-        img: 1,
-        freelanceRating: 1,
-        freelanceRewardPoints: 1,
-        gigsCompleted: 1,
-        DID: 1,
-      },
-    });
+  if (search !== "") filter.$text = { $search: search as string };
 
-    return {
-      status: HttpStatusCodes.OK,
-      data: users,
-    };
+  const users = await User.paginate(filter, {
+    offset: pageNum * 6,
+    limit: 6,
+    select: {
+      EID: 1,
+      email: 1,
+      fullName: 1,
+      role: 1,
+      phone: 1,
+      gender: 1,
+      workmode: 1,
+      img: 1,
+      freelanceRating: 1,
+      freelanceRewardPoints: 1,
+      gigsCompleted: 1,
+      DID: 1,
+    },
   });
+
+  return {
+    status: HttpStatusCodes.OK,
+    data: users,
+  };
+});
 
 
 export const deleteUserByID = sessionHandler(async (req: Request) => {
