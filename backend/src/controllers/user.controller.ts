@@ -23,95 +23,116 @@ import { Gig } from "../models/gig.model";
 import z from "zod";
 import { UserAuth, UserAuthModel } from "../types/userAuth.types";
 import { client } from "../database/connection";
+import { ClientSession } from "mongoose";
 
 interface UserWithRole extends Document {
   role: UserRole;
 }
 
-export const createUser = sessionHandler(
-  async (req: Request, res: Response, session) => {
-    const users = CreateUserSchema.parse(req.body);
-    const usersEmailData: {
-      EID: string;
-      password: string;
-      email: string;
-      _id?: string;
-    }[] = [];
+export const createUser = async (
+  req: Request,
+  res: Response,
+  session: ClientSession
+) => {
+  const users = CreateUserSchema.parse(req.body);
+  const usersEmailData: {
+    EID: string;
+    password: string;
+    email: string;
+    _id?: string;
+  }[] = [];
 
-    const updatedUsers = await Promise.all(
-      users.map(async (user) => {
-        const { skills, ...data } = user;
-        const department = await DepartmentModel.findOne(
-          { DID: data.DID },
-          null,
-          {
-            session,
-          }
-        );
-        const position = await PositionModel.findOne({ PID: data.PID }, null, {
+  let flag = false;
+  await Promise.all(
+    users.map(async (user) => {
+      const { skills, ...data } = user;
+      const department = await DepartmentModel.findOne(
+        { DID: data.DID },
+        null,
+        {
           session,
-        });
-
-        const findUser = await User.findOne({ email: user.email });
-
-        if (!department || !position || findUser)
-          throw new Error(
-            "Department or Position not found or email already exists"
-          );
-
-        const result = await DepartmentModel.findOneAndUpdate(
-          { DID: data.DID },
-          { $inc: { teamSize: 1 } },
-          { session, new: true }
-        );
-        if (!result) throw new Error("Department not updated");
-        const id = await generateId(IDs.EID, session);
-        const password = generateRandomPassword();
-        const hashedPassword = await hashPassword(password);
-
-        if (skills) {
-          skills.forEach(({ skill, score }) => {
-            const hashKey = `skills:${skill}`;
-            if (score && score !== 0) client.hSet(hashKey, id, score);
-          });
         }
+      );
+      const position = await PositionModel.findOne({ PID: data.PID }, null, {
+        session,
+      });
 
-        usersEmailData.push({
-          EID: id,
-          password,
-          email: user.email,
-        });
+      const findUser = await User.findOne({ email: user.email });
 
-        return {
-          ...data,
-          skills: skills,
-          verified: false,
-          EID: id,
-          password: hashedPassword,
-          doj: new Date().toISOString().split("T")[0],
-        };
-      })
-    );
+      if (!department || !position || findUser) flag = true;
+    })
+  );
 
-    const insertedUsers = await User.create(updatedUsers, { session });
-
-    console.log(usersEmailData);
-
-    insertedUsers.forEach((user, idx) => {
-      sendVerificationEmail({ ...usersEmailData[idx], _id: user._id });
-    });
-
+  if (flag)
     return {
-      status: HttpStatusCodes.CREATED,
-      data: updatedUsers,
+      status: HttpStatusCodes.BAD_REQUEST,
+      data: {
+        msg: "Department or Position not found or email already exists",
+      },
     };
-  }
-);
 
-export const updateUserSkills = sessionHandler(async (req: Request) => {
+  const updatedUsers = await Promise.all(
+    users.map(async (user) => {
+      const { skills, ...data } = user;
+
+      const result = await DepartmentModel.findOneAndUpdate(
+        { DID: data.DID },
+        { $inc: { teamSize: 1 } },
+        { session, new: true }
+      );
+      if (!result) throw new Error("Department not updated");
+      const id = await generateId(IDs.EID, session);
+      const password = generateRandomPassword();
+      const hashedPassword = await hashPassword(password);
+
+      if (skills) {
+        skills.forEach(({ skill, score }) => {
+          const hashKey = `skills:${skill}`;
+          if (score && score !== 0) client.hSet(hashKey, id, score);
+        });
+      }
+
+      usersEmailData.push({
+        EID: id,
+        password,
+        email: user.email,
+      });
+
+      return {
+        ...data,
+        skills: skills,
+        verified: false,
+        EID: id,
+        password: hashedPassword,
+        doj: new Date().toISOString().split("T")[0],
+      };
+    })
+  );
+
+  const insertedUsers = await User.create(updatedUsers, { session });
+
+  // console.log(usersEmailData);
+
+  insertedUsers.forEach((user, idx) => {
+    sendVerificationEmail({ ...usersEmailData[idx], _id: user._id });
+  });
+
+  return {
+    status: HttpStatusCodes.CREATED,
+    data: updatedUsers,
+  };
+};
+
+export const updateUserSkills = async (req: Request) => {
   const { EID } = req.params;
   const user: UserAuth | null = await User.findOne({ EID: EID });
-  if (!user) throw new Error("Bad Request");
+  if (!user)
+    return {
+      status: HttpStatusCodes.BAD_REQUEST,
+      data: {
+        msg: "user not found",
+      },
+    };
   const { skills } = UpdateUserSkills.parse({ skills: req.body.skills });
   if (skills) {
     skills.forEach(async ({ skill, score }) => {
@@ -133,9 +154,9 @@ export const updateUserSkills = sessionHandler(async (req: Request) => {
     status: HttpStatusCodes.OK,
     data: updatedUser,
   };
-});
+};
 
-export const getAllUsers = sessionHandler(async (req: Request) => {
+export const getAllUsers = async (req: Request) => {
   const { types, page = 1, search = "" } = req.query;
   const filter: FilterQuery<UserAuthModel> = {};
   const pageNum = Number(page) - 1;
@@ -151,13 +172,14 @@ export const getAllUsers = sessionHandler(async (req: Request) => {
     offset: pageNum * 6,
     limit: 6,
   });
+
   return {
     status: HttpStatusCodes.OK,
     data: users,
   };
-});
+};
 
-export const getAllUsersDetails = sessionHandler(async (req: Request) => {
+export const getAllUsersDetails = async (req: Request) => {
   const { types, page = 1, search = "" } = req.query;
   const filter: FilterQuery<UserAuthModel> = {};
   const pageNum = Number(page) - 1;
@@ -192,62 +214,82 @@ export const getAllUsersDetails = sessionHandler(async (req: Request) => {
     status: HttpStatusCodes.OK,
     data: users,
   };
-});
+};
 
-export const deleteUserByID = sessionHandler(async (req: Request) => {
+export const deleteUserByID = async (req: Request) => {
   const { ID } = req.params;
   GetUserSchema.parse({ EID: ID });
   const user = await User.findOne({ EID: ID });
-  if (!user) throw new Error("Bad Request");
+  if (!user)
+    return {
+      status: HttpStatusCodes.BAD_REQUEST,
+      data: {
+        msg: "user not found",
+      },
+    };
   const result = await User.deleteOne({ EID: ID });
-  if (result.acknowledged === false) throw new Error("User Not Deleted");
+  if (result.acknowledged === false)
+    return {
+      status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+      data: {
+        msg: "failed to delete user",
+      },
+    };
   return {
     status: HttpStatusCodes.OK,
-    data: user,
+    data: {
+      msg: "user deleted successfully",
+    },
   };
-});
+};
 
-export const getUserById = sessionHandler(async (req: Request) => {
+export const getUserById = async (req: Request) => {
   const { ID } = req.params;
 
   GetUserSchema.parse({ EID: ID });
   const user = (await User.findOne({ EID: ID })) as UserWithRole;
-  if (!user) throw new Error("Bad Request");
+  if (!user)
+    return {
+      status: HttpStatusCodes.BAD_REQUEST,
+      data: {
+        msg: "user not found",
+      },
+    };
   return {
     status: HttpStatusCodes.OK,
     data: user,
   };
-});
+};
 
-export const uploadProfileImg = sessionHandler(
-  async (req: Request, res: Response, session) => {
-    const data = await parseFile(req);
-    if (!data || !data.fileUrl) throw new Error("failed to upload img");
-    const user = await User.findOneAndUpdate(
-      {
-        EID: req.user?.EID,
-      },
-      { $set: { img: data.fileUrl } },
-      { upsert: true, session }
-    );
-    if (!user) throw new Error("failed to store file url");
-    const url = "https://talent-hive-s3.s3.ap-south-1.amazonaws.com/";
-    const presignedUrl = await generatePresignedUrl(
-      "talent-hive-s3",
-      data.fileUrl.substring(url.length)
-    );
-    console.log(presignedUrl);
-    return {
-      message: "Success",
-      data: {
-        ...data,
-        fileUrl: presignedUrl,
-      },
-    };
-  }
-);
+export const uploadProfileImg = async (
+  req: Request,
+  _res: Response,
+  session: ClientSession
+) => {
+  const data = await parseFile(req);
+  if (!data || !data.fileUrl) throw new Error("failed to upload img");
+  const user = await User.findOneAndUpdate(
+    {
+      EID: req.user?.EID,
+    },
+    { $set: { img: data.fileUrl } },
+    { upsert: true, session }
+  );
+  if (!user) throw new Error("failed to store file url");
+  const url = "https://talent-hive-s3.s3.ap-south-1.amazonaws.com/";
+  const presignedUrl = await generatePresignedUrl(
+    "talent-hive-s3",
+    data.fileUrl.substring(url.length)
+  );
+  return {
+    status: HttpStatusCodes.OK,
+    data: {
+      fileUrl: presignedUrl,
+    },
+  };
+};
 
-export const getProfile = sessionHandler(async (req: Request) => {
+export const getProfile = async (req: Request) => {
   const EID = req.user?.EID;
   const user = await User.findOne({ EID: EID });
   if (!user) throw new Error("User not found");
@@ -255,9 +297,9 @@ export const getProfile = sessionHandler(async (req: Request) => {
     status: HttpStatusCodes.OK,
     data: user,
   };
-});
+};
 
-export const updateProfile = sessionHandler(async (req: Request) => {
+export const updateProfile = async (req: Request) => {
   const EID = req.user?.EID;
   const user: UserAuth | null = await User.findOne({ EID: EID });
   if (!user) throw new Error("User not found");
@@ -301,13 +343,20 @@ export const updateProfile = sessionHandler(async (req: Request) => {
     },
     { upsert: true }
   );
-  if (!updatedUser) throw new Error("user update failed");
+  if (!updatedUser)
+    return {
+      status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+      data: {
+        msg: "error updating the user",
+      },
+    };
   return {
+    status: HttpStatusCodes.OK,
     data: updatedUser,
   };
-});
+};
 
-export const getGigsByUser = sessionHandler(async (req: Request) => {
+export const getGigsByUser = async (req: Request) => {
   const { page = 1, search = "", DIDs, ManagerIDs } = req.query;
   const pageNum = Number(page) - 1;
   const EID = req.user?.EID;
@@ -369,9 +418,9 @@ export const getGigsByUser = sessionHandler(async (req: Request) => {
     status: HttpStatusCodes.OK,
     data: gigs,
   };
-});
+};
 
-export const resendVerifyMail = sessionHandler(async (req: Request) => {
+export const resendVerifyMail = async (req: Request) => {
   const { email } = req.body;
   z.string().email({ message: "Invalid email" }).parse(email);
 
@@ -396,7 +445,7 @@ export const resendVerifyMail = sessionHandler(async (req: Request) => {
 
   const password = generateRandomPassword();
   const hashedPassword = hashPassword(password);
-  const updatedUser = User.findOneAndUpdate(
+  User.findOneAndUpdate(
     { email: user.email },
     {
       $set: {
@@ -413,11 +462,13 @@ export const resendVerifyMail = sessionHandler(async (req: Request) => {
 
   return {
     status: HttpStatusCodes.OK,
-    data: updatedUser,
+    data: {
+      msg: "verification mail sent successfully",
+    },
   };
-});
+};
 
-export const getEmployeesUnderManager = sessionHandler(async (req: Request) => {
+export const getEmployeesUnderManager = async (req: Request) => {
   const EID = req.user?.EID;
   const { page = 1 } = req.query;
 
@@ -438,31 +489,55 @@ export const getEmployeesUnderManager = sessionHandler(async (req: Request) => {
     status: HttpStatusCodes.OK,
     data: users,
   };
-});
+};
 
 export const userControlRouter = Router();
 
-userControlRouter.post("/create", checkAuth([UserRole.Admin]), createUser);
+userControlRouter.post(
+  "/create",
+  checkAuth([UserRole.Admin]),
+  sessionHandler(createUser)
+);
 userControlRouter.get(
   "",
   checkAuth([UserRole.Admin, UserRole.Manager]),
-  getAllUsers
+  sessionHandler(getAllUsers)
 );
-userControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteUserByID);
-userControlRouter.get("/get-user/:ID", checkAuth([]), getUserById);
-userControlRouter.get("/my-gigs", checkAuth([]), getGigsByUser);
-userControlRouter.post("/upload-img", checkAuth([]), uploadProfileImg);
-userControlRouter.get("/profile", checkAuth([]), getProfile);
-userControlRouter.post("/update-profile", checkAuth([]), updateProfile);
+userControlRouter.delete(
+  "/:ID",
+  checkAuth([UserRole.Admin]),
+  sessionHandler(deleteUserByID)
+);
+userControlRouter.get(
+  "/get-user/:ID",
+  checkAuth([]),
+  sessionHandler(getUserById)
+);
+userControlRouter.get("/my-gigs", checkAuth([]), sessionHandler(getGigsByUser));
+userControlRouter.post(
+  "/upload-img",
+  checkAuth([]),
+  sessionHandler(uploadProfileImg)
+);
+userControlRouter.get("/profile", checkAuth([]), sessionHandler(getProfile));
+userControlRouter.post(
+  "/update-profile",
+  checkAuth([]),
+  sessionHandler(updateProfile)
+);
 userControlRouter.post(
   "/update-user-skills/:EID",
   checkAuth([UserRole.Admin, UserRole.Manager]),
-  updateUserSkills
+  sessionHandler(updateUserSkills)
 );
-userControlRouter.post("/resend-verify-mail", resendVerifyMail);
-userControlRouter.get("/users-details", checkAuth([]), getAllUsersDetails);
+userControlRouter.post("/resend-verify-mail", sessionHandler(resendVerifyMail));
+userControlRouter.get(
+  "/users-details",
+  checkAuth([]),
+  sessionHandler(getAllUsersDetails)
+);
 userControlRouter.get(
   "/users-under-manager",
   checkAuth([UserRole.Manager]),
-  getEmployeesUnderManager
+  sessionHandler(getEmployeesUnderManager)
 );

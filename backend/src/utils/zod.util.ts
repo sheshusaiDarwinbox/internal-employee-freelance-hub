@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { PositionTypeEnum } from "../models/position.model";
-import { RequestTypeEnum } from "../models/request.model";
+// import { RequestTypeEnum } from "../models/request.model";
 import { extendedTechSkills } from "./insertSkills.util";
 
 export const EIDScheme = z.union([
@@ -196,9 +196,9 @@ export const AssignManagerZodSchema = z.object({
     .regex(/^[a-zA-Z0-9]+$/, { message: "DID must be alphanumeric" }),
 });
 
-export const RequestZodSchema = z.object({
-  reqType: z.nativeEnum(RequestTypeEnum),
-});
+// export const RequestZodSchema = z.object({
+//   reqType: z.nativeEnum(RequestTypeEnum),
+// });
 
 export const BidZodSchema = z.object({
   GigID: z
