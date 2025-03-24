@@ -4,15 +4,16 @@ declare global {
   namespace Express {
     interface User {
       EID: string;
-      password: string;
+      password?: string;
       role: keyof typeof UserRole;
       email?: string;
-      JID: string;
+      fullName?: string;
+      PID: string;
       DID: string;
       ManagerID: string;
       gender?: string;
-      DOB?: string;
-      DOJ?: string;
+      dob?: string;
+      doj?: string;
       nationality?: string;
       maritalStatus?: string;
       bloodGroup?: string;
@@ -28,6 +29,8 @@ declare global {
       freelanceRating?: number;
       skills?: string[];
       AccountBalance?: number;
+      img?: string;
+      gigsCompleted?: number;
     }
   }
 }

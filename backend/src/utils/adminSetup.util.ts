@@ -1,6 +1,7 @@
 import { DepartmentModel } from "../models/department.model";
-import { JobModel } from "../models/job.model";
+import { PositionModel } from "../models/position.model";
 import { User } from "../models/userAuth.model";
+import { insertSkills } from "./insertSkills.util";
 import { hashPassword } from "./password.util";
 
 export const setAdmin = async () => {
@@ -11,7 +12,7 @@ export const setAdmin = async () => {
       await User.create({
         DID: "D000000",
         EID: "EMP000000",
-        JID: "J000000",
+        PID: "P000000",
         role: "Admin",
         ManagerID: "EMP000000",
         doj: new Date(),
@@ -28,23 +29,24 @@ export const setAdmin = async () => {
         name: "adminDepartment",
         description: "this is admin department",
         DID: "D000000",
-        type: "Engineering",
+        function: "Engineering",
         teamSize: 1,
       }).then(() => {
         console.log("Admin Department Created");
       });
-    const findJob = await JobModel.find({ JID: "J000000" });
-    if (findJob.length === 0)
-      await JobModel.create({
-        title: "adminJob",
-        description: "this is admin job",
+    const findPosition = await PositionModel.find({ PID: "P000000" });
+    if (findPosition.length === 0)
+      await PositionModel.create({
+        title: "adminPosition",
+        description: "this is admin Position",
         DID: "D000000",
-        JID: "J000000",
+        PID: "P000000",
         salary: 0,
-        type: "Full Time",
+        type: "FullTime",
       }).then(() => {
-        console.log("Admin Job Created");
+        console.log("Admin Position Created");
       });
+    await insertSkills();
   } catch (err) {
     console.log(err);
   }

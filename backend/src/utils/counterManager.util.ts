@@ -1,23 +1,24 @@
 import { CounterID } from "../models/idCounter.model";
 import { IDs } from "../models/idCounter.model";
+import { ClientSession } from "mongoose";
 
 export const IDMap = {
   EID: "EMP",
   OID: "O",
-  TaskID: "T",
+  GigID: "G",
   DID: "D",
-  JID: "J",
+  PID: "P",
   BidID: "B",
   NID: "N",
   ReqID: "Req",
   RefID: "Ref",
 };
 
-export const generateId = async (type: IDs) => {
+export const generateId = async (type: IDs, session: ClientSession) => {
   const counterDoc = await CounterID.findOneAndUpdate(
     { id: type },
     { $inc: { counter: 1 } },
-    { new: true, upsert: true }
+    { session, new: true, upsert: true }
   );
 
   const id = `${IDMap[type]}${counterDoc.counter.toString().padStart(6, "0")}`;
