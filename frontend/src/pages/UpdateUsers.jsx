@@ -24,6 +24,8 @@ const UsersPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(6); // Set number of users per page
   const navigate = useNavigate();
+  const [departmentNames, setDepartmentNames] = useState({}); 
+
 
   const handleRemoveSkill = (skillToRemove) => {
     setFormData({
@@ -58,6 +60,29 @@ const UsersPage = () => {
         setUsers(response.data.docs);
         setFilteredUsers(response.data.docs);
         setLoading(false);
+
+        // Fetch department names
+        const deptNames = {};
+        for (const user of response.data.docs) {
+          if (user.DID && !deptNames[user.DID]) {
+            try {
+              const deptResponse = await api.get(
+                `api/departments/${user.DID}`,
+                {
+                  withCredentials: true,
+                }
+              );
+              deptNames[user.DID] = deptResponse.data.name;
+            } catch (deptErr) {
+              console.error(
+                `Failed to fetch department name for DID ${user.DID}:`,
+                deptErr
+              );
+              deptNames[user.DID] = "Unknown Department"; // Default if fetch fails
+            }
+          }
+        }
+        setDepartmentNames(deptNames);
       } catch (err) {
         console.error("Failed to fetch users:", err);
         setLoading(false);
@@ -77,10 +102,8 @@ const UsersPage = () => {
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    const filtered = users.filter(
-      (user) =>
-        user.fullName.toLowerCase().includes(e.target.value.toLowerCase()) ||
-        user.role.toLowerCase().includes(e.target.value.toLowerCase())
+    const filtered = users.filter((user) =>
+      user.fullName.toLowerCase().includes(e.target.value.toLowerCase())
     );
     setFilteredUsers(filtered);
   };
@@ -120,7 +143,7 @@ const UsersPage = () => {
         <div className="w-full sm:w-1/3">
           <TextInput
             type="text"
-            placeholder="Search by name or role"
+            placeholder="Search by name"
             value={searchTerm}
             onChange={handleSearch}
             icon={HiSearch}
@@ -153,7 +176,7 @@ const UsersPage = () => {
                   {user.fullName}
                 </Table.Cell>
                 <Table.Cell>{user.role}</Table.Cell>
-                <Table.Cell>{user.DID}</Table.Cell>
+                <Table.Cell>{departmentNames[user.DID] || user.DID}</Table.Cell>
                 <Table.Cell>
                   {user.skills.map((skill, index) => (
                     <span

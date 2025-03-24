@@ -2,7 +2,7 @@ import { type Request, type Response, Router } from "express";
 import { CreateGigZodSchema } from "../utils/zod.util";
 import { User, UserRole } from "../models/userAuth.model";
 import { ApprovalStatus, OngoingStatus, Gig } from "../models/gig.model";
-import { RequestModel, RequestTypeEnum } from "../models/request.model";
+// import { RequestModel, RequestTypeEnum } from "../models/request.model";
 import { generateId } from "../utils/counterManager.util";
 import { IDs } from "../models/idCounter.model";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
@@ -19,6 +19,7 @@ import { GigModel, GigSchema } from "../types/gig.types";
 import multer from "multer";
 import { NotificationModel } from "../models/notification.model";
 import { FilterQuery } from "mongoose";
+import { AccountDetailsModel } from "../models/accountDetails.model";
 const upload = multer();
 
 export const gigControlRouter = Router();
@@ -47,23 +48,24 @@ export const createGig = sessionHandler(
       createdAt: Date.now(),
       ongoingStatus: OngoingStatus.UnAssigned,
       approvalStatus:
-        data.amount > 0 ? ApprovalStatus.PENDING : ApprovalStatus.APPROVED,
+         ApprovalStatus.APPROVED,
     };
 
     const [gig] = await Gig.create([gigdata], { session });
 
     if (!gig) throw new Error("failed to create gig");
 
-    if (data.amount > 0) {
-      const request = await RequestModel.create({
-        ReqID: await generateId(IDs.ReqID, session),
-        From: data.ManagerID,
-        To: "EMP000000",
-        reqType: RequestTypeEnum.ApproveGig,
-        description: `Request to approve gig from ${data.ManagerID}`,
-      });
-      if (!request) throw new Error("failed to create request");
-    }
+    // if (data.amount > 0) {
+    //   const request = await RequestModel.create({
+    //     ReqID: await generateId(IDs.ReqID, session),
+    //     From: data.ManagerID,
+    //     To: "EMP000000",
+    //     reqType: RequestTypeEnum.ApproveGig,
+    //     description: `Request to approve gig from ${data.ManagerID}`,
+       
+    //   });
+    //   if (!request) throw new Error("failed to create request");
+    // }
     return {
       status: HttpStatusCodes.CREATED,
       data: gigdata,
@@ -436,6 +438,40 @@ export const updateGigReview = sessionHandler(
   }
 );
 
+
+export const getPaymentsByEID = sessionHandler(async (req: Request) => {
+  const { EID } = req.params;
+  
+  const payments = await Gig.find({ EID: EID, ongoingStatus: "Reviewed" }, 'completedAt title amount') as GigSchema[];
+  
+  const totalAmount = payments.reduce((total, gig) => total + (gig.amount || 0), 0);
+  
+  await User.findOneAndUpdate(
+    { EID: EID },
+    { $set: { accountBalance: totalAmount } }
+  );
+
+  await AccountDetailsModel.findOneAndUpdate(
+    {EID: EID},
+    { $set : { totalBalance : totalAmount} }
+  )
+
+  return {
+    status: HttpStatusCodes.OK,
+    data: payments,
+  };
+});
+
+export const getTotalGigs  = sessionHandler(async () => {
+  const totalGigs = await Gig.countDocuments();
+  return {
+    status: HttpStatusCodes.OK,
+    data: { totalGigs },
+  };
+});
+
+gigControlRouter.get("/total", getTotalGigs);
+
 gigControlRouter.post("/post", checkAuth([UserRole.Manager]), createGig);
 gigControlRouter.get("", checkAuth([]), getAllGigs);
 gigControlRouter.get("/:GigID", checkAuth([]), getGigById);
@@ -447,4 +483,5 @@ gigControlRouter.post(
   upload.array("files"),
   updateGigProgress
 );
-gigControlRouter.post("/:GigID/review", checkAuth([]), updateGigReview);
+gigControlRouter.post("/:GigID/review", checkAuth([]), updateGigReview); 
+gigControlRouter.get("/payments/:EID", checkAuth([]), getPaymentsByEID);

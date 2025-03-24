@@ -1,4 +1,4 @@
-import { Socket } from "socket.io";
+// import { Socket } from "socket.io";
 import { UserAuth } from "./userAuth.types";
 
 declare module "socket.io" {

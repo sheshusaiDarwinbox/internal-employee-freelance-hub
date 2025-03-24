@@ -34,7 +34,7 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/users/emp', { credentials: 'include' });
+        const response = await fetch('http://localhost:3000/api/users/emp-details', { credentials: 'include' });
         const data = await response.json();
         const usersWithGigs = await Promise.all(
           data.docs.map(async (user) => {

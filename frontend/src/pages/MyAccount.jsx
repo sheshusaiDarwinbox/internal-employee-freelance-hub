@@ -7,38 +7,38 @@ import {
   CreditCard,
 } from "lucide-react";
 import { useSelector } from "react-redux";
-import api from "../utils/api"; // Assuming you have your API setup
+import api from "../utils/api"; 
 
 function MyAccount() {
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState("");
   const [accountDetails, setAccountDetails] = useState({
-    name: "",
     bankName: "",
     accountNo: "",
     IFSCNo: "",
     totalBalance: 0,
+    expiredDate:"",
+    CVC:""
   });
   const user = useSelector((state) => state.auth.user);
-  const [paymentHistory, setPaymentHistory] = useState([]); // Add state for payment history
+  const [paymentHistory, setPaymentHistory] = useState([]); 
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const fetchAccountDetails = async () => {
+    try {
+      const response = await api.get(`/api/accounts/${user.EID}`, {
+        withCredentials: true,
+      });
+      setAccountDetails(response.data);
+    } catch (error) {
+      console.error("Error fetching account details:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchAccountDetails = async () => {
-      try {
-        const response = await api.get(`/api/accounts/${user.EID}`, {
-          withCredentials: true,
-        });
-        setAccountDetails(response.data);
-      } catch (error) {
-        console.error("Error fetching account details:", error);
-      }
-    };
+    
 
     const fetchPaymentHistory = async () => {
       try {
-        // Assuming you have an API endpoint to fetch payment history
-        const response = await api.get(`/api/payments/${user.EID}`, {
+        const response = await api.get(`/api/gigs/payments/${user.EID}`, {
           withCredentials: true,
         });
         setPaymentHistory(response.data);
@@ -53,18 +53,6 @@ function MyAccount() {
     }
   }, [user]);
 
-  const handleWithdrawSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // Implement your withdrawal logic here, e.g., make an API call
-      console.log("Withdrawal amount:", withdrawAmount);
-      setShowWithdrawModal(false);
-      setWithdrawAmount("");
-    } catch (error) {
-      console.error("Error during withdrawal:", error);
-    }
-  };
-
   const handleUpdateAccount = async (e) => {
     e.preventDefault();
     try {
@@ -72,6 +60,7 @@ function MyAccount() {
         withCredentials: true,
       });
       setShowEditModal(false);
+      fetchAccountDetails(); 
     } catch (error) {
       console.error("Error updating account details:", error);
     }
@@ -84,6 +73,11 @@ function MyAccount() {
       [name]: value,
     }));
   };
+
+    const formatDate = (dateString) => {
+        const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+        return new Date(dateString).toLocaleDateString('en-GB', options).replace(/\//g, '-');
+    };
 
   return (
     <div className="min-h-screen bg-stone-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -109,20 +103,12 @@ function MyAccount() {
               </div>
               <div className="text-stone-100">
                 <p className="text-4xl font-bold">
-                  ₹{user.accountBalance || 0}
+                  ₹{accountDetails.totalBalance || 0}
                 </p>
                 <p className="text-sm text-stone-300 mt-1">
                   Available for withdrawal
                 </p>
               </div>
-            </div>
-            <div className="p-6">
-              <button
-                onClick={() => setShowWithdrawModal(true)}
-                className="w-full bg-stone-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-stone-700 transition duration-200"
-              >
-                Withdraw Funds
-              </button>
             </div>
           </div>
 
@@ -169,9 +155,28 @@ function MyAccount() {
                   </p>
                 </div>
               </div>
+              <div className="flex items-center space-x-3 p-3 bg-stone-100 rounded-lg">
+                <CreditCard className="w-5 h-5 text-stone-500" />
+                <div>
+                  <p className="text-sm text-stone-500">Expired Date(MM/YY)</p>
+                  <p className="font-medium text-stone-800">
+                    {accountDetails.expiredDate}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-3 bg-stone-100 rounded-lg">
+                <CreditCard className="w-5 h-5 text-stone-500" />
+                <div>
+                  <p className="text-sm text-stone-500">CVC</p>
+                  <p className="font-medium text-stone-800">
+                    {accountDetails.CVC}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
 
         {/* Payment History */}
         <div className="bg-white rounded-2xl shadow-md p-6">
@@ -185,21 +190,17 @@ function MyAccount() {
                   <th className="pb-3 font-medium text-stone-600">Date</th>
                   <th className="pb-3 font-medium text-stone-600">Task</th>
                   <th className="pb-3 font-medium text-stone-600">Amount</th>
-                  <th className="pb-3 font-medium text-stone-600">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {paymentHistory.map((payment, index) => (
                   <tr key={index} className="text-stone-800">
-                    <td className="py-4">{payment.date}</td>
-                    <td className="py-4 font-medium">{payment.task}</td>
-                    <td className="py-4 text-stone-800 font-semibold">
-                      {payment.amount}
-                    </td>
+                    <td className="py-4">{formatDate(payment.completedAt)}</td>
+                    <td className="py-4 font-medium">{payment.title}</td>
                     <td className="py-4">
                       <span className="inline-flex items-center space-x-1 text-stone-600">
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>{payment.status}</span>
+                        <span>{payment.amount}</span>
                       </span>
                     </td>
                   </tr>
@@ -208,48 +209,6 @@ function MyAccount() {
             </table>
           </div>
         </div>
-
-        {/* Withdraw Modal */}
-        {showWithdrawModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6">
-              <h3 className="text-xl font-semibold text-stone-800 mb-4">
-                Withdraw Amount
-              </h3>
-              <form onSubmit={handleWithdrawSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
-                    Amount to Withdraw
-                  </label>
-                  <input
-                    type="number"
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
-                    placeholder="Enter amount"
-                    required
-                  />
-                </div>
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowWithdrawModal(false)}
-                    className="px-4 py-2 text-stone-700 hover:text-stone-900"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700"
-                  >
-                    Confirm Withdrawal
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
         {/* Edit Account Modal */}
         {showEditModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -298,6 +257,32 @@ function MyAccount() {
                     required
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                    Expired Date
+                  </label>
+                  <input
+                    type="text"
+                    name="expiredDate"
+                    value={accountDetails.expiredDate}
+                    onChange={handleInputChange}
+                    className="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                      CVC
+                  </label>
+                  <input
+                    type="number"
+                    name="CVC"
+                    value={accountDetails.CVC}
+                    onChange={handleInputChange}
+                    className="w-full border border-stone-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-stone-500 focus:border-stone-500"
+                    required
+                  />
+                </div>
                 <div className="flex justify-end space-x-3 mt-6">
                   <button
                     type="button"
@@ -306,10 +291,7 @@ function MyAccount() {
                   >
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700"
-                  >
+                  <button>
                     Save Changes
                   </button>
                 </div>

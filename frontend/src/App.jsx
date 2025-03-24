@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import GigPage from "./pages/GigPage";
@@ -10,12 +9,13 @@ import {
   userSidebarNavLinks,
 } from "./utils/sidebarUtils";
 import AllGigs from "./pages/Gigs";
-
 import Profile from "./pages/Profile";
 import ChatPage from "./pages/ChatPage";
 import ManagePositions from "./pages/ManagePositions";
 import ManageUsers from "./pages/ManageUsers";
 import GigAssignPage from "./pages/GigAssignPage";
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 
 const Home = lazy(() => import("./pages/Home/Homepage"));
 const About = lazy(() => import("./pages/Home/About"));
@@ -35,6 +35,18 @@ const UserProfile = lazy(() => import("../src/pages/UserProfile"));
 const UpdateUser = lazy(() => import("../src/pages/UpdateUsers"));
 const MyHistory = lazy(() => import("../src/pages/MyHistory"));
 const Leaderboard = lazy(() => import("../src/pages/LeaderBoard"));
+
+let stripePromise;
+const stripeKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+
+if (stripeKey) {
+  stripePromise = loadStripe(stripeKey);
+} else {
+  console.error(
+    'Stripe publishable key is not set in environment variables.'
+  );
+  stripePromise = Promise.resolve(null);
+}
 
 const styles = `
   body {
@@ -112,7 +124,7 @@ function App() {
               <Route path="work-history" element={<MyHistory />} />
               <Route path="my-activity" element={<MyActivity />} />
               <Route path="profile" element={<Profile />} />
-              <Route path="my-account" element={<MyAccount />} /> 
+              <Route path="my-account" element={<MyAccount />} />
               <Route path="chat" element={<ChatPage />} />
             </Route>
 
@@ -151,6 +163,11 @@ function App() {
             >
               <Route index element={<AllGigs />} />
               <Route path="my-gigs" element={<MyGigs />} />
+              <Route path="gig-assign/:GigID" element={
+                <Elements stripe={stripePromise}>
+                    <GigAssignPage />
+                </Elements>
+              } />
               <Route path="all-gigs" element={<AllGigs />} />
               <Route path="post-gigs" element={<PostGigs />} />
               <Route path="leaderboard" element={<Leaderboard />} />
@@ -158,7 +175,7 @@ function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="gig/:id" element={<GigPage />} />
-              <Route path="gig-assign/:GigID" element={<GigAssignPage />} />
+              {/* <Route path="gig-assign/:GigID" element={<GigAssignPage />} /> */}
               <Route path="users/:userId" element={<UserProfile />} />
             </Route>
 

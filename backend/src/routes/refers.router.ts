@@ -1,7 +1,7 @@
-import { Router } from "express";
+// import { Router } from "express";
 
-import { ReferControlRouter } from "../controllers/refer.controller";
+// import { ReferControlRouter } from "../controllers/refer.controller";
 
-export const referRouter = Router();
+// export const referRouter = Router();
 
-referRouter.use("/refers", ReferControlRouter);
+// referRouter.use("/refers", ReferControlRouter);

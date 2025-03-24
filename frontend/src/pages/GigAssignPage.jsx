@@ -21,6 +21,13 @@ import Loading from "../components/Loading";
 import { useParams } from "react-router-dom";
 import { formatDate } from "../utils/dateUtils";
 import gigImg from "../assets/gig.jpeg";
+import { FileIcon, Image as ImageIcon } from "lucide-react";
+import { toast } from 'react-toastify';
+import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { CheckCircle } from 'lucide-react'; 
+
 
 function ReviewModal({ onClose, onSubmit }) {
   const [rating, setRating] = useState(0);
@@ -88,7 +95,9 @@ function ReviewModal({ onClose, onSubmit }) {
             />
           </div>
 
+          
           <div className="flex justify-end gap-3">
+          
             <button
               type="button"
               onClick={onClose}
@@ -108,8 +117,6 @@ function ReviewModal({ onClose, onSubmit }) {
     </div>
   );
 }
-
-import { FileIcon, Image as ImageIcon } from "lucide-react";
 
 function FilePreviewModal({ file, onClose }) {
   const fileType = getFileType(file);
@@ -363,7 +370,186 @@ function EmployeeCard({ employee }) {
   );
 }
 
+function PaymentModal({ onClose, onSubmit }) {
+  // const [amount, setAmount] = useState("");
+  const stripe = useStripe();
+  const elements = useElements();
+  const [clientSecret, setClientSecret] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentError, setPaymentError] = useState(null);
+  const [paymentAmount, setPaymentAmount] = useState(onSubmit.amount);
+  const [accountDetails, setAccountDetails] = useState(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false); 
+
+  useEffect(() => {
+    const fetchAccountDetails = async () => {
+      try {
+        const response = await api.get(`/api/accounts/${onSubmit.EID}`, {
+          withCredentials: true,
+        });
+        setAccountDetails(response.data);
+      } catch (error) {
+        console.error("Error fetching account details:", error);
+        toast.error("Failed to fetch account details.");
+      }
+    };
+
+    fetchAccountDetails();
+  }, [onSubmit.EID]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setPaymentError(null);
+    try {
+      const response = await api.post('/api/accounts/create-payment-intent', {
+        amount: paymentAmount,
+        EID: onSubmit.EID,
+      }, { withCredentials: true });
+
+      if (response.data && response.data.clientSecret) {
+        setClientSecret(response.data.clientSecret);
+        console.log("Client Secret Recieved", response.data.clientSecret);
+      } else {
+        toast.error('Failed to get client secret.');
+        setIsSubmitting(false);
+        console.error("Client secret not recieved", response);
+        return;
+      }
+
+      if (stripe && elements) {
+        try {
+          if (!clientSecret) {
+            toast.error('Client secret is not available. Please try again.');
+            setIsSubmitting(false);
+            return;
+          }
+          console.log("Client Secret used in confirmCardPayment:", clientSecret);
+          const result = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+              card: elements.getElement(CardElement),
+            },
+          });
+
+          if (result.error) {
+            console.error(result.error.message);
+            toast.error(`Payment Error: ${result.error.message}`);
+            setPaymentError(result.error.message);
+          } else {
+            if (result.paymentIntent.status === 'succeeded') {
+              await api.post('/api/accounts/payment-success', { paymentIntentId: result.paymentIntent.id }, { withCredentials: true });
+
+              await api.put(`/api/accounts/${onSubmit.EID}`, {
+                totalBalance: (onSubmit.totalBalance || 0) + parseFloat(paymentAmount),
+              }, { withCredentials: true });
+
+              toast.success('Payment successful!');
+              setPaymentSuccess(true); // Set payment success state
+              setIsSubmitting(false);
+            }
+          }
+        } catch (error) {
+          console.error('Error during payment confirmation:', error);
+          toast.error(`Payment confirmation error: ${error.message || 'An unexpected error occurred.'}`);
+          setPaymentError(error.message || 'An unexpected error occurred.');
+          setIsSubmitting(false);
+        }
+      } else {
+        toast.error('Stripe.js has not loaded.');
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('Error during payment intent creation:', error);
+      toast.error(`Payment intent error: ${error.message || 'An unexpected error occurred.'}`);
+      setIsSubmitting(false);
+    }
+  };
+
+  if (paymentSuccess) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-8 text-center">
+          <CheckCircle className="w-16 h-16 mx-auto text-green-500 mb-4" />
+          <h3 className="text-xl font-semibold mb-4">Payment Successful!</h3>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg w-full max-w-lg p-6">
+      <h3 className="text-xl font-semibold mb-4">Payment</h3>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Amount
+          </label>
+          <input
+            type="number"
+            value={paymentAmount}
+            onChange={(e) => setPaymentAmount(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Card Details
+          </label>
+          <div className="border border-gray-300 rounded-lg p-3"> {/* Added border and padding */}
+            <CardElement
+              options={{
+                style: {
+                  base: {
+                    fontSize: '16px',
+                    color: '#424770',
+                    '::placeholder': {
+                      color: '#aab7c4',
+                    },
+                  },
+                  invalid: {
+                    color: '#9e2146',
+                  },
+                },
+                
+                layout: 'vertical', // Display fields in block format
+              }}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Processing...' : 'Submit Payment'}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  );
+}
+
+
 function GigAssignPage() {
+  const [showPaymentModal, setShowPaymentModal] = useState(false); // New state for payment modal
+  // const [paymentError, setPaymentError] = useState(null); // Define paymentError state
   const [selectedFile, setSelectedFile] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [gigData, setGigData] = useState(null);
@@ -371,6 +557,10 @@ function GigAssignPage() {
   const [error, setError] = useState(null);
   const [employee, setEmployee] = useState(null);
   const { GigID } = useParams();
+  const [accountDetails, setAccountDetails] = useState(null);
+  // const [amount, setAmount] = useState('');
+
+  const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
   useEffect(() => {
     const fetchGig = async () => {
@@ -378,8 +568,6 @@ function GigAssignPage() {
         setLoading(true);
         setError(null);
 
-        // For development, use mock data
-        // In production, uncomment the API call
         const response = await api.get(`api/gigs/${GigID}`, {
           withCredentials: true,
         });
@@ -402,10 +590,56 @@ function GigAssignPage() {
       }
     };
 
+    const fetchAccountDetails = async () => {
+      try {
+        const response = await api.get(`/api/accounts/${gigData.EID}`, {
+          withCredentials: true,
+        });
+        setAccountDetails(response.data);
+      } catch (error) {
+        console.error("Error fetching account details:", error);
+        toast.error("Failed to fetch account details.");
+      }
+    };
+
     if (GigID) {
       fetchGig();
+      if (gigData) {
+        fetchAccountDetails();
+      }
     }
   }, [GigID]);
+
+
+  // const handlePaymentSubmit = async () => {
+  //   try {
+  //     const response = await api.post(`api/payments`, { amount: parseFloat(amount) }, {
+  //       withCredentials: true,
+  //     });
+
+  //     if (response.status === 200) {
+  //       // Update user's total balance
+  //       const userResponse = await api.get(`api/users/get-user/${employee.id}`, {
+  //         withCredentials: true,
+  //       });
+  //       const updatedBalance = userResponse.data.totalBalance + parseFloat(amount);
+  //       await api.put(`api/users/update-balance`, { totalBalance: updatedBalance }, {
+  //         withCredentials: true,
+  //       });
+
+  //       // Update gigData to mark payment as done
+  //       setGigData(prev => prev ? { ...prev, paymentDone: true } : null);
+
+  //       setShowPaymentModal(false);
+  //       toast.success("Payment Successful");
+  //       setShowReviewModal(true); // Redirect to review modal
+  //     }
+  //   } catch (err) {
+  //     console.error("Error processing payment:", err);
+  //     toast.error("Payment Failed");
+  //   }
+  // };
+
 
   const handleFeedbackSubmit = async (reviewData) => {
     try {
@@ -526,21 +760,32 @@ function GigAssignPage() {
 
             {/* Progress Tracking */}
             <div className="mt-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Progress
-                </h2>
-                {totalProgress === 100 &&
-                  gigData.ongoingStatus !== "Reviewed" && (
-                    <button
-                      onClick={() => setShowReviewModal(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <MessageSquare className="w-5 h-5" />
-                      Submit Feedback
-                    </button>
-                  )}
-              </div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Progress
+          </h2>
+          <div className="flex gap-2">
+          {accountDetails && accountDetails.totalBalance > 0 && (
+                  <button
+                    onClick={() => setShowPaymentModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <DollarSign className="w-5 h-5" />
+                    Make Payment
+                  </button>
+            )}
+            {totalProgress === 100 &&
+              gigData.ongoingStatus !== "Reviewed" && (
+                <button
+                  onClick={() => setShowReviewModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  Submit Feedback
+                </button>
+              )}
+          </div>
+          </div>
               {gigData.progressTracking.map((progress, index) => (
                 <div key={index} className="bg-gray-50 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
@@ -607,6 +852,16 @@ function GigAssignPage() {
         />
       )}
 
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <Elements stripe={stripePromise}>
+          <PaymentModal
+            onClose={() => setShowPaymentModal(false)}
+            onSubmit={{ amount: gigData.amount, EID: gigData.EID, totalBalance: employee.totalBalance }}
+          />
+        </Elements>
+      )}
+
       {/* Review Modal */}
       {showReviewModal && (
         <ReviewModal
@@ -615,6 +870,7 @@ function GigAssignPage() {
         />
       )}
     </div>
+    
   );
 }
 

@@ -32,7 +32,13 @@ interface UserWithRole extends Document {
 
 export const createUser = sessionHandler(
   async (req: Request, res: Response, session) => {
-    const users = CreateUserSchema.parse(req.body);
+    // const users = CreateUserSchema.parse(req.body);
+    let users;
+      if (Array.isArray(req.body)) {
+        users = CreateUserSchema.parse(req.body);
+      } else {
+        users = [CreateUserSchema.parse(req.body)]; //wrap the object into an array.
+      }
     const usersEmailData: {
       EID: string;
       password: string;
@@ -42,7 +48,19 @@ export const createUser = sessionHandler(
 
     const updatedUsers = await Promise.all(
       users.map(async (user) => {
-        const { skills, ...data } = user;
+        const data = user as {
+          DID: string;
+          PID: string;
+          role: "Admin" | "Employee" | "Manager" ;
+          ManagerID: string;
+          email: string;
+          skills?: {
+            skill: string;
+            score?: number;
+          }[];
+        };
+        const skills = data.skills;
+
         const department = await DepartmentModel.findOne(
           { DID: data.DID },
           null,
@@ -54,36 +72,41 @@ export const createUser = sessionHandler(
           session,
         });
 
-        const findUser = await User.findOne({ email: user.email });
+        const findUser = await User.findOne({ email: data.email });
 
-        if (!department || !position || findUser)
+        if (!department || !position || findUser) {
           throw new Error(
             "Department or Position not found or email already exists"
           );
+        }
 
         const result = await DepartmentModel.findOneAndUpdate(
           { DID: data.DID },
           { $inc: { teamSize: 1 } },
           { session, new: true }
         );
-        if (!result) throw new Error("Department not updated");
-        const ids: string[] = []; // Array to hold generated IDs
+        if (!result) {
+          throw new Error("Department not updated");
+        }
+        const ids: string[] = [];
         const id = await generateId(IDs.EID, session);
-        ids.push(id); // Store the generated ID in the array
+        ids.push(id);
         const password = generateRandomPassword();
         const hashedPassword = await hashPassword(password);
 
         if (skills) {
           skills.forEach(({ skill, score }) => {
             const hashKey = `skills:${skill}`;
-            if (score && score !== 0) client.hSet(hashKey, id, score);
+            if (score && score !== 0) {
+              client.hSet(hashKey, id, score);
+            }
           });
         }
 
         usersEmailData.push({
           EID: id,
           password,
-          email: user.email,
+          email: data.email,
         });
 
         return {
@@ -97,13 +120,27 @@ export const createUser = sessionHandler(
       })
     );
 
-    const insertedUsers = await User.create(updatedUsers, { session });
+    const insertedUsers = await User.create(updatedUsers, { session , ordered : true }).catch(err => {
+        throw new Error("Failed to create users: " + err.message);
+    });
 
     console.log(usersEmailData);
 
     let accountDetails;
-    const { role } = users[0]; // Extract role from the first user
-    if (role === "Employee" || role === "Other") {
+    if (users.length > 0) {
+      const firstUser = users[0] as {
+        DID: string;
+        PID: string;
+        role: "Admin" | "Employee" | "Manager";
+        ManagerID: string;
+        email: string;
+        skills?: {
+          skill: string;
+          score?: number;
+        }[];
+      };
+    const { role } = firstUser; // Extract role from the first user
+    if (role === "Employee") {
       const existingAccount = await AccountDetailsModel.findOne({ EID: usersEmailData[0].EID });
       if (!existingAccount) {
         accountDetails = await AccountDetailsModel.create(
@@ -135,6 +172,7 @@ export const createUser = sessionHandler(
       accountDetails
     };
   }
+}
 );
 
 export const updateUserSkills = sessionHandler(async (req: Request) => {
@@ -213,6 +251,7 @@ export const getAllUsersDetails = sessionHandler(async (req: Request) => {
       freelanceRating: 1,
       freelanceRewardPoints: 1,
       gigsCompleted: 1,
+      
       DID: 1,
     },
   });
@@ -254,6 +293,7 @@ export const getAllEmpDetails = sessionHandler(async (req: Request) => {
       freelanceRating: 1,
       freelanceRewardPoints: 1,
       gigsCompleted: 1,
+
       DID: 1,
     },
   });
@@ -280,11 +320,13 @@ export const deleteUserByID = sessionHandler(async (req: Request) => {
 
 export const getUserById = sessionHandler(async (req: Request) => {
   const { ID } = req.params;
+  const accountDetails = await AccountDetailsModel.findOne({ EID: ID });
 
   GetUserSchema.parse({ EID: ID });
   const user = (await User.findOne({ EID: ID })) as UserWithRole;
   if (!user) throw new Error("Bad Request");
   return {
+    accountBalance: accountDetails ? accountDetails.totalBalance : 0,
     status: HttpStatusCodes.OK,
     data: user,
   };
@@ -511,6 +553,14 @@ export const getEmployeesUnderManager = sessionHandler(async (req: Request) => {
   };
 });
 
+export const getTotalUsers = sessionHandler(async () => {
+  const totalUsers = await User.countDocuments();
+  return {
+    status: HttpStatusCodes.OK,
+    data: { totalUsers },
+  };
+});
+
 export const userControlRouter = Router();
 
 userControlRouter.post("/create", checkAuth([UserRole.Admin]), createUser);
@@ -521,7 +571,9 @@ userControlRouter.get(
 );
 userControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteUserByID);
 userControlRouter.get("/get-user/:ID", checkAuth([]), getUserById);
-userControlRouter.get("/my-gigs", checkAuth([]), getGigsByUser);
+
+// Add the route for getting total users
+userControlRouter.get("/total", getTotalUsers);
 userControlRouter.post("/upload-img", checkAuth([]), uploadProfileImg);
 userControlRouter.get("/profile", checkAuth([]), getProfile);
 userControlRouter.post("/update-profile", checkAuth([]), updateProfile);

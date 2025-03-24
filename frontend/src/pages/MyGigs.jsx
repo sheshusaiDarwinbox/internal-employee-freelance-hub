@@ -240,7 +240,9 @@ const MyGigs = () => {
               </div>
 
               <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end">
-                <button className="text-blue-600 text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all duration-200">
+                <button 
+                  className="text-blue-600 text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all duration-200"
+                >
                   View Details
                   <ChevronRight className="h-4 w-4" />
                 </button>

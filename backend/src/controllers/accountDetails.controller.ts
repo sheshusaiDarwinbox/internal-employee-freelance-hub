@@ -3,6 +3,7 @@ import { AccountDetailsModel } from "../models/accountDetails.model";
 import { Router } from "express";
 import {  UserRole } from "../models/userAuth.model";
 import { checkAuth } from "../middleware/checkAuth.middleware";
+import { createPaymentIntent, handlePaymentSuccess } from '../service/stripe.service';
 
 // Create a new account details
 export const createAccountDetails = async (req: Request, res: Response) => {
@@ -69,6 +70,9 @@ export const deleteAccountDetails = async (req: Request, res: Response): Promise
 export const accountDetailsControlRouter = Router();
 
 accountDetailsControlRouter.post("/create", checkAuth([UserRole.Employee,UserRole.Admin]), createAccountDetails);
-accountDetailsControlRouter.get("/:EID", checkAuth([ UserRole.Employee]), getAccountDetailsByEID);
-accountDetailsControlRouter.put("/:EID", checkAuth([ UserRole.Employee]), updateAccountDetails);
+accountDetailsControlRouter.get("/:EID", checkAuth([ UserRole.Employee,UserRole.Manager]), getAccountDetailsByEID);
+accountDetailsControlRouter.put("/:EID", checkAuth([ UserRole.Employee,UserRole.Manager]), updateAccountDetails);
 // accountDetailsControlRouter.delete("/:ID", checkAuth([UserRole.Admin]), deleteUserByID);
+
+accountDetailsControlRouter.post('/create-payment-intent', checkAuth([UserRole.Employee, UserRole.Manager]), createPaymentIntent);
+accountDetailsControlRouter.post('/payment-success', checkAuth([UserRole.Employee, UserRole.Manager]), handlePaymentSuccess);

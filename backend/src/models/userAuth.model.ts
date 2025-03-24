@@ -59,7 +59,7 @@ export const userAuthSchema = new Schema<UserAuth, UserAuthModel>({
   phone: { type: String },
   gender: { type: String },
   dob: { type: String },
-  doj: { type: Date, required: true },
+  doj: { type: Date},
   maritalStatus: { type: String },
   nationality: { type: String },
   bloodGroup: { type: String },
