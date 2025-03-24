@@ -14,10 +14,10 @@ const JobTypeEnum = {
 const JobsManagement = () => {
   const [jobs, setJobs] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [setLoading] = useState(false);
+  const [setError] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
@@ -27,12 +27,12 @@ const JobsManagement = () => {
     maxSalary: "",
   });
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [setIsEditing] = useState(false);
 
-  const [excelData, setExcelData] = useState(null);
+  const [setExcelData] = useState(null);
   const [previewData, setPreviewData] = useState(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
+  const [setUploadError] = useState(null);
   const fileInputRef = useRef(null);
 
   const fetchJobs = useCallback(async () => {
@@ -47,7 +47,7 @@ const JobsManagement = () => {
       const response = await api.get(`/jobs?${params}`);
       setJobs(response.data.jobs);
       setTotalPages(response.data.totalPages);
-    } catch (error) {
+    } catch {
       setError("Failed to fetch jobs");
     } finally {
       setLoading(false);
@@ -58,7 +58,7 @@ const JobsManagement = () => {
     try {
       const response = await api.get("/departments");
       setDepartments(response.data);
-    } catch (error) {
+    } catch {
       console.error("Failed to fetch departments");
     }
   };
@@ -85,7 +85,7 @@ const JobsManagement = () => {
             "Invalid format. Required fields: title, description, type, DID"
           );
         }
-      } catch (error) {
+      } catch {
         setUploadError("Error processing file");
       } finally {
         if (fileInputRef.current) {
@@ -115,7 +115,7 @@ const JobsManagement = () => {
       await api.post("/jobs/bulk", { jobs: previewData });
       fetchJobs();
       cancelPreview();
-    } catch (error) {
+    } catch {
       setError("Failed to create jobs");
     } finally {
       setLoading(false);

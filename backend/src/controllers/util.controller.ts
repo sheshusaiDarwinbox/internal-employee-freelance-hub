@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Router } from "express";
 import { sessionHandler } from "../utils/session.util";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
 import { extendedTechSkills } from "../utils/insertSkills.util";
@@ -18,14 +18,14 @@ const allowedMimeTypes = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ] as const;
 
-export const getSkillsList = sessionHandler(async () => {
+export const getSkillsList = async () => {
   return {
     status: HttpStatusCodes.OK,
     data: extendedTechSkills,
   };
-});
+};
 
-export const generatePresignedUrl = sessionHandler(async (req) => {
+export const generatePresignedUrl = async (req: Request) => {
   const s3Client = new S3Client({
     credentials: {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
@@ -74,11 +74,15 @@ export const generatePresignedUrl = sessionHandler(async (req) => {
         msg: "Error generating presigned URL",
       },
     };
-});
+};
 
-utilControlRouter.get("/get-skills", checkAuth([]), getSkillsList);
+utilControlRouter.get(
+  "/get-skills",
+  checkAuth([]),
+  sessionHandler(getSkillsList)
+);
 utilControlRouter.post(
   "/generate-presigned-url",
   checkAuth([]),
-  generatePresignedUrl
+  sessionHandler(generatePresignedUrl)
 );

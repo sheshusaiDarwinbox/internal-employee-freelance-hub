@@ -8,12 +8,6 @@ import mime from "mime-types";
 import path from "path";
 import fs from "fs";
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  region: process.env.S3_REGION,
-});
-
 interface FileUploadResult {
   fileName: string;
   fileUrl: string;
@@ -27,14 +21,6 @@ const allowedMimeTypes = [
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ] as const;
-
-const s3Client = new S3Client({
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-  region: process.env.S3_REGION,
-});
 
 const uploadToS3 = async (
   fileBuffer: Buffer,

@@ -37,7 +37,12 @@ export const createGig = async (
   const GigID = await generateId(IDs.GigID, session);
 
   if (!manager || !GigID)
-    throw new Error("manager not found or GigID not created");
+    return {
+      status: HttpStatusCodes.BAD_REQUEST,
+      data: {
+        msg: "bad request",
+      },
+    };
 
   const gigdata = {
     ...data,
@@ -51,7 +56,13 @@ export const createGig = async (
 
   const [gig] = await Gig.create([gigdata], { session });
 
-  if (!gig) throw new Error("failed to create gig");
+  if (!gig)
+    return {
+      status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+      data: {
+        msg: "failed to create gig",
+      },
+    };
 
   return {
     status: HttpStatusCodes.CREATED,
@@ -182,7 +193,6 @@ export const assignGig = async (
   session: ClientSession
 ) => {
   const { GigID, BidID, EID } = req.body;
-  console.log(req.body);
 
   const gig: GigSchema | null = await Gig.findOne({ GigID: GigID });
   const bid: Bid | null = await BidModel.findOne({ BidID: BidID });
@@ -248,7 +258,6 @@ export const getMyGigs = async (req: Request) => {
     offset: (pageNum - 1) * 6,
   });
 
-  console.log(gigs);
   if (gigs)
     return {
       status: HttpStatusCodes.OK,
@@ -275,8 +284,6 @@ export const updateGigProgress = async (
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
     },
   });
-  console.log(process.env.S3_BUCKET);
-  console.log(process.env.S3_REGION);
 
   const { _id } = req.params;
   const { subject, description, work_percentage } = req.body;

@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { PositionTypeEnum } from "../models/position.model";
-// import { RequestTypeEnum } from "../models/request.model";
 import { extendedTechSkills } from "./insertSkills.util";
 
 export const EIDScheme = z.union([
@@ -102,7 +100,15 @@ export const CreatePositionSchema = z.object({
       /^[a-zA-Z0-9\s.,!?()&]+$/,
       "Description must be alphanumeric with grammar notations (e.g., spaces, punctuation)."
     ),
-  type: z.nativeEnum(PositionTypeEnum),
+  type: z.enum([
+    "FullTime",
+    "PartTime",
+    "Internship",
+    "Temporary",
+    "Freelance",
+    "Contract",
+    "Other",
+  ]),
 
   salary: z.number().int(),
   DID: z

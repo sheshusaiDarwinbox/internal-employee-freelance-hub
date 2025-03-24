@@ -9,41 +9,44 @@ import { checkAuth } from "../middleware/checkAuth.middleware";
 import { UserRole } from "../models/userAuth.model";
 import { z } from "zod";
 import { Gig } from "../models/gig.model";
+import { ClientSession } from "mongoose";
 export const bidControlRouter = Router();
 
-export const createBid = sessionHandler(
-  async (req: Request, _res: Response, session) => {
-    const data = BidZodSchema.parse(req.body);
-    const findBid = await BidModel.findOne({
-      EID: req.user?.EID,
-      GigID: data.GigID,
-    });
-    if (findBid)
-      return {
-        status: HttpStatusCodes.CONFLICT,
-        data: {
-          msg: "Already Bid for this Gig",
-        },
-      };
-    const BidID = await generateId(IDs.BidID, session);
-    const [bid] = await BidModel.create(
-      [
-        {
-          BidID: BidID,
-          ...data,
-        },
-      ],
-      { session }
-    );
-
+export const createBid = async (
+  req: Request,
+  _res: Response,
+  session: ClientSession
+) => {
+  const data = BidZodSchema.parse(req.body);
+  const findBid = await BidModel.findOne({
+    EID: req.user?.EID,
+    GigID: data.GigID,
+  });
+  if (findBid)
     return {
-      status: HttpStatusCodes.CREATED,
-      data: bid,
+      status: HttpStatusCodes.CONFLICT,
+      data: {
+        msg: "Already Bid for this Gig",
+      },
     };
-  }
-);
+  const BidID = await generateId(IDs.BidID, session);
+  const [bid] = await BidModel.create(
+    [
+      {
+        BidID: BidID,
+        ...data,
+      },
+    ],
+    { session }
+  );
 
-export const getBidsByGig = sessionHandler(async (req: Request) => {
+  return {
+    status: HttpStatusCodes.CREATED,
+    data: bid,
+  };
+};
+
+export const getBidsByGig = async (req: Request) => {
   const { GigID } = req.params;
   const { page = 1 } = req.query;
   const pageNum = Number(page) - 1;
@@ -106,7 +109,15 @@ export const getBidsByGig = sessionHandler(async (req: Request) => {
       prevPage: pageNum > 0 ? pageNum : null,
     },
   };
-});
+};
 
-bidControlRouter.post("/post", checkAuth([UserRole.Employee]), createBid);
-bidControlRouter.get("/:GigID", checkAuth([UserRole.Manager]), getBidsByGig);
+bidControlRouter.post(
+  "/post",
+  checkAuth([UserRole.Employee]),
+  sessionHandler(createBid)
+);
+bidControlRouter.get(
+  "/:GigID",
+  checkAuth([UserRole.Manager]),
+  sessionHandler(getBidsByGig)
+);

@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Router } from "express";
 import { sessionHandler } from "../utils/session.util";
 import { NotificationModel } from "../models/notification.model";
 import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
@@ -6,7 +6,7 @@ import { Notification } from "../types/notification.types";
 
 export const notificationControllRouter = Router();
 
-export const getNotifications = sessionHandler(async (req) => {
+export const getNotifications = async (req: Request) => {
   const EID = req?.user?.EID;
   const { page = 1 } = req.query;
 
@@ -32,9 +32,9 @@ export const getNotifications = sessionHandler(async (req) => {
     status: HttpStatusCodes.OK,
     data: notifications,
   };
-});
+};
 
-export const markAsRead = sessionHandler(async (req) => {
+export const markAsRead = async (req: Request) => {
   const { NID } = req.body;
   const notification: Notification | null = await NotificationModel.findOne({
     NID: NID,
@@ -67,7 +67,10 @@ export const markAsRead = sessionHandler(async (req) => {
       msg: "Notification marked as read",
     },
   };
-});
+};
 
-notificationControllRouter.get("/getNotifications", getNotifications);
-notificationControllRouter.post("/markAsRead", markAsRead);
+notificationControllRouter.get(
+  "/getNotifications",
+  sessionHandler(getNotifications)
+);
+notificationControllRouter.post("/markAsRead", sessionHandler(markAsRead));

@@ -33,7 +33,7 @@ export const gigSkillSchema = new Schema(
   { _id: false }
 );
 
-const gigSchema = new Schema<GigSchema, GigModel>({
+export const gigSchema = new Schema<GigSchema, GigModel>({
   GigID: { type: String, required: true },
   DID: { type: String, required: true },
   ManagerID: { type: String, required: true },

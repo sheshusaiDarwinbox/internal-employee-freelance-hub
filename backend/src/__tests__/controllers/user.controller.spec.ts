@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import "./mocks/mockDependencies";
-import { Gig } from "../models/gig.model";
-import { sendVerificationEmail } from "../utils/mail.util";
-import { parseFile } from "../utils/fileParser.util";
+import "../mocks/mockDependencies";
+import { Gig } from "../../models/gig.model";
+import { sendVerificationEmail } from "../../utils/mail.util";
+import { parseFile } from "../../utils/fileParser.util";
 
 import {
   createUser,
@@ -18,13 +18,13 @@ import {
   getGigsByUser,
   uploadProfileImg,
   resendVerifyMail,
-} from "../controllers/user.controller";
-import { User } from "../models/userAuth.model";
-import { generateId } from "../utils/counterManager.util";
-import { IDs } from "../models/idCounter.model";
-import { generateRandomPassword } from "../utils/password.util";
-import { DepartmentModel } from "../models/department.model";
-import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
+} from "../../controllers/user.controller";
+import { User } from "../../models/userAuth.model";
+import { generateId } from "../../utils/counterManager.util";
+import { IDs } from "../../models/idCounter.model";
+import { generateRandomPassword } from "../../utils/password.util";
+import { DepartmentModel } from "../../models/department.model";
+import { HttpStatusCodes } from "../../utils/httpsStatusCodes.util";
 
 describe("User Controller", () => {
   beforeEach(() => {
@@ -211,13 +211,13 @@ describe("User Controller", () => {
 
       const result = await updateUserSkills(mockRequest as Request);
 
-      expect(User.findOneAndUpdate).not.toHaveBeenCalled(),
-        expect(result).toEqual({
-          status: HttpStatusCodes.BAD_REQUEST,
-          data: {
-            msg: "user not found",
-          },
-        });
+      expect(User.findOneAndUpdate).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        status: HttpStatusCodes.BAD_REQUEST,
+        data: {
+          msg: "user not found",
+        },
+      });
     });
   });
 
@@ -237,6 +237,7 @@ describe("User Controller", () => {
         status: HttpStatusCodes.OK,
         data: {
           EID: "EMP000001",
+          DID: "D000001",
           email: "temp@gmail.com",
           role: "Employee",
         },

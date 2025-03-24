@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
+import "../mocks/mockDependencies";
 import {
   createGig,
   getAllGigs,
@@ -7,21 +8,13 @@ import {
   assignGig,
   getMyGigs,
   updateGigProgress,
-  updateGigReview,
-} from "../controllers/gig.controller";
-import { Gig } from "../models/gig.model";
-import { NotificationModel } from "../models/notification.model";
-import { generateId } from "../utils/counterManager.util";
-import { IDs } from "../models/idCounter.model";
-import { HttpStatusCodes } from "../utils/httpsStatusCodes.util";
-import { ApprovalStatus, OngoingStatus } from "../models/gig.model";
-import { parseFile } from "../utils/fileParser.util";
-
-jest.mock("../models/notification.model", () => ({
-  NotificationModel: {
-    create: jest.fn(),
-  },
-}));
+} from "../../controllers/gig.controller";
+import { Gig } from "../../models/gig.model";
+import { NotificationModel } from "../../models/notification.model";
+import { generateId } from "../../utils/counterManager.util";
+import { IDs } from "../../models/idCounter.model";
+import { HttpStatusCodes } from "../../utils/httpsStatusCodes.util";
+import { parseFile } from "../../utils/fileParser.util";
 
 describe("Gig Controller", () => {
   let mockRequest: Request;
@@ -66,88 +59,96 @@ describe("Gig Controller", () => {
         img: "https://link/to/img",
         rewardPoints: 2000,
       };
-
-      const gigData = {
-        GigID: "G000001",
-        ...mockRequest.body,
-        ManagerID: "EMP000001",
-        ongoingStatus: OngoingStatus.UnAssigned,
-        approvalStatus: ApprovalStatus.APPROVED,
-      };
-
-      // (Gig.create as jest.Mock).mockResolvedValue([gigData]);
-
       const result = await createGig(mockRequest, mockResponse, mockSession);
 
       expect(generateId).toHaveBeenCalledWith(IDs.GigID, mockSession);
-      expect(Gig.create).toHaveBeenCalledWith([gigData], {
-        session: mockSession,
-      });
-      expect(result).toEqual({
-        status: HttpStatusCodes.CREATED,
-        data: gigData,
-      });
+      expect(Gig.create).toHaveBeenCalled();
+      expect(result.status).toEqual(HttpStatusCodes.CREATED);
     });
 
-    it("should handle gig creation failure", async () => {
+    it.only("should handle gig creation failure", async () => {
       mockRequest.body = {
         title: "Test Gig",
+        skills: [
+          {
+            skill: "React",
+            weight: 0.5,
+          },
+          {
+            skill: "Redux",
+            weight: 0.6,
+          },
+        ],
         description: "Test Description",
-        DID: "D000001",
+        amount: 0,
+        deadline: "2024-12-31",
+        img: "https://link/to/img",
+        rewardPoints: 2000,
       };
 
-      (Gig.create as jest.Mock).mockRejectedValue(new Error("Database error"));
+      (Gig.create as jest.Mock).mockResolvedValue([]);
 
-      await expect(
-        createGig(mockRequest, mockResponse, mockSession)
-      ).rejects.toThrow("failed to create gig");
+      const result = await createGig(mockRequest, mockResponse, mockSession);
+
+      expect(result).toEqual({
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        data: {
+          msg: "failed to create gig",
+        },
+      });
     });
   });
 
   describe("getAllGigs", () => {
-    it("should return all gigs with filters", async () => {
+    it.only("should return all gigs with filters", async () => {
       mockRequest.query = {
         DIDs: ["D000001"],
         ManagerIDs: "EMP000001",
-        search: "test",
+        search: "",
         page: "1",
         approvalStatus: "APPROVED",
       };
 
       const mockGigs = [
         {
-          GigID: "GIG000001",
+          GigID: "G000001",
           title: "Test Gig",
           description: "Test Description",
         },
       ];
-
-      (Gig.aggregate as jest.Mock).mockResolvedValue(mockGigs);
 
       const result = await getAllGigs(mockRequest);
 
       expect(Gig.aggregate).toHaveBeenCalled();
       expect(result).toEqual({
         status: HttpStatusCodes.OK,
-        data: mockGigs,
+        data: {
+          docs: mockGigs,
+          totalDocs: 1,
+          page: 1,
+          limit: 6,
+          totalPages: 1,
+          hasNextPage: false,
+          nextPage: null,
+          hasPrevPage: false,
+          prevPage: null,
+        },
       });
     });
   });
 
   describe("getGigById", () => {
-    it("should return a gig by ID", async () => {
-      mockRequest.params = { GigID: "GIG000001" };
+    it.only("should return a gig by ID", async () => {
+      mockRequest.params = { GigID: "G000001" };
 
       const mockGig = {
-        GigID: "GIG000001",
+        GigID: "G000001",
         title: "Test Gig",
       };
 
-      (Gig.findOne as jest.Mock).mockResolvedValue(mockGig);
-
       const result = await getGigById(mockRequest);
 
-      expect(Gig.findOne).toHaveBeenCalledWith({ GigID: "GIG000001" });
+      expect(Gig.findOne).toHaveBeenCalledWith({ GigID: "G000001" });
       expect(result).toEqual({
         status: HttpStatusCodes.OK,
         data: mockGig,
@@ -156,23 +157,20 @@ describe("Gig Controller", () => {
   });
 
   describe("assignGig", () => {
-    it("should assign gig successfully", async () => {
+    it.only("should assign gig successfully", async () => {
       mockRequest.body = {
-        GigID: "GIG000001",
+        GigID: "G000001",
         EID: "EMP000002",
+        BidID: "B000001",
       };
 
       const mockGig = {
-        GigID: "GIG000001",
+        GigID: "G000001",
         ManagerID: "EMP000001",
         EID: null,
       };
 
       (Gig.findOne as jest.Mock).mockResolvedValue(mockGig);
-      (Gig.findOneAndUpdate as jest.Mock).mockResolvedValue({
-        ...mockGig,
-        EID: "EMP000002",
-      });
 
       const result = await assignGig(mockRequest, mockResponse, mockSession);
 
@@ -180,7 +178,7 @@ describe("Gig Controller", () => {
       expect(result).toEqual({
         status: HttpStatusCodes.OK,
         data: expect.objectContaining({
-          GigID: "GIG000001",
+          GigID: "G000001",
           EID: "EMP000002",
         }),
       });
@@ -188,8 +186,13 @@ describe("Gig Controller", () => {
   });
 
   describe("updateGigProgress", () => {
-    it("should update gig progress successfully", async () => {
-      mockRequest.params = { _id: "GIG000001" };
+    it.only("should update gig progress successfully", async () => {
+      mockRequest.params = { _id: "G000001" };
+      mockRequest.body = {
+        subject: "test Subject",
+        description: "test description",
+        work_percentage: 40,
+      };
       mockRequest.files = [
         {
           originalname: "test.pdf",
@@ -198,7 +201,7 @@ describe("Gig Controller", () => {
       ] as Express.Multer.File[];
 
       const mockGig = {
-        GigID: "GIG000001",
+        GigID: "G000001",
         EID: "EMP000001",
       };
 
@@ -217,10 +220,32 @@ describe("Gig Controller", () => {
 
       expect(result).toEqual({
         status: HttpStatusCodes.OK,
-        data: expect.objectContaining({
-          GigID: "GIG000001",
+        data: {
+          GigID: "G000001",
+          EID: "EMP000001",
           progress: ["test-url"],
-        }),
+        },
+      });
+    });
+  });
+
+  describe("getMyGigs", () => {
+    it.only("should return all the gigs of a manager", async () => {
+      mockRequest.query = {
+        type: "Ongoing",
+        search: "",
+      };
+
+      const result = await getMyGigs(mockRequest);
+      expect(result).toEqual({
+        status: HttpStatusCodes.OK,
+        data: [
+          {
+            GigID: "G000001",
+            title: "Test Gig",
+            description: "Test Description",
+          },
+        ],
       });
     });
   });

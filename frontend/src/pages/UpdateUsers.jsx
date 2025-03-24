@@ -16,7 +16,7 @@ const UsersPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [skillsToUpdate, setSkillsToUpdate] = useState([]);
+  const [setSkillsToUpdate] = useState([]);
   const [errors, setErrors] = useState({});
   const [newSkill, setNewSkill] = useState("");
   const [skillsList, setSkillsList] = useState([]); // List of available skills

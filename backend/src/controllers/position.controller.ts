@@ -14,28 +14,30 @@ import { DepartmentModel } from "../models/department.model";
 import { IDs } from "../models/idCounter.model";
 import { sessionHandler } from "../utils/session.util";
 import z from "zod";
-import { FilterQuery } from "mongoose";
+import { ClientSession, FilterQuery } from "mongoose";
 import { PositionModelType } from "../types/position.types";
 
-export const createPosition = sessionHandler(
-  async (req: Request, _res: Response, session) => {
-    if (req.body.salary) req.body.salary = parseInt(req.body.salary);
-    const data = CreatePositionSchema.parse(req.body);
-    const Department = await DepartmentModel.findOne({ DID: data.DID });
-    if (!Department) {
-      throw new Error("Department not found");
-    }
-    const PID = await generateId(IDs.PID, session);
-    const position = await PositionModel.create({ ...data, PID });
-    if (!position) throw new Error("Position not created");
-    return {
-      status: HttpStatusCodes.CREATED,
-      data: position,
-    };
+export const createPosition = async (
+  req: Request,
+  _res: Response,
+  session: ClientSession
+) => {
+  if (req.body.salary) req.body.salary = parseInt(req.body.salary);
+  const data = CreatePositionSchema.parse(req.body);
+  const Department = await DepartmentModel.findOne({ DID: data.DID });
+  if (!Department) {
+    throw new Error("Department not found");
   }
-);
+  const PID = await generateId(IDs.PID, session);
+  const position = await PositionModel.create({ ...data, PID });
+  if (!position) throw new Error("Position not created");
+  return {
+    status: HttpStatusCodes.CREATED,
+    data: position,
+  };
+};
 
-export const getAllPositions = sessionHandler(async (req: Request) => {
+export const getAllPositions = async (req: Request) => {
   const { types, page = 1, DIDs, search } = req.query;
   let filter: FilterQuery<PositionModelType> = {};
   const pageNum = Number(page) - 1;
@@ -112,9 +114,9 @@ export const getAllPositions = sessionHandler(async (req: Request) => {
       prevPage: pageNum > 0 ? pageNum : null,
     },
   };
-});
+};
 
-export const deletePositionByID = sessionHandler(async (req: Request) => {
+export const deletePositionByID = async (req: Request) => {
   const { ID } = req.params;
   GetPositionSchema.parse({ PID: ID });
   const position = await PositionModel.findOne({
@@ -127,9 +129,9 @@ export const deletePositionByID = sessionHandler(async (req: Request) => {
     status: HttpStatusCodes.OK,
     data: position,
   };
-});
+};
 
-export const getPositionById = sessionHandler(async (req: Request) => {
+export const getPositionById = async (req: Request) => {
   const { ID } = req.params;
   GetPositionSchema.parse({ PID: ID });
   const position = await PositionModel.findOne({ PID: ID });
@@ -138,19 +140,23 @@ export const getPositionById = sessionHandler(async (req: Request) => {
     status: HttpStatusCodes.OK,
     data: position,
   };
-});
+};
 
 export const positionControlRouter = Router();
 
 positionControlRouter.post(
   "/create",
   checkAuth([UserRole.Admin]),
-  createPosition
+  sessionHandler(createPosition)
 );
-positionControlRouter.get("", checkAuth([]), getAllPositions);
+positionControlRouter.get("", checkAuth([]), sessionHandler(getAllPositions));
 positionControlRouter.delete(
   "/:ID",
   checkAuth([UserRole.Admin]),
-  deletePositionByID
+  sessionHandler(deletePositionByID)
 );
-positionControlRouter.get("/:ID", checkAuth([]), getPositionById);
+positionControlRouter.get(
+  "/:ID",
+  checkAuth([]),
+  sessionHandler(getPositionById)
+);

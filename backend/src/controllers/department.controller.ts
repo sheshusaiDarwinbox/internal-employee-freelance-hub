@@ -15,25 +15,26 @@ import { User, UserRole } from "../models/userAuth.model";
 import { UserAuth } from "../types/userAuth.types";
 import { sessionHandler } from "../utils/session.util";
 import { checkAuth } from "../middleware/checkAuth.middleware";
-import { FilterQuery } from "mongoose";
+import { ClientSession, FilterQuery } from "mongoose";
 
-export const createDepartment = sessionHandler(
-  async (req: Request, _res: Response, session) => {
-    console.log(req.body);
-    req.body.teamSize = parseInt(req.body.teamSize);
-    const data = CreateDepartmentSchema.parse(req.body);
-    const DID = await generateId(IDs.DID, session);
-    const departmentData: Department = { ...data, DID };
-    const department = await DepartmentModel.create(departmentData);
-    if (!department) throw new Error("Server Error");
-    return {
-      status: HttpStatusCodes.OK,
-      data: department,
-    };
-  }
-);
+export const createDepartment = async (
+  req: Request,
+  _res: Response,
+  session: ClientSession
+) => {
+  req.body.teamSize = parseInt(req.body.teamSize);
+  const data = CreateDepartmentSchema.parse(req.body);
+  const DID = await generateId(IDs.DID, session);
+  const departmentData: Department = { ...data, DID };
+  const department = await DepartmentModel.create(departmentData);
+  if (!department) throw new Error("Server Error");
+  return {
+    status: HttpStatusCodes.OK,
+    data: department,
+  };
+};
 
-export const getAllDepartments = sessionHandler(async (req: Request) => {
+export const getAllDepartments = async (req: Request) => {
   const { functions, page = 1, search = "" } = req.query;
   const filter: FilterQuery<DepartmentModelType> = {};
   const pageNum = Number(page) - 1;
@@ -52,9 +53,9 @@ export const getAllDepartments = sessionHandler(async (req: Request) => {
     limit: 6,
   });
   return { status: HttpStatusCodes.OK, data: departments };
-});
+};
 
-export const deleteDepartmentByID = sessionHandler(async (req: Request) => {
+export const deleteDepartmentByID = async (req: Request) => {
   const { ID } = req.params;
   GetDepartmentSchema.parse({ DID: ID });
   const department = await DepartmentModel.findOne({
@@ -67,9 +68,9 @@ export const deleteDepartmentByID = sessionHandler(async (req: Request) => {
     status: HttpStatusCodes.OK,
     data: department,
   };
-});
+};
 
-export const getDepartmentByID = sessionHandler(async (req: Request) => {
+export const getDepartmentByID = async (req: Request) => {
   const { ID } = req.params;
   GetDepartmentSchema.parse({ DID: ID });
   const department = await DepartmentModel.findOne({ DID: ID });
@@ -78,58 +79,64 @@ export const getDepartmentByID = sessionHandler(async (req: Request) => {
     status: HttpStatusCodes.OK,
     data: department,
   };
-});
+};
 
-export const assignManagerToDepartment = sessionHandler(
-  async (req: Request) => {
-    const data = AssignManagerZodSchema.parse(req.body);
-    const user: UserAuth | null = await User.findOne({ EID: data.EID });
-    const department: Department | null = await DepartmentModel.findOne({
-      DID: data.DID,
-    });
-    if (
-      !user ||
-      !department ||
-      department.ManagerID !== undefined ||
-      user.DID !== department.DID
-    )
-      throw new Error(
-        "user or department not found OR department already assigned with a manager OR user does not belong to given Department"
-      );
-
-    const updatedDepartment = await DepartmentModel.updateOne(
-      { DID: data.DID },
-      {
-        $set: {
-          ManagerID: data.EID,
-        },
-      }
+export const assignManagerToDepartment = async (req: Request) => {
+  const data = AssignManagerZodSchema.parse(req.body);
+  const user: UserAuth | null = await User.findOne({ EID: data.EID });
+  const department: Department | null = await DepartmentModel.findOne({
+    DID: data.DID,
+  });
+  if (
+    !user ||
+    !department ||
+    department.ManagerID !== undefined ||
+    user.DID !== department.DID
+  )
+    throw new Error(
+      "user or department not found OR department already assigned with a manager OR user does not belong to given Department"
     );
 
-    if (!updatedDepartment) throw new Error("failed to assign manager");
-    return {
-      status: HttpStatusCodes.OK,
-      data: updatedDepartment,
-    };
-  }
-);
+  const updatedDepartment = await DepartmentModel.updateOne(
+    { DID: data.DID },
+    {
+      $set: {
+        ManagerID: data.EID,
+      },
+    }
+  );
+
+  if (!updatedDepartment) throw new Error("failed to assign manager");
+  return {
+    status: HttpStatusCodes.OK,
+    data: updatedDepartment,
+  };
+};
 
 export const departmentControlRouter = Router();
 
 departmentControlRouter.post(
   "/create",
   checkAuth([UserRole.Admin]),
-  createDepartment
+  sessionHandler(createDepartment)
 );
-departmentControlRouter.get("", checkAuth([]), getAllDepartments);
+departmentControlRouter.get(
+  "",
+  checkAuth([]),
+  sessionHandler(getAllDepartments)
+);
 departmentControlRouter.delete(
   "/:ID",
   checkAuth([UserRole.Admin]),
-  deleteDepartmentByID
+  sessionHandler(deleteDepartmentByID)
 );
-departmentControlRouter.get("/:ID", checkAuth([]), getDepartmentByID);
+departmentControlRouter.get(
+  "/:ID",
+  checkAuth([]),
+  sessionHandler(getDepartmentByID)
+);
 departmentControlRouter.post(
   "/assign-manager",
   checkAuth([UserRole.Admin]),
-  assignManagerToDepartment
+  sessionHandler(assignManagerToDepartment)
 );

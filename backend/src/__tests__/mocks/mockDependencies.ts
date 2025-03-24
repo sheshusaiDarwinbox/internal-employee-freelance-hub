@@ -7,6 +7,21 @@ jest.mock("../../utils/mail.util", () => ({
   sendForgotPasswordMail: jest.fn(),
 }));
 
+jest.mock("../../models/notification.model", () => ({
+  NotificationModel: {
+    create: jest.fn(),
+  },
+}));
+
+jest.mock("../../models/bid.model", () => ({
+  BidModel: {
+    findOne: jest.fn().mockResolvedValue({
+      BidID: "B000001",
+      GigID: "G000001",
+    }),
+  },
+}));
+
 jest.mock("../../models/userAuth.model", () => ({
   User: {
     create: jest
@@ -18,6 +33,7 @@ jest.mock("../../models/userAuth.model", () => ({
           EID: "EMP000001",
           email: "temp@gmail.com",
           role: "Employee",
+          DID: "D000001",
         };
       return null;
     }),
@@ -86,6 +102,8 @@ jest.mock("../../utils/counterManager.util", () => ({
     .mockImplementation((id: IDs, session: ClientSession) => {
       if (id === IDs.EID) return "EMP000002";
       if (id === IDs.GigID) return "G000001";
+      if (id === IDs.NID) return "N000001";
+      if (id === IDs.BidID) return "B000001";
     }),
 }));
 
@@ -122,7 +140,13 @@ jest.mock("../../database/connection", () => ({
 
 jest.mock("../../models/gig.model", () => ({
   Gig: {
-    paginate: jest.fn(),
+    paginate: jest.fn().mockResolvedValue([
+      {
+        GigID: "G000001",
+        title: "Test Gig",
+        description: "Test Description",
+      },
+    ]),
     create: jest
       .fn()
       .mockImplementation(
@@ -130,6 +154,38 @@ jest.mock("../../models/gig.model", () => ({
           return data;
         }
       ),
+    aggregate: jest.fn().mockResolvedValue([
+      {
+        GigID: "G000001",
+        title: "Test Gig",
+        description: "Test Description",
+      },
+    ]),
+    countDocuments: jest.fn().mockResolvedValue(1),
+    findOne: jest.fn().mockResolvedValue({
+      GigID: "G000001",
+      title: "Test Gig",
+    }),
+    findOneAndUpdate: jest.fn().mockResolvedValueOnce({
+      GigID: "G000001",
+      ManagerID: "EMP000001",
+      EID: "EMP000002",
+    }),
+    findById: jest.fn().mockResolvedValue({
+      GigID: "G000001",
+      EID: "EMP000001",
+    }),
+  },
+
+  OngoingStatus: {
+    UnAssigned: "UnAssigned",
+    Ongoing: "Ongoing",
+    Completed: "Completed",
+  },
+  ApprovalStatus: {
+    PENDING: "PENDING",
+    APPROVED: "APPROVED",
+    REJECTED: "REJECTED",
   },
 }));
 
@@ -138,4 +194,12 @@ jest.mock("../../utils/fileParser.util", () => ({
   generatePresignedUrl: jest
     .fn()
     .mockResolvedValue("https://presigned/url/string"),
+}));
+
+jest.mock("@aws-sdk/client-s3", () => ({
+  S3Client: jest.fn().mockReturnValue({
+    send: jest.fn(),
+  }),
+  PutObjectCommand: jest.fn(),
+  GetObjectCommand: jest.fn(),
 }));
