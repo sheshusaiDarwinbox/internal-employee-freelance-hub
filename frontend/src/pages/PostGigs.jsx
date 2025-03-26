@@ -1,23 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { z } from "zod";
-import { extendedTechSkills } from "../utils/constants.util";
+// import { extendedTechSkills } from "../utils/constants.util";
 import api from "../utils/api";
-import { useSelector } from "react-redux";
-
-// const CreateGigZodSchema = z.object({
-//   ManagerID: z.string().regex(/^[a-zA-Z0-9]+$/),
-//   title: z.string().regex(/^[a-zA-Z0-9\s.,!?()&]+$/),
-//   skills: z.array(
-//     z.object({
-//       skill: z.enum(extendedTechSkills),
-//       weight: z.number().min(0).max(1),
-//     })
-//   ),
-//   amount: z.number().int().gte(0),
-//   deadline: z.string().refine((val) => !isNaN(Date.parse(val))),
-//   description: z.string().regex(/^[a-zA-Z0-9\s.,!?()&]+$/),
-//   img: z.string(),
-// });
+// import { useSelector } from "react-redux";
 
 export default function PostGigs() {
   const [formData, setFormData] = useState({
@@ -41,17 +26,38 @@ export default function PostGigs() {
   const initialFormState = {
     title: "",
     description: "",
-    amount: "",
+    amount: 0,
     deadline: "",
-    skills: "",
+    skills: [],
+    img: "",
+    rewardPoints: 0,
   };
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const CreateGigZodSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().min(1, "Description is required"),
+    skills: z.array(
+      z.object({
+        skill: z.string().min(1),
+        weight: z.number().min(0).max(1),
+      })
+    ),
+    amount: z.number().int().gte(0, "Amount must be a number greater than or equal to 0"),
+    deadline: z
+      .string()
+      .refine((val) => val >= today, "Deadline must be today or a future date"),
+    img: z.string().optional(),
+    rewardPoints: z.number().int().gte(0, "Reward points must be a number greater than or equal to 0"),
+  });
 
   useEffect(() => {
     async function fetchSkills() {
       const response = await api.get("api/util/get-skills", {
         withCredentials: true,
       });
-      setSkillsList(response.data); // Assuming data is an array of skill names
+      setSkillsList(response.data);
     }
     fetchSkills();
   }, []);
@@ -64,11 +70,15 @@ export default function PostGigs() {
     if (imageInputRef.current) {
       imageInputRef.current.value = "";
     }
+    
   };
 
   const handleAddSkill = () => {
-    if (newSkill && weight && !isNaN(weight) && weight >= 0 && weight <= 100) {
-      const newSkillObj = { skill: newSkill, weight: parseFloat(weight) / 100 };
+    let skillToAdd = newSkill;
+    
+
+    if (skillToAdd && weight && !isNaN(weight) && weight >= 0 && weight <= 100) {
+      const newSkillObj = { skill: skillToAdd, weight: parseFloat(weight) / 100 };
       setFormData({
         ...formData,
         skills: [...formData.skills, newSkillObj],
@@ -76,6 +86,7 @@ export default function PostGigs() {
       setNewSkill("");
       setWeight("");
       setErrors({});
+      
     } else {
       setErrors({
         skills: "Please enter a valid skill and weight between 0 and 100.",
@@ -90,49 +101,101 @@ export default function PostGigs() {
     });
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrors({});
+
+    // Parse amount and rewardPoints to integers
+    const parsedFormData = {
+      ...formData,
+      amount: parseInt(formData.amount, 10),
+      rewardPoints: parseInt(formData.rewardPoints, 10),
+    };
+
+    const validationResult = CreateGigZodSchema.safeParse(parsedFormData);
+
+    if (!validationResult.success) {
+      const errorMessages = validationResult.error.errors.reduce((acc, error) => {
+        acc[error.path[0]] = error.message;
+        return acc;
+      }, {});
+      setErrors(errorMessages);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const fileJson = {
-        fileName: selectedImage.name,
-      };
-      const response = await api.post(
-        "api/util/generate-presigned-url",
-        fileJson,
-        {
+      if (selectedImage) {
+        const fileJson = {
+          fileName: selectedImage.name,
+        };
+        const response = await api.post(
+          "api/util/generate-presigned-url",
+          fileJson,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            withCredentials: true,
+          }
+        );
+
+        const uploadResponse = await fetch(response.data.url, {
+          method: "PUT",
+          mode: "cors",
+          headers: {
+            "Content-Type": response.contentType,
+          },
+          body: selectedImage,
+        });
+
+        if (uploadResponse.ok) {
+          setFormData((prev) => ({
+            ...prev,
+            img: response.data.key,
+          }));
+        } else {
+          console.error("Error uploading file");
+          setLoading(false);
+          return;
+        }
+      } else {
+        await api.post("api/gigs/post", parsedFormData, {
           headers: {
             "Content-Type": "application/json",
           },
           withCredentials: true,
-        }
-      );
-
-      const uploadResponse = await fetch(response.data.url, {
-        method: "PUT",
-        mode: "cors",
-        headers: {
-          "Content-Type": response.contentType,
-        },
-        body: selectedImage,
-      });
-
-      if (uploadResponse.ok) {
-        console.log("File uploaded successfully");
-      } else {
-        console.error("Error uploading file");
+        });
+        setSuccess(true);
+        setLoading(false);
+        handleReset();
       }
-      setFormData((prev) => ({
-        ...prev,
-        img: response.data.key,
-      }));
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        setErrors(error.formErrors.fieldErrors);
-      }
+      console.error("Error submitting gig:", error);
+      setLoading(false);
     }
   };
+
+
+  useEffect(() => {
+    const postGig = async () => {
+      await api.post("api/gigs/post", formData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      });
+
+      setSuccess(true);
+      handleReset();
+    };
+    if (formData.img && formData.img !== "") {
+      postGig();
+      setLoading(false);
+    }
+  }, [formData.img]);
 
   useEffect(() => {
     const postGig = async () => {
@@ -276,9 +339,12 @@ export default function PostGigs() {
 
                   {/* Dropdown to select skill */}
                   <select
-                    value={newSkill}
-                    onChange={(e) => setNewSkill(e.target.value)}
-                    className="mt-1 w-full rounded-md border-gray-200 shadow-sm focus:border-gray-400 focus:ring focus:ring-gray-200 focus:ring-opacity-50"
+                      value={newSkill}
+                      onChange={(e) => {
+                          setNewSkill(e.target.value);
+                          
+                      }}
+                      className="mt-1 w-full rounded-md border-gray-200 shadow-sm focus:border-gray-400 focus:ring focus:ring-gray-200 focus:ring-opacity-50"
                   >
                     <option value="">Select a skill</option>
                     {skillsList.map((skill) => (
@@ -286,7 +352,9 @@ export default function PostGigs() {
                         {skill}
                       </option>
                     ))}
-                  </select>
+                    <option value="Other">Other</option>
+                    </select>
+                    
 
                   {/* Input for weight */}
                   <div className="mt-2">

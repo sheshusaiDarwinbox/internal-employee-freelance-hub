@@ -6,6 +6,7 @@ import WebSocketComponent from "./WebSocketConnection";
 import { clsx } from "clsx";
 import api from "../utils/api";
 import { getRelativeTime } from "../utils/timeFormat";
+import logo from "../assets/darwinbox-logo.png";
 
 const Navbar = ({ linkName }) => {
   const { user } = useSelector((state) => state.auth);
@@ -85,13 +86,11 @@ const Navbar = ({ linkName }) => {
 
   return (
     <nav className="bg-white border-b border-gray-100 fixed w-full z-30 top-0 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-[90%] mx-auto px-14 py-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xl font-bold">TH</span>
-              </div>
+              <img src={logo} className="h-16" alt=" Logo" />
               <span className="text-xl font-semibold text-gray-900">
                 Talent Hive
               </span>

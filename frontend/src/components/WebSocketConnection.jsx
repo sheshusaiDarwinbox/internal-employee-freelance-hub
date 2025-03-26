@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 
 const WebSocketComponent = () => {
   const dispatch = useDispatch();
-  const { connected } = useSelector((state) => state.websocket);
+  // const { connected } = useSelector((state) => state.websocket);
   const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const WebSocketComponent = () => {
   return (
     <div>
       <h2>
-        WebSocket Connection Status: {connected ? "Connected" : "Disconnected"}
+        {/* WebSocket Connection Status: {connected ? "Connected" : "Disconnected"} */}
       </h2>
     </div>
   );

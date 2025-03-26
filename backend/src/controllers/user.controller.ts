@@ -216,6 +216,48 @@ export const getAllUsersDetails = async (req: Request) => {
   };
 };
 
+export const getAllEmpDetails = sessionHandler(async (req: Request) => {
+  const { types, page = 1, search = "" } = req.query;
+  const filter: FilterQuery<UserAuthModel> = {};
+  const pageNum = Number(page) - 1;
+
+  // Filter for role="Employee" or other specified roles
+  if (types) {
+    const typesArray = (types as string).split(",");
+    UsersArraySchema.parse(typesArray);
+    filter.role = { $in: typesArray };
+  } else {
+    filter.role = "Employee"; // Default to "Employee" if no types are provided
+  }
+
+  if (search !== "") filter.$text = { $search: search as string };
+
+  const users = await User.paginate(filter, {
+    offset: pageNum * 6,
+    limit: 6,
+    select: {
+      EID: 1,
+      email: 1,
+      fullName: 1,
+      role: 1,
+      phone: 1,
+      gender: 1,
+      workmode: 1,
+      img: 1,
+      freelanceRating: 1,
+      freelanceRewardPoints: 1,
+      gigsCompleted: 1,
+
+      DID: 1,
+    },
+  });
+
+  return {
+    status: HttpStatusCodes.OK,
+    data: users,
+  };
+});
+
 export const deleteUserByID = async (req: Request) => {
   const { ID } = req.params;
   GetUserSchema.parse({ EID: ID });
@@ -491,6 +533,14 @@ export const getEmployeesUnderManager = async (req: Request) => {
   };
 };
 
+export const getTotalUsers = sessionHandler(async () => {
+  const totalUsers = await User.countDocuments();
+  return {
+    status: HttpStatusCodes.OK,
+    data: { totalUsers },
+  };
+});
+
 export const userControlRouter = Router();
 
 userControlRouter.post(
@@ -503,6 +553,7 @@ userControlRouter.get(
   checkAuth([UserRole.Admin, UserRole.Manager]),
   sessionHandler(getAllUsers)
 );
+userControlRouter.get("/total", getTotalUsers);
 userControlRouter.delete(
   "/:ID",
   checkAuth([UserRole.Admin]),
@@ -536,6 +587,7 @@ userControlRouter.get(
   checkAuth([]),
   sessionHandler(getAllUsersDetails)
 );
+userControlRouter.get("/emp-details", checkAuth([]), getAllEmpDetails);
 userControlRouter.get(
   "/users-under-manager",
   checkAuth([UserRole.Manager]),

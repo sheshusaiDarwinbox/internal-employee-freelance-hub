@@ -179,8 +179,10 @@ const ChatPage = () => {
     scrollToBottom();
   };
 
-  const filteredContacts = contacts.filter((contact) =>
-    contact.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredContacts = contacts.filter((contact) =>{
+    if(contact.fullName)
+    return contact.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+  return false;}
   );
 
   return (

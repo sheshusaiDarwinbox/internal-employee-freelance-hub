@@ -112,6 +112,13 @@ export const assignManagerToDepartment = async (req: Request) => {
     data: updatedDepartment,
   };
 };
+export const getTotalDepartments = sessionHandler(async () => {
+  const totalDepartments = await DepartmentModel.countDocuments();
+  return {
+    status: HttpStatusCodes.OK,
+    data: { totalDepartments },
+  };
+});
 
 export const departmentControlRouter = Router();
 
@@ -125,6 +132,7 @@ departmentControlRouter.get(
   checkAuth([]),
   sessionHandler(getAllDepartments)
 );
+departmentControlRouter.get("/total", getTotalDepartments);
 departmentControlRouter.delete(
   "/:ID",
   checkAuth([UserRole.Admin]),

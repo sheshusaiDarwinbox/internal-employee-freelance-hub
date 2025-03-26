@@ -437,6 +437,14 @@ export const updateGigReview = async (
   };
 };
 
+export const getTotalGigs  = sessionHandler(async () => {
+  const totalGigs = await Gig.countDocuments();
+  return {
+    status: HttpStatusCodes.OK,
+    data: { totalGigs },
+  };
+});
+
 gigControlRouter.post(
   "/post",
   checkAuth([UserRole.Manager]),
@@ -444,6 +452,7 @@ gigControlRouter.post(
 );
 gigControlRouter.get("", checkAuth([]), sessionHandler(getAllGigs));
 gigControlRouter.get("/:GigID", checkAuth([]), sessionHandler(getGigById));
+gigControlRouter.get("/total", getTotalGigs);
 gigControlRouter.post(
   "/assign",
   checkAuth([UserRole.Manager]),

@@ -1,14 +1,40 @@
+import { useEffect, useState } from "react";
 import {
   FaCheckCircle,
   FaProjectDiagram,
   FaUsers,
-  FaClock,
   FaBuilding,
 } from "react-icons/fa";
 import aboutImg from "../../assets/about.png";
 import { memo } from "react";
 
 const About = () => {
+  const [totalProjects, setTotalProjects] = useState(0);
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const [totalDepartments, setTotalDepartments] = useState(0);
+  
+  // Fetch counts from APIs
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const projectsResponse = await fetch("http://localhost:3000/api/gigs/total");
+        const employeesResponse = await fetch("http://localhost:3000/api/users/total");
+        const departmentsResponse = await fetch("http://localhost:3000/api/departments/total");
+
+        const projectsData = await projectsResponse.json();
+        const employeesData = await employeesResponse.json();
+        const departmentsData = await departmentsResponse.json();
+        setTotalProjects(projectsData.totalGigs);
+        setTotalEmployees(employeesData.totalUsers);
+        setTotalDepartments(departmentsData.totalDepartments);
+      } catch (error) {
+        console.error("Error fetching counts:", error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 px-6">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-y-16">
@@ -48,10 +74,9 @@ const About = () => {
       {/* Counters Section */}
       <div className="max-w-7xl mx-auto mt-16 grid grid-cols-2 md:grid-cols-4 gap-10 text-center">
         {[
-          { icon: FaProjectDiagram, count: 232, label: "Freelance Projects" },
-          { icon: FaUsers, count: 521, label: "Employees" },
-          { icon: FaClock, count: 1453, label: "Active Externals" },
-          { icon: FaBuilding, count: 32, label: "Departments Involved" },
+          { icon: FaProjectDiagram, count: totalProjects, label: "Freelance Projects" },
+          { icon: FaUsers, count: totalEmployees, label: "Employees" },
+          { icon: FaBuilding, count: totalDepartments, label: "Departments Involved" },
         ].map(({ icon: Icon, count, label }, index) => (
           <div key={index} className="flex flex-col items-center">
             <Icon className="text-blue-500 text-5xl mb-2" />
