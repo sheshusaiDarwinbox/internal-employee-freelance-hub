@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
+
+import "../mocks/mockDependencies";
+
 import { BidModel } from "../../models/bid.model";
 import { createBid, getBidsByGig } from "../../controllers/bid.controller";
 import { generateId } from "../../utils/counterManager.util";
 import { IDs } from "../../models/idCounter.model";
 import { HttpStatusCodes } from "../../utils/httpsStatusCodes.util";
 import { Gig } from "../../models/gig.model";
-// import "../mocks/mockDependencies";
 
 jest.mock("../../models/bid.model", () => ({
   BidModel: {
@@ -51,12 +53,14 @@ describe("Bid Controller", () => {
       };
 
       (BidModel.findOne as jest.Mock).mockResolvedValue(null);
-      (BidModel.create as jest.Mock).mockResolvedValue([
+
+      BidModel.create = jest.fn().mockResolvedValue([
         {
           BidID: "B000001",
           ...mockRequest.body,
         },
       ]);
+
       (generateId as jest.Mock).mockResolvedValue("B0000001");
 
       const result = await createBid(
@@ -123,8 +127,9 @@ describe("Bid Controller", () => {
         GigID: "G000001",
         title: "Test Gig",
       });
-      (BidModel.aggregate as jest.Mock).mockResolvedValue(mockBids);
-      (BidModel.countDocuments as jest.Mock).mockResolvedValue(1);
+      BidModel.aggregate = jest.fn().mockResolvedValue(mockBids);
+
+      BidModel.countDocuments = jest.fn().mockResolvedValue(1);
 
       const result = await getBidsByGig(mockRequest as Request);
 

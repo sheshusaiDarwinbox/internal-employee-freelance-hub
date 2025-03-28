@@ -112,21 +112,6 @@ const DepartmentManagement = () => {
     }
   };
 
-  // const handleCreate = (e) => {
-  //   e.preventDefault();
-  //   const newDepartment = {
-  //     ...formData,
-  //     id: Date.now(),
-  //   };
-  //   setDepartments([...departments, newDepartment]);
-  //   setFormData({
-  //     name: "",
-  //     description: "",
-  //     function: "Engineering",
-  //   });
-  //   setView("list");
-  // };
-
   const cancelPreview = () => {
     setExcelData(null);
     setPreviewData(null);
@@ -168,15 +153,6 @@ const DepartmentManagement = () => {
   const handleViewChange = useCallback((newView) => {
     setView(newView);
   }, []);
-
-  // const handleUpdate = (department) => {
-  //   setFormData(department);
-  //   setView("form");
-  // };
-
-  // const handleDelete = (id) => {
-  //   setDepartments(departments.filter((dept) => dept._id !== id));
-  // };
 
   const handleSearchChange = useCallback((e) => {
     setSearchQuery(e.target.value);

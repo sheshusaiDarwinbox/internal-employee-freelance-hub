@@ -1,12 +1,14 @@
 import { Request, Response, Router } from "express";
 import passport from "passport";
+import { User } from "../models/userAuth.model";
 
 export const loginControlRouter = Router();
 
-export const login = (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response) => {
+  const user = await User.findOne({ EID: req.user.EID });
   res.json({
     message: "Login successful",
-    user: req.user,
+    user: user,
   });
 };
 

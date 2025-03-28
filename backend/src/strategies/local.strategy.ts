@@ -43,27 +43,6 @@ passport.use(
         const sessionUser: Express.User = {
           EID: user.get("EID"),
           role: user.get("role"),
-          PID: user.get("PID"),
-          DID: user.get("DID"),
-          ManagerID: user.get("ManagerID"),
-          email: user.get("email"),
-          gender: user.get("gender"),
-          dob: user.get("DOB"),
-          phone: user.get("phone"),
-          address: user.get("address"),
-          state: user.get("state"),
-          country: user.get("country"),
-          pincode: user.get("pincode"),
-          AccountBalance: user.get("AccountBalance"),
-          freelanceRating: user.get("freelanceRating"),
-          freelanceRewardPoints: user.get("freelanceRewardPoints"),
-          nationality: user.get("nationality"),
-          img: user.get("img"),
-          bloodGroup: user.get("bloodGroup"),
-          workmode: user.get("workmode"),
-          maritalStatus: user.get("maritalStatus"),
-          fullName: user.get("fullName"),
-          gigsCompleted: user.get("gigsCompleted"),
         };
 
         done(null, sessionUser);

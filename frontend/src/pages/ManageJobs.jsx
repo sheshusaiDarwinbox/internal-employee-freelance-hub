@@ -129,7 +129,6 @@ const JobsManagement = () => {
     setUploadError(null);
   };
 
-  // Initialize data
   useEffect(() => {
     fetchJobs();
     fetchDepartments();

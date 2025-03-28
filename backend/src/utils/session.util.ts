@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { Request, Response } from "express";
 
 export const sessionHandler = (
-  fun: (
+  routeHandler: (
     req: Request,
     res: Response,
     session: mongoose.ClientSession
@@ -14,7 +14,7 @@ export const sessionHandler = (
       session = await mongoose.startSession();
       session.startTransaction();
 
-      const result = await fun(req, res, session);
+      const result = await routeHandler(req, res, session);
 
       await session.commitTransaction();
 

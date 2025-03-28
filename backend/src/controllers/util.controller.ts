@@ -34,7 +34,7 @@ export const generatePresignedUrl = async (req: Request) => {
     region: process.env.S3_REGION,
   });
 
-  const { fileName } = req?.body;
+  const { fileName } = req.body;
 
   const extension = path.extname(fileName);
   const contentType = mime.lookup(fileName) || "application/octet-stream";

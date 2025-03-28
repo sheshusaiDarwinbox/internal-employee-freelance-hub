@@ -12,7 +12,7 @@ export const PasswordScheme = z
   .regex(/[A-Z]/, {
     message: "Password must contain at least one uppercase letter",
   })
-  .regex(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\?]+/, {
+  .regex(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>?]+/, {
     message: "Password must contain at least one special character",
   })
   .max(255);
@@ -45,8 +45,8 @@ export const CreateUserSchema = z.array(
     skills: z
       .array(
         z.object({
-          skill: z.enum(extendedTechSkills), // The skill must be one of the listed extendedTechSkills
-          score: z.number().min(0).max(1).optional(), // Score is optional and between 0 and 1
+          skill: z.enum(extendedTechSkills),
+          score: z.number().min(0).max(1).optional(),
         })
       )
       .optional(),
@@ -56,8 +56,8 @@ export const CreateUserSchema = z.array(
 export const UpdateUserSkills = z.object({
   skills: z.array(
     z.object({
-      skill: z.enum(extendedTechSkills), // The skill must be one of the listed extendedTechSkills
-      score: z.number().min(0).max(1), // Score is optional and between 0 and 1
+      skill: z.enum(extendedTechSkills),
+      score: z.number().min(0).max(1),
     })
   ),
 });
@@ -201,10 +201,6 @@ export const AssignManagerZodSchema = z.object({
     .string()
     .regex(/^[a-zA-Z0-9]+$/, { message: "DID must be alphanumeric" }),
 });
-
-// export const RequestZodSchema = z.object({
-//   reqType: z.nativeEnum(RequestTypeEnum),
-// });
 
 export const BidZodSchema = z.object({
   GigID: z

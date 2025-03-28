@@ -109,9 +109,10 @@ export const createUser = async (
     })
   );
 
-  const insertedUsers = await User.create(updatedUsers, { session });
-
-  // console.log(usersEmailData);
+  const insertedUsers = await User.create(updatedUsers, {
+    session,
+    ordered: true,
+  });
 
   insertedUsers.forEach((user, idx) => {
     sendVerificationEmail({ ...usersEmailData[idx], _id: user._id });
