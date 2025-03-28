@@ -378,8 +378,6 @@ function GigAssignPage() {
         setLoading(true);
         setError(null);
 
-        // For development, use mock data
-        // In production, uncomment the API call
         const response = await api.get(`api/gigs/${GigID}`, {
           withCredentials: true,
         });

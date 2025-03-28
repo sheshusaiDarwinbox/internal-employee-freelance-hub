@@ -16,7 +16,7 @@ const UsersPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [setSkillsToUpdate] = useState([]);
+  const [skillsToUpdate, setSkillsToUpdate] = useState([]);
   const [errors, setErrors] = useState({});
   const [newSkill, setNewSkill] = useState("");
   const [skillsList, setSkillsList] = useState([]); // List of available skills
@@ -172,6 +172,7 @@ const UsersPage = () => {
                       setSelectedUser(user);
                       setSkillsToUpdate(user.skills);
                       setShowModal(true);
+                      console.log(showModal);
                     }}
                   >
                     <HiPencil className="w-4 h-4 mr-2" /> Update Skills

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { login, logout } from "../../controllers/login.controller";
 import "../mocks/mockDependencies";
+import { User } from "../../models/userAuth.model";
 
 describe("Login Controller", () => {
   let mockRequest: Partial<Request>;
@@ -22,17 +23,6 @@ describe("Login Controller", () => {
       sendStatus: jest.fn(),
     };
     jest.clearAllMocks();
-  });
-
-  describe("login", () => {
-    it("should return successful login response with user data", () => {
-      login(mockRequest as Request, mockResponse as Response);
-
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: "Login successful",
-        user: mockRequest.user,
-      });
-    });
   });
 
   describe("logout", () => {

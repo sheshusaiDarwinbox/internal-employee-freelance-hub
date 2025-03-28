@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { z } from "zod";
-// import { extendedTechSkills } from "../utils/constants.util";
 import api from "../utils/api";
-// import { useSelector } from "react-redux";
 
 export default function PostGigs() {
   const [formData, setFormData] = useState({
@@ -18,7 +16,7 @@ export default function PostGigs() {
   const [success, setSuccess] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [skillsList, setSkillsList] = useState([]); // List of available skills
+  const [skillsList, setSkillsList] = useState([]);
   const [newSkill, setNewSkill] = useState("");
   const [weight, setWeight] = useState("");
   const [errors, setErrors] = useState({});

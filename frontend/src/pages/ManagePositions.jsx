@@ -19,7 +19,7 @@ const PositionTypeEnum = {
 const ManagePositions = () => {
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [setError] = useState(null);
+  const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");

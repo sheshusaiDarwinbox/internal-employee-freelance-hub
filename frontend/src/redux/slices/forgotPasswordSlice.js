@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:3000/api"; // Update with your backend URL
+const API_BASE_URL = "http://localhost:3000/api";
 
 export const sendForgotPasswordEmail = createAsyncThunk(
   "forgotPassword/sendForgotPasswordEmail",
@@ -67,7 +67,7 @@ const forgotPasswordSlice = createSlice({
       })
       .addCase(sendForgotPasswordEmail.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.successMessage = action.payload.msg; // Assuming your backend sends a success message
+        state.successMessage = action.payload.msg;
       })
       .addCase(sendForgotPasswordEmail.rejected, (state, action) => {
         state.isLoading = false;
@@ -80,11 +80,11 @@ const forgotPasswordSlice = createSlice({
       })
       .addCase(resetPassword.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.successMessage = action.payload.msg; // Assuming your backend sends a success message
+        state.successMessage = action.payload.msg;
       })
       .addCase(resetPassword.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload?.message || "Failed to reset password"; // Extract message
+        state.error = action.payload?.message || "Failed to reset password";
       });
   },
 });

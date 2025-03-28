@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import api from "../../utils/api";
 
-const API_BASE_URL = "http://localhost:3000/api"; // Update with your backend URL
+const API_BASE_URL = "http://localhost:3000/api";
 
 export const loginUser = createAsyncThunk(
   "auth/loginUser",

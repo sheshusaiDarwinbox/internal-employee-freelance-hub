@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Bell, MessageCircle, UserCircle, ChevronDown, X } from "lucide-react";
 import { useSelector } from "react-redux";
-import WebSocketComponent from "./WebSocketConnection";
 import { clsx } from "clsx";
 import api from "../utils/api";
 import { getRelativeTime } from "../utils/timeFormat";
@@ -98,8 +97,6 @@ const Navbar = ({ linkName }) => {
           </div>
 
           <div className="flex items-center space-x-6">
-            <WebSocketComponent />
-
             <Link
               to={linkName}
               className="text-gray-600 relative font-medium group"
