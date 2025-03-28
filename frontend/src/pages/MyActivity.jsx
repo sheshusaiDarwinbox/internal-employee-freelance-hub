@@ -69,7 +69,7 @@ const MyActivity = () => {
     const fetchRewards = async () => {
       if (EID) {
         try {
-          setRewards(user.freelanceRewardPoints || 0); // Replace with actual API call when available
+          setRewards(user.freelanceRewardPoints || 0);
         } catch (error) {
           console.error("Error fetching rewards:", error);
         }
@@ -102,7 +102,6 @@ const MyActivity = () => {
   };
 
   const handleFileChange = (taskId, files) => {
-    // Convert FileList to array and filter out any unsupported file types if needed
     const fileArray = Array.from(files).map((file) => ({
       file,
       preview: URL.createObjectURL(file),

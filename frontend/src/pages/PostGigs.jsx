@@ -1,23 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { z } from "zod";
-import { extendedTechSkills } from "../utils/constants.util";
 import api from "../utils/api";
-import { useSelector } from "react-redux";
-
-// const CreateGigZodSchema = z.object({
-//   ManagerID: z.string().regex(/^[a-zA-Z0-9]+$/),
-//   title: z.string().regex(/^[a-zA-Z0-9\s.,!?()&]+$/),
-//   skills: z.array(
-//     z.object({
-//       skill: z.enum(extendedTechSkills),
-//       weight: z.number().min(0).max(1),
-//     })
-//   ),
-//   amount: z.number().int().gte(0),
-//   deadline: z.string().refine((val) => !isNaN(Date.parse(val))),
-//   description: z.string().regex(/^[a-zA-Z0-9\s.,!?()&]+$/),
-//   img: z.string(),
-// });
 
 export default function PostGigs() {
   const [formData, setFormData] = useState({
@@ -33,7 +16,7 @@ export default function PostGigs() {
   const [success, setSuccess] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [skillsList, setSkillsList] = useState([]); // List of available skills
+  const [skillsList, setSkillsList] = useState([]);
   const [newSkill, setNewSkill] = useState("");
   const [weight, setWeight] = useState("");
   const [errors, setErrors] = useState({});
@@ -51,7 +34,7 @@ export default function PostGigs() {
       const response = await api.get("api/util/get-skills", {
         withCredentials: true,
       });
-      setSkillsList(response.data); // Assuming data is an array of skill names
+      setSkillsList(response.data);
     }
     fetchSkills();
   }, []);
