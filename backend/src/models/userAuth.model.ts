@@ -5,7 +5,6 @@ import { extendedTechSkills } from "../utils/insertSkills.util";
 
 export enum UserRole {
   Employee = "Employee",
-  Other = "Other",
   Admin = "Admin",
   Manager = "Manager",
 }

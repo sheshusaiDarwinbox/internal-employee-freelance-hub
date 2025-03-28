@@ -9,7 +9,6 @@ export enum PositionTypeEnum {
   Temporary = "Temporary",
   Freelance = "Freelance",
   Contract = "Contract",
-  Other = "Other",
 }
 
 export const positionSchema = new Schema<Position, PositionModelType>({

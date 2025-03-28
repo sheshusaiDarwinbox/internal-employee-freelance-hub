@@ -45,7 +45,7 @@ export const createUser = async (
   let flag = false;
   await Promise.all(
     users.map(async (user) => {
-      const { skills, ...data } = user;
+      const { ...data } = user;
       const department = await DepartmentModel.findOne(
         { DID: data.DID },
         null,
@@ -443,7 +443,7 @@ export const getGigsByUser = async (req: Request) => {
       offset: pageNum * 6,
       limit: 6,
     });
-  } else if (user.role === UserRole.Employee || UserRole.Other) {
+  } else if (user.role === UserRole.Employee) {
     filter.EID = EID;
     gigs = await Gig.paginate(filter, {
       offset: pageNum * 6,

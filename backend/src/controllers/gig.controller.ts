@@ -437,6 +437,25 @@ export const updateGigReview = async (
   };
 };
 
+
+export const getPaymentsByEID = sessionHandler(async (req: Request) => {
+  const { EID } = req.params;
+  
+  const payments = await Gig.find({ EID: EID, ongoingStatus: "Reviewed" }, 'completedAt title amount') as GigSchema[];
+  
+  const totalAmount = payments.reduce((total, gig) => total + (gig.amount || 0), 0);
+  
+  await User.findOneAndUpdate(
+    { EID: EID },
+    { $set: { accountBalance: totalAmount } }
+  );
+
+  return {
+    status: HttpStatusCodes.OK,
+    data: payments,
+  };
+});
+
 export const getTotalGigs  = sessionHandler(async () => {
   const totalGigs = await Gig.countDocuments();
   return {
@@ -459,6 +478,7 @@ gigControlRouter.post(
   sessionHandler(assignGig)
 );
 gigControlRouter.post("/my-gigs", checkAuth([]), sessionHandler(getMyGigs));
+gigControlRouter.get("/payments/:EID", checkAuth([]), getPaymentsByEID);
 gigControlRouter.post(
   "/:_id/update-progress",
   checkAuth([]),
