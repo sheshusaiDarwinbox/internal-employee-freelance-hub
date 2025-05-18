@@ -1,20 +1,21 @@
 import dotenv from "dotenv";
 import path from "path";
-import { Server as SocketServer, Socket } from "socket.io";
 import http from "http";
-import { Express } from "express";
 import { createApp } from "./app";
-import connect, { client } from "./database/connection";
+import { Express } from "express";
 import { setAdmin } from "./utils/adminSetup.util";
+import connect, { client } from "./database/connection";
 import { initializeCounters } from "./utils/counterManager.util";
 import { establishSocketConnection } from "./utils/socket.util";
+import { Server as SocketServer, Socket } from "socket.io";
+
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
 export const user = process.env.NODEJS_GMAIL_APP_USER;
 export const pass = process.env.NODEJS_GMAIL_APP_PASSWORD;
-export const userSockets: {
-  [key: string]: Socket;
-} = {};
+
+export const userSockets: { [key: string]: Socket} = {};
 export const config = {
   service: "gmail",
   auth: {
@@ -25,6 +26,8 @@ export const config = {
 
 let app: Express;
 let server: http.Server;
+
+
 
 connect().then(() => {
   const { app: createdApp, sessionMiddleware } = createApp();
@@ -38,7 +41,10 @@ connect().then(() => {
       methods: ["GET", "POST"],
     },
   });
+
   establishSocketConnection(io, sessionMiddleware);
+
+
   process.on("SIGINT", async () => {
     try {
       await client.del("inputQueue");
@@ -51,11 +57,15 @@ connect().then(() => {
     }
   });
 
+
+
   server.listen(3000, () => {
     console.log("Server running on port 3000");
-    setAdmin();
     initializeCounters();
+    setAdmin();
   });
 });
+
+
 
 export { app, server };

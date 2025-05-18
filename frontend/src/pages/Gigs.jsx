@@ -529,7 +529,7 @@ function App() {
                         >
                           Place Bid
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => {
                             setOpenModal(false);
                             setOpenReferModal(true);
@@ -537,7 +537,7 @@ function App() {
                           className="px-6 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700"
                         >
                           Refer
-                        </button>
+                        </button> */}
                       </>
                     )}
                 </div>

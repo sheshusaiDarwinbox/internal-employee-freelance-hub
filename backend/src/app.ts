@@ -11,7 +11,7 @@ import cors from "cors";
 export const createSessionStore = () => {
   return MongoStore.create({
     client: mongoose.connection.getClient(),
-    collectionName: "sessions", // optional, default is 'sessions'
+    collectionName: "sessions",
   });
 };
 

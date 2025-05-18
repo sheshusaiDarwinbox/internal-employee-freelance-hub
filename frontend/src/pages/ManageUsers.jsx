@@ -275,13 +275,13 @@ const ManageUsers = () => {
             className="hidden"
             id="fileUpload"
           />
-          <label
+          {/* <label
             htmlFor="fileUpload"
             className="cursor-pointer flex items-center gap-2 bg-blue-50 text-slate-600 px-4 py-2 rounded-lg hover:bg-blue-100"
           >
             <HiUpload className="w-5 h-5" />
             Upload Excel/CSV
-          </label>
+          </label> */}
         </div>
       </div>
 

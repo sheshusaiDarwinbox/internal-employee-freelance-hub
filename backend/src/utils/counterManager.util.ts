@@ -33,7 +33,7 @@ export const initializeCounters = async () => {
     console.log(id);
     await CounterID.findOneAndUpdate(
       { id },
-      { $setOnInsert: { counter: 0 } }, // Initialize counter for each role
+      { $setOnInsert: { counter: 0 } },
       { upsert: true }
     ).catch((err) => {
       console.log(err);

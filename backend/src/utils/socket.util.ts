@@ -6,6 +6,30 @@ import { BidModel } from "../models/bid.model";
 import { client } from "../database/connection";
 import { connectedUsers, registerEvents } from "./eventHandler.util";
 
+async function getBid({ GigID, EID }: { GigID: string; EID: string }) {
+  const [bid] = await BidModel.aggregate([
+    { $match: { GigID: GigID, EID: EID } },
+    {
+      $lookup: {
+        from: "userauths",
+        localField: "EID",
+        foreignField: "EID",
+        as: "userauth",
+      },
+    },
+    {
+      $project: {
+        GigID: 1,
+        BidID: 1,
+        description: 1,
+        "userauth.fullName": 1,
+        "userauth.EID": 1,
+      },
+    },
+  ]);
+  return bid;
+}
+
 async function processJob(job: string) {
   console.log("Processing job:", job);
 
@@ -21,26 +45,7 @@ async function processJob(job: string) {
   const modifiedData = [];
   for (let i = 3; i < data.length - 1; i += 2) {
     const EID = "EMP" + data[i].padStart(6, "0");
-    const [bid] = await BidModel.aggregate([
-      { $match: { GigID: GigID, EID: EID } },
-      {
-        $lookup: {
-          from: "userauths",
-          localField: "EID",
-          foreignField: "EID",
-          as: "userauth",
-        },
-      },
-      {
-        $project: {
-          GigID: 1,
-          BidID: 1,
-          description: 1,
-          "userauth.fullName": 1,
-          "userauth.EID": 1,
-        },
-      },
-    ]);
+    const bid = await getBid({ GigID, EID });
     (bid as any).score = data[i + 1];
     modifiedData.push(bid);
   }
@@ -60,8 +65,6 @@ async function listenToQueue() {
 
       if (job) {
         await processJob(job);
-      } else {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error) {
       console.error("Error while processing job:", error);
